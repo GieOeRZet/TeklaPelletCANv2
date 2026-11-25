@@ -21,4 +21,4 @@ Dane o urządzeniu (menu, PID-y, kodowanie zapisu, alarmy, moduły) pochodzą z 
 - Etap = jeden commit + push; CI ma być oszczędne.
 
 ## Status
-Szkielet + specyfikacja API v2 (`docs/ESP_API_V2.md`) - do akceptacji. Kodu ESP jeszcze nie ma.
+Szkielet + specyfikacja API v2 (`docs/ESP_API_V2.md`) z decyzjami wlasciciela (runda 1 i 2) - do akceptacji; makiety `ui/mockups/`. Kodu ESP jeszcze nie ma.

@@ -5,7 +5,7 @@ Decyzje wlasciciela (2026-11-25): projekt niezalezny od starego (bez API v1); ES
 
 ## 1. Sprzet i magistrala
 - Seeed XIAO ESP32-C6 (flash 4 MB) + MCP2515 (SPI), CAN 125 kbit/s (CANopen).
-- Kociol = wezel 4 (SDO: zapytanie 0x604, odpowiedz 0x584). Wezel ESP konfigurowalny (OPEN: domyslny Node ID; w tabeli SIEC panelu kazdy Node ID ma klase, wybrac wolny).
+- Kociol = wezel 4 (SDO: zapytanie 0x604, odpowiedz 0x584). Wezel ESP konfigurowalny; **domyslny Node ID = 95 (0x5F)** (decyzja wlasciciela; wolny, poza klasami modulow producenta -> panel pokazuje UNKNOWN; obecny 87 kolidowalby z drugim CAN IO BIG).
 - ESP jest dodatkowym kontrolerem: czyta cyklicznie zestaw "live", reszte na zadanie; zapis wylacznie wg trybu i poziomu (pkt 5).
 
 ## 2. Uklad pamieci (4 MB) - propozycja
@@ -84,4 +84,11 @@ Bledy: JSON `{ "ok": false, "code": "...", "msg": "..." }`, kody HTTP: 400/401/4
 `data/device_model.json` -> `tools/` generuje tabele firmware (PID, typ, min/max, kodowanie, `level_min`, flaga live) -> ESP; ten sam model w pakiecie UI dla klientow. Wersja/hasz modelu w `/api/info`.
 
 ## 11. Otwarte pytania (do zamkniecia przed kodem)
-1. Node ID ESP na magistrali. 2. Czasy: sesja, autoblokada, zdrowy start (OTA). 3. Zakres zapisow w wersji 1. 4. Zestaw live i czestotliwosci. 5. Budzet UI vs 448 KB. 6. TLS/podpis OTA. 7. Parametry hasha hasel/PIN-ow.
+1. ~~Node ID ESP~~ (zamkniete: 95). 2. Czasy: sesja, autoblokada, zdrowy start (OTA). 3. Zakres zapisow w wersji 1. 4. Zestaw live i czestotliwosci. 5. Budzet UI vs 448 KB. 6. TLS/podpis OTA. 7. Parametry hasha hasel/PIN-ow.
+
+## 12. Decyzje wlasciciela - runda 2 (2026-11-25)
+1. **Node ID ESP = 95 (0x5F)**, konfigurowalny.
+2. **Zapisy v1: wszystkie nastawy z poziomami PIN** (pelna lista z `device_model.json`, odblokowywana PIN-em poziomu per sesja, tryb `full` wymagany). **Pierwszy test na kotle**: odczyt na zywo + strona (tylko odczyt) oraz **zapis licznika paliwa (`0x3601`)** jako pierwszy zapis przez ESP; pozostale zapisy dopiero po tym ttescie (kolejne etapy testow z wlascicielem przy kotle).
+3. **Dane na zywo (decyzja delegowana do agenta; propozycja do akceptacji):** zestaw podstawowy zawsze (ok. 1 Hz temperatury, natychmiast zmiany stanow): temperatury kotla/powrotu/palnika/zewnetrznej/CO/CWU, kod stanu palnika, moc, stany pomp i diod pulpitu (zasilanie, palnik, CO1/CO2/CWU), paliwo i pojemnosc/rezerwa, alarm aktywny. **Dodatkowo zestaw biezacego ekranu** po subskrypcji (`{"t":"sub","screen":"PALNIK"}`): wartosci widoczne na tym ekranie (np. PALNIK: spalanie, moc kW/%, jasnosc, T. palnika, obroty dmuchawy, czas podawania), zwalniane po zamknieciu. Nastawy i listy tylko na zadanie (REST) + powiadomienie o zmianie.
+4. Z pomiarow z prawdziwego panelu: diody i ikony pulpitu - patrz `data/device_model.json` -> `home_indicators`, `real_panel_screens`; dolne belki ekranow (animowane wyjscia) pochodza ze stanow wyjsc, nie z parametrow (zrodlo stanow wyjsc OPEN).
+5. Odczyty widziane przez integracje HA, ktore sa zle/zerowe wzgledem panelu (moc palnika %, kW, spalanie kg/h) - ESP v2 ma czytac wlasciwe rejestry (OPEN: ustalic PID-y z panelu).
