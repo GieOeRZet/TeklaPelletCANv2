@@ -43,6 +43,33 @@ body.min .card{background:var(--panel);box-shadow:0 1px 2px rgba(0,0,0,.05)}
 .wide{grid-column:span 2}
 .spark{margin-top:8px;height:46px}
 @media (max-width:900px){body{grid-template-columns:64px 1fr}nav a span,.brand div,nav .lv,nav a .b{display:none}nav a{justify-content:center;padding:9px}main{grid-template-columns:1fr 1fr;gap:10px;padding:12px}.hero{grid-column:span 2;grid-row:auto;grid-template-columns:200px 1fr}.wide{grid-column:span 2}header .chip.hid{display:none}}
+
+/* PION (telefon): jedna kolumna, dolny pasek zakladek, arkusz menu */
+.tabs,.sheet{display:none}
+@media (max-width:600px){
+ body{grid-template-columns:1fr;grid-template-rows:52px 1fr 64px;grid-template-areas:"top" "main" "tabs";height:100vh}
+ nav{display:none}
+ header{padding:0 14px}header h1{font-size:15px}header h1 span{display:block;margin:1px 0 0;font-size:10.5px}
+ header .chip.hid{display:none}
+ main{grid-template-columns:1fr 1fr;gap:10px;padding:12px;overflow-y:auto}
+ .hero{grid-column:span 2;grid-row:auto;grid-template-columns:1fr;justify-items:center;gap:8px;padding:14px 12px}
+ .gauge{width:210px;height:210px}.gauge svg{width:210px;height:210px}.big{font-size:54px}
+ .kv{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;width:100%}.kv div{font-size:12px;flex-direction:column;border:0;padding:0;gap:1px}
+ .wide{grid-column:span 2}.card{padding:12px}.val{font-size:24px}
+ main>.card:nth-of-type(n+7){display:none}
+ .tabs{grid-area:tabs;display:grid;grid-template-columns:repeat(5,1fr);background:var(--bg2);border-top:1px solid var(--line)}
+ .tabs a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--mut);font-size:10px;font-weight:600;text-decoration:none;position:relative}
+ .tabs a svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+ .tabs a.on{color:var(--acc)}.tabs a.on:before{content:"";position:absolute;top:0;left:30%;right:30%;height:3px;border-radius:0 0 3px 3px;background:var(--acc)}
+ .tabs .n{position:absolute;top:7px;right:calc(50% - 20px);font-size:9px;background:var(--acc);color:#000;border-radius:8px;padding:0 5px;font-weight:800}
+ body.menu .sheet{display:block;position:fixed;left:0;right:0;bottom:64px;top:52px;background:rgba(0,0,0,.55)}
+ .sheet .in{position:absolute;left:0;right:0;bottom:0;background:var(--panel);border-radius:20px 20px 0 0;border-top:1px solid var(--line);padding:14px 16px 12px;max-height:80%}
+ .sheet .in:before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+ .sheet .g{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+ .sheet .g a{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);color:var(--txt);text-decoration:none;font-size:11px;font-weight:600;text-align:center}
+ .sheet .g svg{width:22px;height:22px;stroke:var(--acc);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+ .sheet .lv{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.9px;margin:12px 2px 8px}
+}
 </style></head>
 <body>
 <nav>
@@ -81,6 +108,25 @@ body.min .card{background:var(--panel);box-shadow:0 1px 2px rgba(0,0,0,.05)}
  <section class="card"><h3>Palnik <span class="dot"></span></h3><div class="val">Wyłączony</div><div class="row"><span>jasność płomienia</span><b>0 %</b></div><div class="row"><span>zapalarka</span><b>0</b></div><div class="row"><span>podajnik</span><b>Automat</b></div></section>
  <section class="card alarm wide"><h3>Ostatni alarm</h3><div class="val" style="font-size:20px;margin-top:8px"><span class="c">kod 140</span> · Brak ognia/opału</div><div class="row"><span>w historii 20 zdarzeń</span><b>nie aktywny</b></div></section>
  <section class="card"><h3>Moduły CAN <span class="dot on"></span></h3><div class="val" style="font-size:22px">1 online</div><div class="row"><span>CAN IO BIG</span><b>Node 86</b></div></section>
-</main></body>
-<script>if(location.hash=='#min')document.body.classList.add('min')</script>
+</main><div class="tabs">
+ <a class="on" href="#"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9H4z"/></svg>Pulpit</a>
+ <a href="#"><svg viewBox="0 0 24 24"><path d="M6 6v12M10 6v12M14 6v12M18 6v12M4 6h16M4 18h16"/></svg>Ogrzewanie</a>
+ <a href="#"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Harmonogram</a>
+ <a href="#"><svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 0 1 12 0c0 6 2 7 2 7H4s2-1 2-7"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>Alarmy<em class="n">20</em></a>
+ <a href="#menu"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>Menu</a>
+</div>
+<div class="sheet"><div class="in"><div class="g">
+ <a href="#"><svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6"/></svg>Kocioł</a>
+ <a href="#"><svg viewBox="0 0 24 24"><path d="M12 3c1 4-4 5-4 10a4 4 0 0 0 8 0c0-3-2-4-3-7"/></svg>Palnik</a>
+ <a href="#"><svg viewBox="0 0 24 24"><path d="M5 9h8a3 3 0 0 1 3 3v1M5 9V6M9 6H5M16 13v3"/></svg>Ciepła woda</a>
+</div><div class="lv">Poziom 1</div><div class="g">
+ <a href="#"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Nastawy</a>
+ <a href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg>Test wyjść</a>
+ <a href="#"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Statystyki</a>
+ <a href="#"><svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="M8 12h4l4-5M12 12l4 5"/></svg>Sieć CAN</a>
+ <a href="#"><svg viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 20 0M5 13a10 10 0 0 1 14 0M9 17a4 4 0 0 1 6 0"/></svg>Internet</a>
+ <a href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>Informacje</a>
+</div></div></div>
+</body>
+<script>const h=location.hash;if(h.includes('min'))document.body.classList.add('min');if(h.includes('menu'))document.body.classList.add('menu')</script>
 </html>
