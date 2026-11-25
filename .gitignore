@@ -1,0 +1,12 @@
+# sekrety i dane lokalne - NIGDY do repo (repo jest publiczne)
+*.pin
+secrets.*
+.env
+local.properties
+*.keystore
+build/
+.gradle/
+node_modules/
+sdkconfig
+sdkconfig.old
+managed_components/
