@@ -70,8 +70,30 @@ body.min .card{background:var(--panel);box-shadow:0 1px 2px rgba(0,0,0,.05)}
  .sheet .g svg{width:22px;height:22px;stroke:var(--acc);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
  .sheet .lv{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.9px;margin:12px 2px 8px}
 }
+
+/* --- poprawka: nic nie jest zasloniete. Strona zyje WEWNATRZ bezpiecznych marginesow (pasek stanu u gory, pasek nawigacji systemu na dole); caly Pulpit miesci sie bez przewijania --- */
+.sys{display:none}
+@media (max-width:600px){
+ body.frame{padding-top:40px;padding-bottom:48px;height:100vh}
+ body.frame .sys{display:flex;position:fixed;left:0;right:0;background:#000;color:#ddd;align-items:center;justify-content:space-between;padding:0 18px;z-index:9;font-size:13px}
+ body.frame .sys.top{top:0;height:40px}.sys.bot{bottom:0;height:48px;justify-content:space-around;padding:0 70px}
+ .sys.bot i{width:16px;height:16px;border-radius:4px;background:#8b8b93;display:block}.sys.bot i:nth-child(2){border-radius:50%;background:none;border:2px solid #8b8b93}.sys.bot i:nth-child(3){background:none;width:0;height:0;border-radius:0;border-style:solid;border-width:9px 14px 9px 0;border-color:transparent #8b8b93 transparent transparent}
+ body{grid-template-rows:48px minmax(0,1fr) 58px}
+ main{overflow:hidden;align-content:stretch;grid-template-rows:auto auto auto auto;gap:9px;padding:10px 12px}
+ .hero{grid-column:span 2;grid-template-columns:176px 1fr;justify-items:stretch;gap:6px;padding:10px 12px}
+ .gauge,.gauge svg{width:176px;height:176px}.big{font-size:44px}.big sup{font-size:14px;top:-14px}.st{font-size:15px}.hint{font-size:10px}
+ .kv{grid-template-columns:1fr;gap:5px}.kv div{flex-direction:row;font-size:11.5px;padding-bottom:4px;border-bottom:1px dashed var(--line);white-space:nowrap}
+ .kv div:nth-child(n+5){display:none}
+ .card{padding:11px}.val{font-size:22px;margin-top:4px}.row{margin-top:5px;font-size:11px}.pill{margin-top:6px;font-size:9.5px;padding:2px 7px}.bar{margin-top:7px}
+ main>.card:nth-of-type(n+7){display:block}
+ .alarm.wide{padding:9px 12px}.alarm .val{font-size:15px!important;margin-top:4px!important}.alarm .row{margin-top:3px}
+ main>.card:last-of-type{display:none}
+ .tabs{height:58px}.tabs a svg{width:20px;height:20px}
+ body.menu .sheet{bottom:58px;top:48px}
+}
 </style></head>
 <body>
+<div class="sys top"><span>19:09</span><span>◔ ▲ ▮ 84%</span></div><div class="sys bot"><i></i><i></i><i></i></div>
 <nav>
  <div class="brand"><i></i><div>TeklaPellet<small>Bio Compact 10kW</small></div></div>
  <a class="on" href="#"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9H4z"/></svg><span>Pulpit</span></a>
@@ -128,5 +150,5 @@ body.min .card{background:var(--panel);box-shadow:0 1px 2px rgba(0,0,0,.05)}
  <a href="#"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>Informacje</a>
 </div></div></div>
 </body>
-<script>const h=location.hash;if(h.includes('min'))document.body.classList.add('min');if(h.includes('menu'))document.body.classList.add('menu')</script>
+<script>const h=location.hash;if(h.includes('min'))document.body.classList.add('min');if(h.includes('menu'))document.body.classList.add('menu');if(h.includes('frame'))document.body.classList.add('frame')</script>
 </html>
