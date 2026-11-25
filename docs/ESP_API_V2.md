@@ -92,3 +92,35 @@ Bledy: JSON `{ "ok": false, "code": "...", "msg": "..." }`, kody HTTP: 400/401/4
 3. **Dane na zywo (decyzja delegowana do agenta; propozycja do akceptacji):** zestaw podstawowy zawsze (ok. 1 Hz temperatury, natychmiast zmiany stanow): temperatury kotla/powrotu/palnika/zewnetrznej/CO/CWU, kod stanu palnika, moc, stany pomp i diod pulpitu (zasilanie, palnik, CO1/CO2/CWU), paliwo i pojemnosc/rezerwa, alarm aktywny. **Dodatkowo zestaw biezacego ekranu** po subskrypcji (`{"t":"sub","screen":"PALNIK"}`): wartosci widoczne na tym ekranie (np. PALNIK: spalanie, moc kW/%, jasnosc, T. palnika, obroty dmuchawy, czas podawania), zwalniane po zamknieciu. Nastawy i listy tylko na zadanie (REST) + powiadomienie o zmianie.
 4. Z pomiarow z prawdziwego panelu: diody i ikony pulpitu - patrz `data/device_model.json` -> `home_indicators`, `real_panel_screens`; dolne belki ekranow (animowane wyjscia) pochodza ze stanow wyjsc, nie z parametrow (zrodlo stanow wyjsc OPEN).
 5. Odczyty widziane przez integracje HA, ktore sa zle/zerowe wzgledem panelu (moc palnika %, kW, spalanie kg/h) - ESP v2 ma czytac wlasciwe rejestry (OPEN: ustalic PID-y z panelu).
+
+## 13. Rozstrzygniecia agenta (2026-11-25) - DOMYSLNE, do zmiany przez wlasciciela
+
+Wlasciciel zlecil pelna autonomie; ponizej wartosci domyslne zamykajace punkty OPEN z sekcji 1-12. Kazda mozna zmienic bez przebudowy architektury (to stale/NVS).
+
+### 13.1 Sesje, haslo, PIN-y
+- Haslo i PIN-y: PBKDF2-HMAC-SHA256, sol 16 B (losowa z RNG ESP), 10 000 iteracji (ok. 0,1-0,3 s na ESP32-C6 - akceptowalne przy logowaniu), w NVS tylko hasz + sol.
+- Token sesji: 32 B losowe (base64url), TTL 12 h od ostatniej aktywnosci, maks. 8 rownoczesnych sesji (najstarsza wygasa).
+- Ochrona logowania: 5 blednych prob na adres IP w 60 s -> blokada tego IP na 60 s (HTTP 429); licznik prob PIN osobno, 5 prob -> blokada podniesienia poziomu na 5 min.
+- Poziom sesji (0-3): auto-blokada po 5 min bezczynnosci (wartosc z panelu NIE jest zmierzona; ustawialna 1-60 min w ustawieniach ESP).
+
+### 13.2 OTA - zdrowy start i podpis
+- Slot oznaczany jako poprawny po: serwer HTTP odpowiada lokalnie + MCP2515 zainicjalizowany + 30 s bez resetu. Pierwszy odczyt SDO z kotla NIE jest warunkiem (kociol moze byc wylaczony) - brak odpowiedzi jest tylko raportowany w `/api/status`. Limit: brak potwierdzenia w 120 s lub reset watchdog -> rollback.
+- Podpis: obraz (fw i ui) = plik + 64 B podpisu Ed25519 z hasza SHA-256; klucz publiczny wkompilowany w firmware, klucz prywatny wylacznie u wlasciciela (NIE w repo). Bez poprawnego podpisu wgranie odrzucane (HTTP 422). Zalecane tez w trybie `read-only`.
+- TLS: nie w pierwszej wersji (siec lokalna); haslo/token idzie otwartym HTTP w LAN - zaleca sie VLAN/brak dostepu z internetu; TLS (mbedTLS, certyfikat samopodpisany) do rozwazenia w v1.1.
+
+### 13.3 Budzet interfejsu (partycja ui_0/ui_1 = 448 KB)
+- Pomiar: wszystkie 188 bitmap panelu jako PNG = 346 KB (SVG po trasowaniu jest 10x wiekszy, odrzucone; wlasciciel: zostajemy przy PNG).
+- Plan: tylko bitmapy uzywane przez UI ESP (ok. 120-150 z 188; pelne dane: `real_panel_screens.json`, `presenter_widget_map.json`), kwantyzacja do PNG8 (typowo -40...-60%) -> ok. 130-200 KB; JS/CSS/HTML gzip ok. 100-150 KB; razem ok. 230-350 KB < 448 KB. Gdy po pierwszym buildzie przekroczy: podzial partycji ui 0x80000 kosztem miejsca `store`.
+
+### 13.4 Zestawy danych na zywo (zrodlo: `data/device_model.json` -> `presenter_widget_map`)
+- Zestaw podstawowy (zawsze): temperatury 0x2001/0x4000/0x215F/0x3721, kod stanu palnika 0x2007 (tabela stanow w `real_panel_screens.json`), moc 0x4005, zasilanie 0x2005, programy 0x2002/0x2064/0x2014, stany pomp 0x2277/0x2299/0x2278 i mieszacz 0x216F/0x22B9, paliwo 0x3601/0x3600/0x3602/0x3603, alarm aktywny.
+- Zestaw ekranu (po `sub`): dokladnie PID-y z `presenter_widget_map.ekrany[SCREEN]` (PALNIK: 0x2251-0x2254, 0x2276, 0x226D, 0x3711, 0x3710, 0x3706, 0x2250, 0x226C, 0x299C, ...; KOCIOL, CO1-4, CWU, BUFOR, SOLARY, MAGAZYN, KASKADA analogicznie).
+- **Regula stanu wyjsc: `stan = (wartosc SDO & 0xFF)`** (SDO zwraca 4 B, starszy bajt = 0x01; pompy chodza przy `0x0101`). Mieszacz: 1 = zamykanie (niebieska strzalka, bitmapa 106), 2 = otwieranie (czerwona, 107). Ruszt `0x2276`: 1/2 = dwa kierunki.
+- Czestotliwosc: temperatury 1 Hz; stany wyjsc co 1-2 s (zmiana pushowana natychmiast po wykryciu); reszta wg potrzeb ekranu (nie czesciej niz 1 Hz, zeby nie obciazac magistrali 125 kbit/s).
+- PID-y spoza katalogu 655 czytane przez panel (np. 0x218B) - nie zalezec od nich.
+
+### 13.5 Pozostale decyzje
+- mDNS: `_teklapellet._tcp`, instancja `teklapellet-<4 hex z MAC>`.
+- Czas: ESP synchronizuje zegar panelu z NTP tylko na zadanie uzytkownika (przycisk "ustaw czas panelu"); bez automatycznego zapisu (panel ma wlasny RTC, rozjazd ok. 2 min zaobserwowany).
+- Pogoda: prognoza (0x2161-0x2164) nie jest wyswietlana przez panel - nie implementowac w v1 (OPEN: czy kiedykolwiek).
+- Stan zapisu v1: wszystkie nastawy z poziomami PIN (decyzja wlasciciela); przed pierwszym zapisem na zywym kotle - dry-run w trybie `read-only` + odczyt zwrotny, jak w sekcji 5.
