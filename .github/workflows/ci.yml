@@ -42,7 +42,7 @@ jobs:
           idf.py set-target esp32c6
           idf.py build 2>&1 | tee /tmp/build.log
           grep -E 'error:|FAILED' /tmp/build.log | head -40 || true
-          idf.py merge-bin -o build/tekla_pellet_flash.bin
+          idf.py merge-bin -o "$PWD/build/tekla_pellet_flash.bin"
           ls -la build/*.bin
       - uses: actions/upload-artifact@v4
         with:
