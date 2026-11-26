@@ -5,7 +5,7 @@ Samodzielne monorepo: dodatkowy moduł **ESP32‑C6 (Seeed XIAO) + MCP2515** na 
 **Nowy agent/osoba: zacznij od `docs/AGENT_CONTINUITY.md`**, potem `docs/PRZEJECIE_PROJEKTU_2026-11-26.md`, `docs/STATUS.md`, `docs/ZADANIA.md` i `docs/API_ESP.md`. Nie odtwarzaj historii rozmów — stan i decyzje mają być utrzymywane w repo.
 
 ## Architektura w jednym akapicie
-ESP to **bramka i sterownik CAN ↔ API (REST + WebSocket)** z małą wbudowaną stroną serwisową (konfiguracja Wi‑Fi/IP, hasło, parowanie klientów, logi/eksport, aktualizacja firmware). **Interfejsu użytkownika ESP nie serwuje**: robią to klienci (Android, Windows, HA), którzy parują się z modułem raz hasłem i dostają stały token. Moduł się ogłasza (mDNS, stały ID z MAC), więc można mieć wiele urządzeń. Strażnik zapisu (tryb odczyt/pełny, PIN-y poziomów, kodowanie z modelu, odczyt zwrotny) działa w ESP.
+ESP to **bramka i sterownik CAN ↔ API (REST + WebSocket)** z małą wbudowaną stroną serwisową (konfiguracja Wi‑Fi/IP, hasło, parowanie klientów, logi/eksport, aktualizacja firmware). **Interfejsu użytkownika ESP nie serwuje**: robią to klienci (Android, Windows, HA), którzy parują się z modułem raz hasłem i dostają stały token. Moduł się ogłasza (mDNS, stały ID z MAC), więc można mieć wiele urządzeń. Autoryzowany klient dostaje pełny odczyt/zapis; ESP egzekwuje model PID, kodowanie, zakres, listę blokad i odczyt zwrotny. PIN-y oryginalnego panelu będą logiką klienta Android, nie autoryzacją ESP.
 
 ## Struktura
 | Katalog | Zawartość |
@@ -20,7 +20,7 @@ ESP to **bramka i sterownik CAN ↔ API (REST + WebSocket)** z małą wbudowaną
 | `archiwum_v1/` | historia: stary produkt v1 i dane sprzętowe PelletCAN (tylko do odczytu) |
 
 ## Zasady (skrót, pełne w `CLAUDE.md`)
-Domyślnie **tylko odczyt**; zapis do kotła tylko świadomie, z odczytem zwrotnym, nigdy bez właściciela. **Żadnych sekretów w repo** (hasła, PIN-y, SSID, klucze; repo publiczne). Dowody oznaczone MEASURED/STRONG/INFERENCE/OPEN/REJECTED. Minimalne zmiany; commit + push na koniec etapu.
+ESP jest **Full** dla autoryzowanych klientów; zapis do kotła zawsze przechodzi przez model, walidację i odczyt zwrotny. **Żadnych sekretów w repo** (hasła, PIN-y, SSID, klucze; repo publiczne). Dowody oznaczone MEASURED/STRONG/INFERENCE/OPEN/REJECTED. Minimalne zmiany; commit + push na koniec etapu.
 
 ## Stan
 Szczegóły w `docs/STATUS.md`. W skrócie: firmware ESP, aplikacja Android i testy kompilują się w CI; aplikacja uruchamia się w emulatorze w trybie demo. **Nic nie było uruchomione na prawdziwym kotle, module ESP ani telefonie.**
