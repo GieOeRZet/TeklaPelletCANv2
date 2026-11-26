@@ -616,6 +616,7 @@ fun AppPinCard(ui: Ui) {
     var set by remember { mutableStateOf(AppLock.isSet()) }
     var bio by remember { mutableStateOf(AppLock.biometricEnabled()) }
     var pin by remember { mutableStateOf("") }
+    val activity = LocalContext.current as? androidx.fragment.app.FragmentActivity
     Card("Zabezpieczenie aplikacji") {
         Text("Chroni wejście do aplikacji. Jest niezależne od poziomów dostępu kotła.", color = Mut, fontSize = 13.sp)
         OutlinedTextField(pin, { pin = it.filter(Char::isDigit).take(12) }, label = { Text("Nowy PIN (4–12 cyfr)") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword), modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
@@ -630,7 +631,7 @@ fun AppPinCard(ui: Ui) {
                     Text("Odcisk palca / twarz, jeśli telefon obsługuje.", color = Mut, fontSize = 12.sp)
                 }
                 Switch(checked = bio, onCheckedChange = { want ->
-                    val a = Ctl.ctx as? androidx.fragment.app.FragmentActivity
+                    val a = activity
                     val ok = a != null && BiometricManager.from(a).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS
                     if (want && !ok) ui.toast("Biometria nie jest dostępna na tym telefonie.") else { bio = want; AppLock.setBiometric(want) }
                 })
