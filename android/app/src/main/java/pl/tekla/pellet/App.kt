@@ -113,42 +113,28 @@ fun TeklaApp() {
 
 @Composable
 fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
+    if (screen == "home") return
     val title = when {
-        screen == "home" -> "Pulpit"; screen == "more" -> "Więcej"; screen == "module" -> "Moduł ESP"; screen == "log" -> "Dziennik"; screen == "appset" -> "Ustawienia aplikacji"
-        screen.startsWith("set:") -> "Nastawy"; screen.startsWith("sched:") -> "Harmonogram"
+        screen == "more" -> "Menu"
+        screen == "module" -> "Moduł ESP"
+        screen == "log" -> "Dziennik"
+        screen == "appset" -> "Ustawienia aplikacji"
+        screen.startsWith("set:") -> "Nastawy"
+        screen.startsWith("sched:") -> "Harmonogram"
         else -> ui.m.screens[screen]?.title ?: ui.m.menu.firstOrNull { ui.m.routeOf(it) == screen }?.title ?: screen
     }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
-    if (screen == "home") {
-        val wx = ui.n("0x215F")
-        Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(Modifier.weight(1f).clickable { ui.go("appset") }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(Modifier.size(7.dp).background(if (demo) Warn else if (conn) Okc else Bad, RoundedCornerShape(4.dp)))
-                Text(if (demo) "TeklaPellet (demo)" else Ctl.activeName() + (if (!conn) " · offline" else ""), color = Txt, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-            }
-            if (wx != null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Ic(if (ui.n("0x3729")?.toInt() == 1) 180 else 181, 24.dp)
-                Column(verticalArrangement = Arrangement.spacedBy((-2).dp)) { Text(f1(wx) + "°", color = Txt, fontSize = 12.sp, fontWeight = FontWeight.SemiBold); Text(f1(ui.n("0x3721")) + "°", color = Mut, fontSize = 11.sp) }
-            }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(java.text.SimpleDateFormat("HH:mm", java.util.Locale("pl")).format(now), color = Acc2, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-                Text(java.text.SimpleDateFormat("EEE, d MMM", java.util.Locale("pl")).format(now), color = Mut, fontSize = 10.5.sp)
-            }
-            if (ui.alarmActive) Box(Modifier.clickable { ui.go("alarms") }.padding(4.dp)) { Ic(78, 22.dp) }
-        }
-        return
-    }
-    Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(title, color = Txt, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-            if (screen == "home") Text(java.text.SimpleDateFormat("EEE, d MMM · HH:mm", java.util.Locale("pl")).format(now), color = Mut, fontSize = 12.sp, maxLines = 1)
+            Text(java.text.SimpleDateFormat("EEE, d MMM · HH:mm", java.util.Locale("pl")).format(now), color = Mut, fontSize = 11.sp)
         }
         Chip("", if (demo) Warn else if (conn) Okc else Bad) { ui.go("appset") }
-        Chip("PIN ${ui.level}", Mut) { ui.open(Dlg.Pin) }
+        Spacer(Modifier.width(6.dp))
+        Chip("PIN " + ui.level, Mut) { ui.open(Dlg.Pin) }
     }
 }
-
 @Composable
 fun Chip(t: String, dot: Color, click: () -> Unit) {
     Row(Modifier.clip(RoundedCornerShape(20.dp)).border(1.dp, Line, RoundedCornerShape(20.dp)).background(Panel).clickable(onClick = click).padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -379,57 +365,43 @@ fun Spark(hist: List<Float>, set: Float?, modifier: Modifier) {
 
 @Composable
 fun HomeView(ui: Ui) {
-    if (ui.src.isDemo && Ctl.devices.isEmpty()) {
-        Card("Połącz z modułem") {
-            Text("Nie masz jeszcze sparowanego modułu. Poniżej widzisz dane DEMO — po dodaniu własnego modułu aplikacja automatycznie przełączy się na jego rzeczywiste dane.", color = Mut, fontSize = 13.sp)
-            Spacer(Modifier.height(10.dp))
-            Button({ ui.go("appset") }, Modifier.fillMaxWidth()) { Text("＋ Dodaj moduł") }
-            OutlinedButton({ ui.go("appset") }, Modifier.fillMaxWidth().padding(top = 6.dp)) { Text("Wykryj moduł w sieci") }
+    val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0
+    val on = ui.n("0x2005") != 0.0; val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
+    val run = bs in 1..8; val solar = (ui.n("0x2108") ?: 0.0) != 0.0; val buffer = (ui.n("0x2107") ?: 0.0) != 0.0
+    val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0
+    val (dots, emptyFuel) = fuelDots(fuel, cap, res); val wx = ui.n("0x215F")
+    val mode = ui.m.statusTables["burner"]?.getOrNull(bs) ?: "—"
+    val entries = (visibleTileIds(ui).filter { it != "kociol" && it != "palnik" } + listOf("fuel")).distinct()
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal=2.dp, vertical=4.dp), verticalAlignment=Alignment.CenterVertically) {
+            Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Panel2).border(1.dp,Line,RoundedCornerShape(10.dp)).clickable{ui.go("more")}, contentAlignment=Alignment.Center){Text("≡",color=Txt,fontSize=21.sp)}
+            Spacer(Modifier.width(9.dp)); var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+            LaunchedEffect(Unit){while(true){delay(1000);now=System.currentTimeMillis()}}
+            Column(Modifier.weight(1f)){Text(if(ui.src.isDemo)"TeklaPellet" else Ctl.activeName(),color=Txt,fontSize=14.sp,fontWeight=FontWeight.SemiBold,maxLines=1);Text(java.text.SimpleDateFormat("EEE, d MMM",java.util.Locale("pl")).format(now),color=Mut,fontSize=10.sp)}
+            if(ui.alarmActive){Ic(78,17.dp);Spacer(Modifier.width(8.dp))}
+            Box(Modifier.size(8.dp).background(if(ui.src.isDemo)Warn else if(Ctl.source?.connected?.value==true)Okc else Bad,RoundedCornerShape(4.dp)));Spacer(Modifier.width(10.dp))
+            Text(java.text.SimpleDateFormat("HH:mm",java.util.Locale("pl")).format(now),color=Acc2,fontSize=19.sp,fontWeight=FontWeight.SemiBold)
         }
-    }
-    // Pulpit: karta kotła (łuk z temperaturą, metryki, wskaźniki wyjść palnika, wykres temperatury) + siatka kompaktowych kafli wg konfiguracji; kafle rozkładają się na wysokość ekranu, przy dużej instalacji Pulpit się przewija.
- karta kotła (łuk z temperaturą, metryki, wskaźniki wyjść palnika, wykres temperatury) + siatka kompaktowych kafli wg konfiguracji; kafle rozkładają się na wysokość ekranu, przy dużej instalacji Pulpit się przewija.
-    val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0; val on = ui.n("0x2005") != 0.0
-    val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
-    val frac = (((t ?: 20.0) - 20.0) / 70.0).coerceIn(0.0, 1.0).toFloat(); val run = bs in 1..8
-    val kix = ui.m.screens.getValue("palnik").bar.mapNotNull { barIx(ui, it, "palnik") } + ui.m.screens.getValue("kociol").bar.filter { it.k != "anim" }.mapNotNull { barIx(ui, it, "kociol") }
-    val entries = visibleTileIds(ui) + listOf("fuel", "power"); val rows = (entries.size + 1) / 2
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val tileH = ((maxHeight - 430.dp) / rows - 10.dp).coerceIn(116.dp, 160.dp)
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            GlowCard(Modifier.fillMaxWidth(), if (run) Warn else null, { ui.go("kociol") }) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(Modifier.weight(0.95f).aspectRatio(1f), contentAlignment = Alignment.Center) {
-                        Canvas(Modifier.fillMaxSize().padding(6.dp)) {
-                            val sw = size.width * 0.06f; val d = size.minDimension - sw
-                            drawArc(Line, 135f, 270f, false, Offset(sw / 2, sw / 2), Size(d, d), style = Stroke(sw, cap = androidx.compose.ui.graphics.StrokeCap.Round))
-                            drawArc(Brush.sweepGradient(listOf(Warn, Acc, Warn)), 135f, 270f * frac.coerceAtLeast(0.01f), false, Offset(sw / 2, sw / 2), Size(d, d), style = Stroke(sw, cap = androidx.compose.ui.graphics.StrokeCap.Round))
-                        }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Row(verticalAlignment = Alignment.Top) { Text(f1(t), color = Txt, fontSize = 33.sp, fontWeight = FontWeight.Light, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum")); Text("°C", color = Acc, fontSize = 12.sp, modifier = Modifier.padding(start = 2.dp, top = 3.dp)) }
-                            Text(ui.m.statusTables["burner"]?.getOrNull(bs) ?: "?", color = Acc2, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Ic(prog, 15.dp); Text("zadana ${f1(set, 0)} °C", color = Mut, fontSize = 11.sp) }
-                        }
-                    }
-                    Column(Modifier.weight(1.05f)) {
-                        KvRow("Moc palnika", f1(ui.n("0x4005"), 0) + " %"); KvRow("Spalanie", f1(ui.n("0x3710"), 1) + " kg/h")
-                        if ((ui.n("0x350A") ?: 0.0) != 0.0) KvRow("Powrót", f1(ui.n("0x4000"), 1) + " °C")
-                        if ((ui.n("0x350D") ?: 0.0) != 0.0) KvRow("Ciśnienie", f1(ui.n("0x3333"), 0) + " mbar")
-                        KvRow("Temp. palnika", f1(ui.n("0x226C"), 0) + " °C")
-                    }
+        GlowCard(Modifier.fillMaxWidth().heightIn(min=300.dp,max=340.dp),if(run)Warn else null,{ui.go("kociol")}){
+            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
+                Box(Modifier.weight(1.35f).aspectRatio(1f),contentAlignment=Alignment.Center){
+                    Canvas(Modifier.fillMaxSize().padding(4.dp)){val sw=size.width*.055f;val d=size.minDimension-sw;val frac=(((t?:20.0)-20.0)/70.0).coerceIn(.02,1.0).toFloat();drawArc(Color(0xFF1D1D23),135f,270f,false,Offset(sw/2,sw/2),Size(d,d),style=Stroke(sw,cap=androidx.compose.ui.graphics.StrokeCap.Round));drawArc(Brush.sweepGradient(listOf(Acc,Warn,Acc)),135f,270f*frac,false,Offset(sw/2,sw/2),Size(d,d),style=Stroke(sw,cap=androidx.compose.ui.graphics.StrokeCap.Round))}
+                    Column(horizontalAlignment=Alignment.CenterHorizontally){Row(verticalAlignment=Alignment.Top){Text(f1(t,1),color=Txt,fontSize=44.sp,fontWeight=FontWeight.Light);Text("°C",color=Acc,fontSize=12.sp,modifier=Modifier.padding(top=5.dp,start=2.dp))};Text(mode,color=Acc2,fontSize=14.sp,fontWeight=FontWeight.SemiBold);Text("zadana " + f1(set,0) + " °C",color=Mut,fontSize=10.sp)}
                 }
-                Spacer(Modifier.height(4.dp)); IxRow(kix)
-                if (ui.hist.size >= 2) {
-                    Spacer(Modifier.height(6.dp))
-                    Row(Modifier.fillMaxWidth()) { Text("Temperatura kotła", color = Mut, fontSize = 10.5.sp, modifier = Modifier.weight(1f)); Text("ostatnie ${ui.hist.size / 4} min", color = Color(0xFF5D5D68), fontSize = 10.5.sp) }
-                    Spark(ui.hist, set?.toFloat(), Modifier.fillMaxWidth().height(34.dp).padding(top = 2.dp))
-                }
+                Column(Modifier.weight(.95f).padding(end=4.dp),verticalArrangement=Arrangement.spacedBy(9.dp)){KvRow("Moc palnika",f1(ui.n("0x4005"),0)+" %");KvRow("Spalanie",f1(ui.n("0x3710"),1)+" kg/h");if((ui.n("0x350A")?:0.0)!=0.0)KvRow("Powrót",f1(ui.n("0x4000"),1)+" °C");if((ui.n("0x350D")?:0.0)!=0.0)KvRow("Ciśnienie",f1(ui.n("0x3333"),0)+" mbar");KvRow("Palnik",f1(ui.n("0x226C"),0)+" °C")}
             }
-            TileGrid(ui, entries, tileH)
+            Spacer(Modifier.height(5.dp));IxRow(ui.m.screens.getValue("palnik").bar.mapNotNull{barIx(ui,it,"palnik")}+ui.m.screens.getValue("kociol").bar.filter{it.k!="anim"}.mapNotNull{barIx(ui,it,"kociol")})
+            if(ui.hist.size>=2){Spacer(Modifier.height(5.dp));Row(Modifier.fillMaxWidth()){Text("Temperatura kotła",color=Mut,fontSize=10.sp,modifier=Modifier.weight(1f));Text("trend",color=Color(0xFF5D5D68),fontSize=10.sp)};Spark(ui.hist,set?.toFloat(),Modifier.fillMaxWidth().height(32.dp))}
         }
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)){
+            GlowCard(Modifier.weight(1f).height(92.dp),null,null){Text("ZEWN.",color=Mut,fontSize=9.sp,letterSpacing=.8.sp);BigNum(f1(wx,0),"°C",27);Text(if((ui.n("0x3729")?:0.0)==1.0)"AUTO" else "RĘCZNY",color=Color.Black,fontSize=9.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(horizontal=8.dp,vertical=3.dp).background(Acc,RoundedCornerShape(6.dp)))}
+            GlowCard(Modifier.weight(1f).height(92.dp),if(on)Okc else null,{ui.go("kociol")} ){Text("ZASILANIE",color=Mut,fontSize=9.sp,letterSpacing=.8.sp);Text(if(on)"Włączone" else "Wyłączone",color=Txt,fontSize=18.sp,fontWeight=FontWeight.Medium);Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(7.dp)){Ix(IxData("Kocioł","",on,Okc));Ic(prog,20.dp)}}
+        }
+        if(entries.isNotEmpty())TileGrid(ui,entries,112.dp)
+        if(ui.src.isDemo&&Ctl.devices.isEmpty()){GlowCard(Modifier.fillMaxWidth(),Warn,null){Row(verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text("TRYB DEMO",color=Warn,fontSize=10.sp,fontWeight=FontWeight.Bold,letterSpacing=.8.sp);Text("Połącz aplikację z własnym modułem",color=Txt,fontSize=14.sp,fontWeight=FontWeight.Medium);Text("Dane powyżej są demonstracyjne.",color=Mut,fontSize=11.sp)};OutlinedButton({ui.go("appset")}){Text("Połącz")}}}}
+        if(solar||buffer){Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)){if(solar)GlowCard(Modifier.weight(1f).height(70.dp),Okc,{ui.go("more")}){Text("SOLARY",color=Mut,fontSize=9.sp);Text("Aktywne",color=Txt,fontSize=14.sp)};if(buffer)GlowCard(Modifier.weight(1f).height(70.dp),Okc,{ui.go("more")}){Text("BUFOR",color=Mut,fontSize=9.sp);Text("Aktywny",color=Txt,fontSize=14.sp)}}}
     }
 }
-
 @Composable
 fun Led(t: String, on: Boolean, c: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) { Box(Modifier.size(34.dp, 7.dp).background(if (on) c else Color(0xFF3A3A42), RoundedCornerShape(4.dp))); Text(t, color = Mut, fontSize = 11.sp) }
