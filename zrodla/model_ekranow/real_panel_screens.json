@@ -1,0 +1,810 @@
+{
+ "schema_version": "1.0",
+ "evidence": "MEASURED (zdjecia wlasciciela z prawdziwego panelu 2026-11-25 + odczyty HA tylko odczyt)",
+ "screens": {
+  "PALNIK": {
+   "states": {
+    "Rozpalanie": {
+     "code": 1,
+     "texts": [
+      "spalanie[kg/h]=0.0",
+      "jasność=100",
+      "T. palnika=32"
+     ],
+     "bottom_row": "wentylator (animowany) w komorce 1 + zarzaca sie zapalarka w komorce 4",
+     "corner": "46"
+    },
+    "Modulacja": {
+     "code": 5,
+     "texts": [
+      "spalanie[kg/h]=1.4",
+      "moc[kW]=5.2",
+      "moc[%]=30",
+      "jasność=100",
+      "T. palnika=31"
+     ],
+     "bottom_row": "wentylator (animowany) w komorce 1",
+     "corner": "52   2.1   3:00 (HA: dmuchawa_obroty=52, czas podawania paliwa=2.1; 3:00 - zrodlo OPEN)"
+    }
+   },
+   "note": "w dolnym rzedzie 6 malych komorek (kreski co ok. 40 px) + duzy przycisk z kolem zebatym; komorki pokazuja aktywne wyjscia (animacje); tylko na PALNIK nad ikonami sa wartosci liczbowe"
+  },
+  "KOCIOL": {
+   "header": "< MENU | KOCIOŁ | klucz poziomu 2 | dom",
+   "texts": [
+    "duza temperatura kotla (45.6)",
+    "kapsula '60 AUTO' = zadana wynikowa",
+    "pasek programu dobowego 0-6-12-18-24 z segmentami komfortu",
+    "T. powrotu=41.7"
+   ],
+   "bottom_row": "komorka 1: ikona pompy (kolo ze strzalka); komorka 3: zawor trojdrozny/mieszacz z czerwonym lukiem nad ikona (polozenie, animacja); reszta pusta; duzy przycisk z kolem zebatym",
+   "path": "EKRAN GLOWNY -> MENU -> Kociol"
+  },
+  "general": "na dolnych belkach ekranow sa animowane ikony wyjsc/stanow (wentylator, podajniki, zapalarka, pompa, zawor); dane o tym, ktora ikona i kiedy: sonda emulatora bind_screen (BIND_STATE) w toku"
+ },
+ "bottom_row_icon_bindings_emulator": {
+  "evidence": "MEASURED (sonda bind_screen: 658 PID, tryb STATE/REVERT)",
+  "finding": "animowane ikony dolnych belek (wentylator, zapalarka, pompa, zawor) NIE reaguja na wstrzykniecie parametrow (ramki 0x584) - pochodza ze stanow wyjsc; powiazane parametrem sa m.in.: KOCIOL: 'T. powrotu' pojawia sie gdy 0x350A (czujnik powrotu) != 0, 'Cisnienie' gdy 0x350D != 0; OGRZEWANIE: mieszacz (ikony) wg 0x214B, napisy czujnika wg 0x22A1/0x22A2/0x22A5; CWU: temperatura 0x2110, zadana 0x201A; PALNIK: 'jasnosc' 0x2250, 'T. palnika' 0x226C, 'spaliny[C]' pojawia sie wg 0x3606/0x360A, 'tlen[%]' wg 0x2123",
+  "raw": "bind_raw/PAL_*.json, KOCIOL_all.json, OGRZEWANIE1_all.json, CWU_all.json"
+ },
+ "animated_icons_investigation_2026_11_25": {
+  "evidence": "MEASURED (emulator) + odczyty HA tylko odczyt",
+  "pdo_sweep": "ramki PDO 0x184/0x284/0x384/0x484 od wezla 4 (bajty 0xFF/0x01) NIE wlaczaja diod ani ikon dolnych belek - brak kanalu PDO od sterownika dla tych stanow (wyniki: bind_raw/pdo_*.json; zmiany to animacje niezalezne od ramek)",
+  "animation_in_emulator": "ikony dolnych belek animuja sie w emulatorze bez bodzca (KOCIOL: komorka 1 - 6 roznych klatek w 10 probkach); wstrzykniecie 0x216D (stan mieszacza powrotu)=2 zwieksza liczbe klatek (komorka mieszacza); 0x2299/0x2278/0x22B9/0x2254/0x229A bez wplywu na liczbe klatek",
+  "live_registers_known_from_old_project": {
+   "pompa_CO1": "0x2299 (FLAG_LOW)",
+   "pompa_CO2": "0x229A",
+   "pompa_CWU": "0x2278",
+   "mieszacz_CO1": "0x22B9",
+   "mieszacz_powrotu": "0x216D",
+   "dmuchawa_obroty_pct": "0x2254",
+   "zapalarka": "0x2253",
+   "jasnosc_plomienia": "0x2250",
+   "moc_palnika_pct_UWAGA": "0x4005 daje 0 przy panelowym moc[%]=30 - rejestr mocy z panelu inny (OPEN)"
+  },
+  "next": "zebrac mape komorka->rejestr z korelacji panel (zdjecia/nagrania z czasem) + odczyty HA w tym samym czasie; dla ESP wystarczy czytac rejestry sterownika i animowac wlasne ikony (nie trzeba odtwarzac mechanizmu panelu)"
+ },
+ "bottom_bar_static_2026_11_25": {
+  "evidence": "STRONG (kod: presentery aktywacji ekranow w decompiled.c, klucz modelu FUN_08036ff2 -> ui_key -> PID wg cg_ui_key_pid_t1/t2_full.csv; widgety klasy 0x0807e43c = animowany obraz z kolejnymi bitmapami); MEASURED tylko dla 0x2252 (wstrzykniecie w emulatorze zapala komorke x=81)",
+  "method": "widgety dolnej belki: klasa vptr 0x0807e43c; setter komorek wybiera komorke indeksem 0..4 i widocznosc = (wartosc != 0); liczby nad ikonami to osobne Text widgety ustawiane tym samym presenterem",
+  "addr_note": "adresy decompiled.c = runtime - 0x10000 (np. presenter PALNIK runtime 0x0804cf54 = decompiled 0x0803cf54)",
+  "PALNIK": {
+   "presenter": "0x0803cf54",
+   "setter_cells": "0x08043954",
+   "cells": [
+    {
+     "x": 1,
+     "index": 3,
+     "icon": "wentylator",
+     "frames": [
+      8,
+      9,
+      10
+     ],
+     "pid": "0x2254",
+     "name": "Burner blower",
+     "number_above": {
+      "x": 5,
+      "text": "wartosc 0x2254 (np. 52), widoczna gdy != 0"
+     }
+    },
+    {
+     "x": 40,
+     "index": 1,
+     "icon": "podajnik zasobnika",
+     "frames": [
+      36,
+      37,
+      38
+     ],
+     "pid": "0x2251",
+     "name": "Burner storage feeder",
+     "number_above": {
+      "x": 38,
+      "pid": "0x226D",
+      "fmt": "%d.%d",
+      "unit": "dS->s",
+      "note": "czas podawania, np. 2.1; ukryty gdy 0"
+     }
+    },
+    {
+     "x": 81,
+     "index": 0,
+     "icon": "podajnik palnika (slimak)",
+     "frames": [
+      40,
+      41,
+      42
+     ],
+     "pid": "0x2252",
+     "name": "Burner burner feeder",
+     "evidence_extra": "MEASURED emulator"
+    },
+    {
+     "x": 122,
+     "index": 2,
+     "icon": "zapalarka",
+     "frames": [
+      65,
+      66,
+      67
+     ],
+     "pid": "0x2253",
+     "name": "Burner igniter",
+     "number_above": {
+      "x": 145,
+      "pid": "0x3711",
+      "fmt": "h:mm",
+      "note": "czas do czyszczenia rusztu [min]; pokazywany gdy stan 0x2007==5 i typ spalania 0x4008==0 (to jest '3:00')",
+      "owner_note": "wlasciciel: liczba to odliczanie licznika (czas do czyszczenia/ruchu rusztu); zgodne z 0x3711 'Time to grate cleaning [min]'"
+     }
+    },
+    {
+     "x": 161,
+     "index": 4,
+     "icon": "ruszt (ruch)",
+     "frames": [
+      58,
+      59
+     ],
+     "extra_arrows": [
+      108,
+      109
+     ],
+     "pid": "0x2276",
+     "name": "Grate move indicator",
+     "states": "0=brak strzalek, 1 i 2 = dwa kierunki (bitmapy 108/109)",
+     "rule": "ikona rusztu pojawia sie TYLKO podczas ruchu rusztu (0x2276 != 0; 1 i 2 = dwa kierunki, strzalki 108/109); w emulatorze widoczna w stanie bazowym to artefakt wartosci domyslnych przed pierwszym odswiezeniem",
+     "owner_note": "wlasciciel: ruch rusztu wynika z ustawien (cykl/licznik), pojawia sie przy czyszczeniu/ruchu, gdy licznik odliczy do zera"
+    }
+   ],
+   "texts_right": {
+    "spalanie[kg/h]": "0x3710 (Dkg/h), gdy 0x4008==0",
+    "moc[%]": "0x4005 (gdy 0x4008==0)",
+    "moc[kW]": "0x3706 (dkW, gdy 0x4008==0)",
+    "jasnosc": "0x2250",
+    "T. palnika": "0x226C",
+    "obroty": "0x299C (gdy 0x299D aktywne)",
+    "spaliny[C]": "0x4009 (gdy 0x3606==2)",
+    "tlen[%]": "0x2120 (gdy 0x2123!=0)",
+    "stan (Wylaczony/Rozpalanie...)": "0x2007",
+    "uwaga": "KOREKTA 2026-11-25: 0x4005 (moc palnika %) JEST rejestrem kotla (katalog: POTWIERDZONY, panel 47 / sensor 46) - panel go nie liczy; moc[%]=0 przy wylaczonym palniku jest poprawne. 0x4008 (typ spalania) i 0x4009 (spaliny 2) wystepuja tylko w FW panela i kociol na nie nie odpowiada -> wartosc domyslna 0 (dlatego warunek 'typ==0' jest spelniony). 0x4006 Power regulator %, 0x4007 Blower power % (raw 308 = flaga 0x01 + 52) istnieja na kotle"
+   },
+   "expected_when_off": "wszystkie 5 komorek ukryte, brak liczb nad ikonami; prawa strona: Wylaczony, spalanie 0.0, moc 0, T. palnika",
+   "liczba_nad_wentylatorem": "wartosc 0x2254 (u8, mlodszy bajt); format rejestru: flaga 0x01 + bajt (np. raw 308 = 0x134 -> 52; raw 316 = 0x13C -> 60); ten sam sens ma 0x4007 Blower power [%]"
+  },
+  "KOCIOL": {
+   "presenter": "0x0803cb2c",
+   "inputs": {
+    "0x2277": "Boiler pump state (ikona pompy)",
+    "0x216A": "Exchanger cleaning request",
+    "0x216F": "CH mixer state (zawor/mieszacz)",
+    "0x370A": "Boiler image selector (obrazek kotla)",
+    "0x2001": "temp kotla",
+    "0x3333": "cisnienie mbar (widoczne gdy 0x350D)",
+    "0x2004": "zadana wynikowa",
+    "0x4000": "temp powrotu",
+    "0x3628": "energia lacznie kWh",
+    "0x2005/0x2002": "on/off, program"
+   },
+   "cells": [
+    {
+     "x": 9,
+     "icon": "pompa kotla (spinner 138-143)",
+     "pid": "0x2277"
+    },
+    {
+     "x": 40,
+     "icon": "czyszczenie wymiennika (bitmapy 34,35)",
+     "pid": "0x216A",
+     "widget": "0x807e43c 34x27"
+    },
+    {
+     "x": 81,
+     "icon": "mieszacz/zawor z czerwonym lukiem (bitmapa 107 przy stanie 2)",
+     "pid": "0x216F",
+     "rule": "STRONG (kod 0x0803c550): 0 = ukryty; 1 = bitmapa 106 (15x4 strzalka) przy offsecie 0; 2 = bitmapa 107 (15x4, druga strzalka) przesunieta w osi y; dwa stany = dwa kierunki/polozenia, w obu pokazywany jest ten sam widget",
+     "widget": "klasa 0x8079de0 34x30",
+     "states": {
+      "0": "ukryty",
+      "1": "bitmapa 106, NIEBIESKA strzalka = zamykanie (CLOSE)",
+      "2": "bitmapa 107, CZERWONA strzalka = otwieranie (OPEN)"
+     },
+     "owner_note": "wlasciciel: mieszacz ma dwa stany, na zdjeciu widac jeden",
+     "owner_note_2": "wlasciciel: dwa stany mieszacza (otwieranie/zamykanie) to strzalki; zgodne z bitmapami 106 i 107 (15x4)",
+     "evidence_direction": "STRONG (wlasciciel: otwieranie czerwona, zamykanie niebieska; kolory bitmap zmierzone: 106 niebieska, 107 czerwona; zgodne z TEST WYJSC A/CLOSE/OPEN = 0/1/2)",
+     "test_pids": {
+      "mieszacz CO1": "0x214A",
+      "CO2": "0x214B",
+      "CO3": "0x214C",
+      "powrotu (kociol)": "0x216D (Boiler return mixer test, u8 0..2)"
+     }
+    }
+   ]
+  },
+  "OGRZEWANIE": {
+   "presenter": "0x0803d37c",
+   "note": "PID = baza + instancja - 1",
+   "inputs": {
+    "0x2299": "CH pump state",
+    "0x22B9": "CH mixer state",
+    "0x2301": "CH thermostat state",
+    "0x22FD": "CH status",
+    "0x4001": "CH temp measured",
+    "0x22AD": "CH temp calc",
+    "0x2166": "CH res",
+    "0x22F5": "CH needed temp",
+    "0x2064": "CH program",
+    "0x22A1": "typ czujnika pokojowego",
+    "0x2016": "temp pokojowa"
+   },
+   "cells": [
+    {
+     "x": 9,
+     "icon": "pompa obwodu (spinner)",
+     "pid": "0x2299"
+    },
+    {
+     "x": 40,
+     "icon": "mieszacz obwodu",
+     "pid": "0x22B9",
+     "widget": "klasa 0x807b610 34x30",
+     "rule": "INFERENCE: ta sama logika 0/1/2 co mieszacz kotla (klasa 0x807b610), do potwierdzenia w kodzie"
+    }
+   ]
+  },
+  "CWU": {
+   "presenter": "0x0803d744",
+   "inputs": {
+    "0x2278": "pompa CWU",
+    "0x3749": "pompa cyrkulacji CWU",
+    "0x2110": "temp zmierzona",
+    "0x201A": "temp wynikowa",
+    "0x2111": "temp potrzebna",
+    "0x2014": "program"
+   },
+   "cells": [
+    {
+     "x": 9,
+     "icon": "pompa CWU (spinner)",
+     "pid": "0x2278"
+    },
+    {
+     "x": 48,
+     "icon": "pompa cyrkulacji (spinner)",
+     "pid": "0x3749"
+    }
+   ]
+  },
+  "BUFOR": {
+   "presenter": "0x0803df78",
+   "inputs": {
+    "0x2277": "pompa kotla",
+    "0x2112": "gora zmierzona",
+    "0x2113": "dol zmierzona",
+    "0x2280": "gora zadana",
+    "0x2115": "dol zadana",
+    "0x3171..0x3173": "T1..T3",
+    "0x3174": "energia wewnetrzna %"
+   }
+  },
+  "SOLARY": {
+   "presenter": "0x0803e148",
+   "inputs": {
+    "0x311C": "pompa solarna",
+    "0x3120": "status solarow",
+    "0x2109/0x2102/0x2103": "temperatury 1..3",
+    "0x2101": "moc W"
+   }
+  },
+  "MAGAZYN_ZEWNETRZNY": {
+   "presenter": "0x0803e2e8",
+   "inputs": {
+    "0x3522": "silnik 1",
+    "0x3523": "silnik 2",
+    "0x3524": "czujnik poziomu",
+    "0x352A": "czujnik rezerwy"
+   }
+  },
+  "KASKADA": {
+   "presenter": "0x0803e45c",
+   "inputs": {
+    "0x3519": "aktualny poziom mocy",
+    "0x3518": "czas do zmniejszenia [min]",
+    "0x351C": "timer [s]",
+    "0x350C": "master kaskady",
+    "0x3511..0x3514": "poziomy mocy master/slave1-3",
+    "0x200A..0x200F": "temperatury i zadane slave"
+   }
+  },
+  "OPEN": "ktore bitmapy dolnej belki odpowiadaja komorkom na KOCIOL/OGRZEWANIE/CWU (numery klatek) - do wyciagniecia z konstruktorow tych widokow; wartosci wartosci PID (czy 0x2251..0x2254 sa odswiezane przez PDO czy SDO poll) - do pomiaru odczytem z HA",
+  "common_pump_widget": {
+   "evidence": "STRONG (konstruktory widokow w emulatorze + settery w kodzie)",
+   "widget": "klasa 0x0807e43c, 19x19, komorka x=9,y=239 (view_off 0x2c0), klatki 138..143 (spinner pompy), na KOCIOL/OGRZEWANIE/CWU; na PALNIK mala wersja x=7,y=250 (ukryta)",
+   "visible_when": "PID pompy != 0 (KOCIOL: 0x2277 przez setter 0x0804283c)"
+  },
+  "ikony_bez_tekstu": "tak: KOCIOL/OGRZEWANIE/CWU maja same ikony; liczby nad ikonami tylko na PALNIK",
+  "sdo_odczyt_2026_11_25_20_30": {
+   "evidence": "MEASURED (HA, tylko odczyt, palnik wylaczony wg wlasciciela; wlasciciel widzi kontrolki dolne na KOCIOL, CO i CWU)",
+   "0x2254": 316,
+   "0x2252": 256,
+   "uwaga": "to nie flagi 0/1; stan palnika w chwili odczytu nieznany - nie wiadomo jeszcze czy panel skaluje (316 vs liczba nad ikona np. 52)",
+   "stan_palnika": "Wylaczony (wlasciciel)",
+   "wniosek": "STRONG: rejestry stanow wyjsc sa jednobajtowe; odpowiedz SDO ma 4 B, MLODSZY bajt = stan (0/1 lub wartosc), starszy bajt = 0x01 (staly). 0x2277/0x2299/0x2278 = 0x0101 -> pompy wlaczone -> zgadza sie z widocznymi kontrolkami pomp na KOCIOL/CO/CWU; 0x2252 = 0x0100 -> podajnik palnika 0 -> ukryty; 0x22B9 = 0x0100 -> mieszacz 0. Zasada dla ESP: stan = (wartosc SDO & 0xFF)",
+   "wartosci": {
+    "0x2254": 316,
+    "0x2252": 256,
+    "0x2277": 257,
+    "0x2299": 257,
+    "0x2278": 257,
+    "0x22B9": 256
+   },
+   "odczyt_2026_11_26_03_56": {
+    "evidence": "MEASURED (HA, tylko odczyt) + obserwacja wlasciciela: palnik wylaczony -> belka PALNIK pusta",
+    "0x2254": 256,
+    "wniosek": "mlodszy bajt 0 -> wentylator ukryty, zgodne z reguly (SDO & 0xFF). Wczesniejszy odczyt 316 (20:30) = wentylator jeszcze pracowal po wylaczeniu palnika (wybieg)"
+   }
+  },
+  "pary_test_stan": {
+   "evidence": "STRONG (nazwy PID w katalogu: 'X test' <-> 'X state'; kolejnosc wierszy TEST WYJSC z outputs_test.json MEASURED); NIE potwierdzone zapisem na kotle (zapis tylko na polecenie wlasciciela)",
+   "reguła_wartosci": "stan = (wartosc SDO & 0xFF); u8; pompy/podajniki 0/1, mieszacze i ruszt 0/1/2 (A/CLOSE/OPEN w tescie)",
+   "pary": [
+    {
+     "wyjscie": "Pompa kotlowa",
+     "pid_testowy": "0x2286",
+     "pid_stanu": "0x2277",
+     "ikona": "KOCIOL/BUFOR: spinner pompy x=9",
+     "nazwa_testu": "Boiler pump test",
+     "nazwa_stanu": "Boiler pump state"
+    },
+    {
+     "wyjscie": "Pompa CWU",
+     "pid_testowy": "0x2296",
+     "pid_stanu": "0x2278",
+     "ikona": "CWU: spinner pompy x=9",
+     "nazwa_testu": "HW1 pump test",
+     "nazwa_stanu": "Hot water pump state"
+    },
+    {
+     "wyjscie": "Pompa cyrkulacyjna CWU",
+     "pid_testowy": "0x374A",
+     "pid_stanu": "0x3749",
+     "ikona": "CWU: drugi spinner pompy x=48",
+     "nazwa_testu": "HW1 circular pump test",
+     "nazwa_stanu": "Hot water circular pump state"
+    },
+    {
+     "wyjscie": "Pompa solarna",
+     "pid_testowy": "0x311F",
+     "pid_stanu": "0x311C",
+     "ikona": "SOLARY: spinner pompy x=9",
+     "nazwa_testu": "Solar pump test",
+     "nazwa_stanu": "Solar pump state"
+    },
+    {
+     "wyjscie": "Podajnik zasobnika",
+     "pid_testowy": "0x2259",
+     "pid_stanu": "0x2251",
+     "ikona": "PALNIK: komorka x=40 (klatki 36-38) + liczba nad ikona 0x226D (czas podawania)",
+     "nazwa_testu": "Burner storage feeder test",
+     "nazwa_stanu": "Burner storage feeder"
+    },
+    {
+     "wyjscie": "Podajnik palnika",
+     "pid_testowy": "0x2295",
+     "pid_stanu": "0x2252",
+     "ikona": "PALNIK: komorka x=81 (klatki 40-42)",
+     "nazwa_testu": "Burner feeder test",
+     "nazwa_stanu": "Burner burner feeder"
+    },
+    {
+     "wyjscie": "Zapalarka",
+     "pid_testowy": "0x2284",
+     "pid_stanu": "0x2253",
+     "ikona": "PALNIK: komorka x=122 (klatki 65-67)",
+     "nazwa_testu": "Igniter test",
+     "nazwa_stanu": "Burner igniter"
+    },
+    {
+     "wyjscie": "Dmuchawa",
+     "pid_testowy": "0x2283",
+     "pid_stanu": "0x2254",
+     "ikona": "PALNIK: komorka x=1 (klatki 8-10) + liczba nad ikona = wartosc 0x2254; suwak mocy testu 0x2288",
+     "nazwa_testu": "Blower test",
+     "nazwa_stanu": "Burner blower"
+    },
+    {
+     "wyjscie": "Ruszt",
+     "pid_testowy": "0x2279",
+     "pid_stanu": "0x2276",
+     "ikona": "PALNIK: komorka x=161 (klatki 58-59) + strzalki 108 (stan 1) / 109 (stan 2); test A/CLOSE/OPEN",
+     "nazwa_testu": "Burner grate test",
+     "nazwa_stanu": "Grate move indicator"
+    },
+    {
+     "wyjscie": "Wymiennik (czyszczenie)",
+     "pid_testowy": "0x2285",
+     "pid_stanu": "0x216A",
+     "ikona": "KOCIOL: komorka x=40 (bitmapy 34,35)",
+     "nazwa_testu": "Exchanger cleaner test",
+     "nazwa_stanu": "Exchanger cleaning request"
+    },
+    {
+     "wyjscie": "Magazyn transport(1)",
+     "pid_testowy": "0x351E",
+     "pid_stanu": "0x3522",
+     "ikona": "MAGAZYN zewn.: stan silnika 1",
+     "nazwa_testu": "External fuel storage motor 1 test",
+     "nazwa_stanu": "External fuel storage motor 1 state"
+    },
+    {
+     "wyjscie": "Magazyn podajnik(2)",
+     "pid_testowy": "0x351F",
+     "pid_stanu": "0x3523",
+     "ikona": "MAGAZYN zewn.: stan silnika 2",
+     "nazwa_testu": "External fuel storage motor 2 test",
+     "nazwa_stanu": "External fuel storage motor 2 state"
+    },
+    {
+     "wyjscie": "Pompa CO1",
+     "pid_testowy": "0x229D",
+     "pid_stanu": "0x2299",
+     "ikona": "OGRZEWANIE 1: spinner x=9",
+     "nazwa_testu": "CH pump test",
+     "nazwa_stanu": "CH pump state"
+    },
+    {
+     "wyjscie": "Pompa CO2",
+     "pid_testowy": "0x229E",
+     "pid_stanu": "0x229A",
+     "ikona": "OGRZEWANIE 2: spinner x=9",
+     "nazwa_testu": "CH pump test",
+     "nazwa_stanu": "CH pump state"
+    },
+    {
+     "wyjscie": "Pompa CO3",
+     "pid_testowy": "0x229F",
+     "pid_stanu": "0x229B",
+     "ikona": "OGRZEWANIE 3: spinner x=9",
+     "nazwa_testu": "CH pump test",
+     "nazwa_stanu": "CH pump state"
+    },
+    {
+     "wyjscie": "Pompa CO4",
+     "pid_testowy": "0x22A0",
+     "pid_stanu": "0x229C",
+     "ikona": "OGRZEWANIE 4: spinner x=9",
+     "nazwa_testu": "CH pump test",
+     "nazwa_stanu": "CH pump state"
+    },
+    {
+     "wyjscie": "Mieszacz CO1",
+     "pid_testowy": "0x214A",
+     "pid_stanu": "0x22B9",
+     "ikona": "OGRZEWANIE 1: luk 106 (1, niebieski, zamykanie) / 107 (2, czerwony, otwieranie), x=40",
+     "nazwa_testu": "CH mixer test",
+     "nazwa_stanu": "CH mixer state"
+    },
+    {
+     "wyjscie": "Mieszacz CO2",
+     "pid_testowy": "0x214B",
+     "pid_stanu": "0x22BA",
+     "ikona": "OGRZEWANIE 2",
+     "nazwa_testu": "CH mixer test",
+     "nazwa_stanu": "CH mixer state"
+    },
+    {
+     "wyjscie": "Mieszacz CO3",
+     "pid_testowy": "0x214C",
+     "pid_stanu": "0x22BB",
+     "ikona": "OGRZEWANIE 3",
+     "nazwa_testu": "CH mixer test",
+     "nazwa_stanu": "CH mixer state"
+    },
+    {
+     "wyjscie": "Mieszacz CO4",
+     "pid_testowy": "0x214D",
+     "pid_stanu": "0x22BC",
+     "ikona": "OGRZEWANIE 4 (PID testowy wg kolejnosci; do potwierdzenia w outputs_test.json)",
+     "nazwa_testu": "CH mixer test",
+     "nazwa_stanu": "CH mixer state"
+    },
+    {
+     "wyjscie": "Mieszacz powrotu kotla",
+     "pid_testowy": "0x216D",
+     "pid_stanu": "0x216F",
+     "ikona": "KOCIOL: komorka x=81, luk 106/107",
+     "nazwa_testu": "Boiler return mixer test",
+     "nazwa_stanu": "CH mixer state"
+    }
+   ]
+  },
+  "mechanika_ikon": {
+   "evidence": "STRONG (setery 0x08044950, 0x08044ef4, 0x08044e78, 0x08046514, 0x08044774, 0x0803c550)",
+   "pompa": "wartosc != 0 -> widget klasy 0x807e43c (19x19, klatki 138-143) widoczny i animowany; 0 -> zatrzymany i ukryty; ten sam setter na KOCIOL, BUFOR, CO1-4, CWU (x2), SOLARY",
+   "mieszacz_CO": "setter 0x08044774: 0 ukryty, 1 luk 106, 2 luk 107 (x=40, klasa 0x807b610), identycznie jak KOCIOL",
+   "termostat_CO": "setter 0x08044848: tylko gdy typ czujnika pokojowego 0x22A1 == 4 (radiowy): 0x2301==1 -> jedna ikona, inaczej druga (widgety poza dolna belka)",
+   "ekrany_z_dolna_belka": {
+    "KOCIOL": "pompa x9, czyszczenie x40, mieszacz powrotu x81",
+    "PALNIK": "5 komorek x1/40/81/122/161",
+    "CO1-4": "pompa x9, mieszacz x40",
+    "CWU": "pompa x9, cyrkulacja x48",
+    "BUFOR": "pompa x9",
+    "SOLARY": "pompa x9",
+    "STATYSTYKI": "brak"
+   },
+   "uwaga_animacji": "klatki animacji to kolejne bitmapy; tempo zmiany klatek - OPEN (do zmierzenia z emulatora: tick)"
+  }
+ },
+ "status_tables_from_binary_2026_11_25": {
+  "evidence": "MEASURED (odczyt tabel z FW2213TK.bin: HOME 0x0802dbbc, PALNIK 0x08043c2c, SOLARY 0x080464ec, ikony programu 0x0802dbe8)",
+  "stan_palnika_0x2007": {
+   "0": "Wylaczony",
+   "1": "Rozpalanie",
+   "2": "Rozzarzanie",
+   "3": "Moc 1",
+   "4": "Moc 2",
+   "5": "Modulacja",
+   "6": "Wygaszanie",
+   "7": "Czyszczenie",
+   "8": "Podtrzymanie",
+   "9": "Postoj",
+   "10": "Alarm",
+   "tekst_ids": {
+    "0": 6,
+    "1": 8,
+    "2": 9,
+    "3": 10,
+    "4": 11,
+    "5": 12,
+    "6": 13,
+    "7": 7,
+    "8": 14,
+    "9": 15,
+    "10": 16
+   },
+   "uwaga": "identyczna tabela na HOME i PALNIK; wartosci > 10 nie sa wyswietlane; dioda palnika widoczna dla 1-8"
+  },
+  "stan_solarow_0x3120": {
+   "0": "Stop",
+   "1": "Praca",
+   "2": "Przeplukiwanie",
+   "3": "Zamarzanie",
+   "4": "Przegrzanie",
+   "5": "Woda max",
+   "6": "Wylaczone",
+   "7": "Chlodzenie",
+   "8": "Test",
+   "9": "Alarm",
+   "tekst_ids": {
+    "0": 17,
+    "1": 18,
+    "2": 19,
+    "3": 20,
+    "4": 21,
+    "5": 22,
+    "6": 23,
+    "7": 24,
+    "8": 25,
+    "9": 16
+   }
+  },
+  "ikona_programu_kotla_0x2002": {
+   "evidence": "MEASURED (tabela u16) + wyglad bitmap",
+   "wartosc_i_bitmapa": {
+    "0": 133,
+    "1": 135,
+    "2": 122,
+    "3": 128,
+    "4": 120
+   },
+   "wyglad": {
+    "133": "zegar A (harmonogram auto)",
+    "135": "zegar M (harmonogram reczny)",
+    "122": "AUTO",
+    "128": "MAN",
+    "120": "platek sniegu (kociol wylaczony 0x2005=0 -> wartosc 4)"
+   },
+   "uwaga": "gdy 0x2005 == 0 panel uzywa wartosci 4 niezaleznie od 0x2002"
+  },
+  "status_obwodu_CO_0x22FD": {
+   "evidence": "MEASURED (tabela 0x080448FC, setter 0x0804480E, klucz 0xA8 -> 0x22FD+instancja-1)",
+   "0": "(pusty)",
+   "1": "Grzanie",
+   "2": "Wybieg",
+   "3": "Oczekiwanie",
+   "4": "Stop",
+   "5": "Ochrona kotla",
+   "6": "Alarm",
+   "7": "Lato",
+   "8": "Zrodlo blokuje",
+   "tekst_ids": {
+    "0": 26,
+    "1": 27,
+    "2": 28,
+    "3": 29,
+    "4": 32,
+    "5": 30,
+    "6": 31,
+    "7": 33,
+    "8": 34
+   }
+  }
+ },
+ "bitmap_roles_2026_11_25": {
+  "evidence": "INFERENCE z wygladu bitmap + STRONG tam, gdzie id wystepuje w kodzie/tabelach (oznaczone 'kod')",
+  "tryby_i_programy": {
+   "120/121": "platek sniegu (kociol wylaczony / przeciwzamrozeniowy) [kod: tabela programu kotla 120]",
+   "122/123": "AUTO (spoczynek/wcisniety) [kod 122]",
+   "124": "slonce 'comf' (komfort)",
+   "126/127": "ksiezyc 'eco'",
+   "128/129": "MAN (spoczynek/wcisniety) [kod 128]",
+   "130/131": "zasilanie 'off'",
+   "132": "zegar",
+   "133": "zegar A (harmonogram auto) [kod]",
+   "135": "zegar M [kod]",
+   "136": "zegar M",
+   "137": "zegar",
+   "173": "kominiarz",
+   "174/176": "kran (CWU)"
+  },
+  "wyjscia_dolna_belka": {
+   "8-10": "wentylator (klatki)",
+   "34/35": "wymiennik/czyszczenie (2 stany)",
+   "36-38": "podajnik zasobnika (klatki)",
+   "39": "podajnik zasobnika wariant z '1'",
+   "40-42": "podajnik palnika (slimak, klatki)",
+   "58/59": "ruszt (ikona)",
+   "65-67": "zapalarka (klatki)",
+   "106": "luk NIEBIESKI mieszacz = zamykanie",
+   "107": "luk CZERWONY mieszacz = otwieranie",
+   "108/109": "strzalki rusztu lewo/prawo",
+   "138-143": "pompa (spinner 6 klatek)",
+   "29/30": "czujnik poziomu magazynu zewn. (wylaczony/wlaczony)"
+  },
+  "obrazy_kotla_0x370A": {
+   "11": "kociol wariant 1 (dwa zbiorniki)",
+   "12": "wariant 2 (duzy rysunek)",
+   "13": "wariant 3 (z podajnikiem)",
+   "14": "szafka/bufor",
+   "15": "zbiornik CWU/bufor (pionowy)"
+  },
+  "diody_i_pola": {
+   "28": "LED zielony (zasilanie)",
+   "31": "LED zolty (palnik)",
+   "32": "LED bialy (CO/CWU)",
+   "26/57/151/152": "kontrolki okragle",
+   "27": "pasek pomaranczowy",
+   "19/20": "pole wyboru puste/zaznaczone",
+   "102/103/117/118": "przyciski -/+ 155x38",
+   "111": "OK",
+   "115": "przycisk zasilania",
+   "116": "wyjscie/drzwi",
+   "119": "plus",
+   "140/142": "strzalki lewo/prawo",
+   "144/146/147": "grzejnik 1/2 (aktywny/nieaktywny)",
+   "153/154/155": "WiFi pelny/2 kreski/1 kreska",
+   "168/169": "przycisk (spoczynek/wcisniety)",
+   "180/181": "slonce/platek (pora roku)"
+  },
+  "paliwo_kafelek": {
+   "51": "kontur zasobnika",
+   "52": "kropki zasobnika (poziom)",
+   "53": "E (pusty)",
+   "54": "duzy czerwony pojemnik (animacja tankowania)"
+  }
+ },
+ "unseen_texts_classification_2026_11_26": {
+  "evidence": "STRONG (alarm_codes_verified.json, tabele stanow z binarki, przeszukanie kodu) + INFERENCE tam gdzie zaznaczono",
+  "alarm_teksty_nieuzywane_w_kodach_alarmow": {
+   "ids": [
+    271,
+    277,
+    278,
+    287,
+    288,
+    289,
+    290,
+    293,
+    294
+   ],
+   "teksty": [
+    "Przegrzanie procesora",
+    "Reset procesora",
+    "STB",
+    "Zwarcie czujnika CWU",
+    "Przerwa czujnika CWU",
+    "Zwarcie czujnika pokojowego",
+    "Przerwa czujnika pokojowego",
+    "Przegrzanie solarów",
+    "Zamarzanie solarów"
+   ],
+   "uwaga": "71 zweryfikowanych kodow alarmow (alarm_codes_verified.json) nie uzywa tych tekstow; resztki starszego zestawu alarmow (zwarcie/przerwa czujnika CWU i pokojowego, przegrzanie/zamarzanie solarow, reset/przegrzanie procesora) - martwe napisy w tej wersji"
+  },
+  "klawiatura_edytora": {
+   "ids": [
+    481,
+    482,
+    483,
+    484,
+    485,
+    486,
+    487,
+    488,
+    489,
+    490,
+    491
+   ],
+   "uwaga": "zestawy znakow edytora tekstu (cyfry, male i duze litery, symbole) - ekran INTERNET (SSID/haslo) i edytor nazwy obwodu"
+  },
+  "fragmenty_formatow": {
+   "ids": [
+    442,
+    443,
+    449,
+    467,
+    476
+   ],
+   "teksty": [
+    "\\x02s",
+    "\\x02",
+    "\\x02",
+    "\\x02mA",
+    "\\x02 = \\x02"
+   ],
+   "uwaga": "szablony z wildcardem (wartosc + jednostka) skladane w kodzie"
+  },
+  "dni_tygodnia": {
+   "ids": [
+    214,
+    215,
+    216,
+    217,
+    218
+   ],
+   "uwaga": "Wtorek-Sobota tytuly okna harmonogramu dnia (Poniedzialek i Niedziela widziane); ten sam dialog"
+  },
+  "powietrze_drewno": {
+   "ids": [
+    87,
+    88,
+    245
+   ],
+   "teksty": [
+    "Powietrze MIN (moc 20%)",
+    "Powietrze MIN (moc 100%)",
+    "Powietrze wtorne"
+   ],
+   "uwaga": "parametry powietrza (drewno/wtorne) - te same martwe wiersze co grupa 40 ukrytych parametrow"
+  },
+  "slowa_stanow": {
+   "ids": [
+    15,
+    19,
+    23,
+    24,
+    34
+   ],
+   "teksty": [
+    "Postoj",
+    "Przeplukiwanie",
+    "Wylaczone",
+    "Chlodzenie",
+    "Zrodlo blokuje"
+   ],
+   "uwaga": "stany z tabel statusow (palnik 9, solary 2/6/7, obwod CO 8) - opisane w status_tables_from_binary_2026_11_25"
+  },
+  "inne": {
+   "84 'Nastepny serwis'": "komunikat przypomnienia o serwisie; INFERENCE: zwiazany z PID 0x3719 'Confirm. service date timestamp' (nieopisany) - do sprawdzenia w kodzie",
+   "181 'CAN'": "opcja radio czujnika pokojowego/zewnetrznego (CAN) - opisana w firmware_row_table",
+   "346/347 'AIR[m/s]=' 'ETA[%]='": "etykiety diagnostyczne przeplywomierza na PALNIK (widgety bez pozycji, patrz palnik_widgety_bez_pozycji)",
+   "495 'Incalzire 1'": "rumunski ciag testowy ostatniego wpisu bazy tekstow"
+  }
+ },
+ "palnik_widgety_bez_pozycji_2026_11_26": {
+  "evidence": "MEASURED (odczyt obiektow widoku z RAM emulatora, view+offset z setterow)",
+  "wniosek": "widgety TextArea dla 0x2119 spaliny(2) (+0xE30), 0x228C wentylator wyciagowy (+0xC00), 0x300A powietrze wtorne (+0xDF8), 0x371A/0x362B przeplyw (+0xD18) sa skonstruowane, ale maja prostokat 0x0 (nigdy nie ustawione w pozycji) - w tej wersji nie sa wyswietlane",
+  "wyjatek": "0x300B 'Stop burning wood' (+0xF74): widget 52x36 z bitmapami 182/183 (palnik z roznika / z napisem STOP), prostokat 0,0 wzgledem rodzica - ikona dla trybu drewna, w tej wersji bez wlasnej pozycji",
+  "uwaga": "zgodne z 40 martwymi parametrami (wariant drewno/spaliny/przeplyw)"
+ }
+}

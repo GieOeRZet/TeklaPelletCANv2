@@ -1,0 +1,521 @@
+{
+ "schema_version": "1.0",
+ "evidence": "MEASURED (PASS 67, emulator, konfiguracja domyslna 0x2105=4,0x2106..8=1; ramki PDO wstrzykiwane pojedynczo)",
+ "transport": {
+  "frames": "CAN RX: 0x180+node PDO1, 0x280+node PDO2, 0x380+node PDO3, 0x480+node PDO4; PDO2-4 = 4 x u16 LE; kanal n = slot (PDO2: 0-3, PDO3: 4-7, PDO4: 8-11)",
+  "watchdog": "moduly offline po ~300 cyklach bez ramki (obiekt +0xA); PDO1 bajty 6/7 = wersja oprogramowania modulu (PIDy 0x3658/0x3659 dla 0x56, 0x3635/0x363D dla 0x45, 0x3630/0x3638 dla 0x40)",
+  "rx_rule": "odbiornik przyjmuje jedna ramke naraz: ramki musza isc z odstepem ~12 tikow; wartosc = srednia z 8 probek (potrzeba >= 8 rund)"
+ },
+ "ntc_curve": {
+  "description": "surowy odczyt PDO (12-bit ADC) -> PID temperatury [dC]; zmierzone dla 0x2001 (node 0x56 slot 0); identyczne dla pozostalych kanalow temperaturowych",
+  "points_raw_to_dC": {
+   "60": 1500,
+   "180": 1358,
+   "300": 1150,
+   "420": 1020,
+   "540": 924,
+   "660": 848,
+   "780": 786,
+   "900": 732,
+   "1020": 683,
+   "1140": 640,
+   "1260": 599,
+   "1380": 564,
+   "1500": 529,
+   "1620": 495,
+   "1740": 465,
+   "1860": 434,
+   "1980": 404,
+   "2100": 376,
+   "2220": 346,
+   "2340": 319,
+   "2460": 290,
+   "2580": 261,
+   "2700": 232,
+   "2820": 201,
+   "2940": 171,
+   "3060": 139,
+   "3180": 104,
+   "3300": 68,
+   "3420": 28,
+   "3540": 65518,
+   "3660": 65465,
+   "3780": 65399,
+   "3900": 65309
+  },
+  "valid_raw_range": "51..4000 (poza zakresem = blad czujnika)",
+  "clamp_dC": "max 1500 (150.0 C)"
+ },
+ "modules": {
+  "0x56": {
+   "name": "CAN IO BIG",
+   "object": "0x20023F54",
+   "pdo_slots": {
+    "PDO2 (0x280+node)": "kanaly 0-3",
+    "PDO3 (0x380+node)": "kanaly 4-7",
+    "PDO4 (0x480+node)": "kanaly 8-11"
+   },
+   "slots": {
+    "0": {
+     "pdo": "PDO2",
+     "byte_offset": 0,
+     "pids_primary": [
+      "0x2001"
+     ],
+     "names": [
+      "Boiler temp[dC]"
+     ],
+     "also_changes": []
+    },
+    "3": {
+     "pdo": "PDO2",
+     "byte_offset": 6,
+     "pids_primary": [
+      "0x215F"
+     ],
+     "names": [
+      "Outside temperature"
+     ],
+     "also_changes": []
+    },
+    "4": {
+     "pdo": "PDO3",
+     "byte_offset": 0,
+     "pids_primary": [
+      "0x2110"
+     ],
+     "names": [
+      "Hot water 1 measured temperature"
+     ],
+     "also_changes": []
+    },
+    "6": {
+     "pdo": "PDO3",
+     "byte_offset": 4,
+     "pids_primary": [
+      "0x226C"
+     ],
+     "names": [
+      "Burner feeder temperature [dC]"
+     ],
+     "also_changes": []
+    },
+    "5": {
+     "pdo": "PDO3",
+     "byte_offset": 2,
+     "pids_primary": [
+      "0x4000"
+     ],
+     "names": [
+      "Boiler return temp [dC]"
+     ],
+     "also_changes": [],
+     "condition": "aktywny tylko gdy 0x350A (Return to boiler temperature sensor)=1; krzywa NTC jak pozostale (500->953, 2000->399); MEASURED PASS 70"
+    }
+   },
+   "online_effects": {
+    "0x215f": {
+     "idle": 0,
+     "online": 691,
+     "name": "Outside temperature"
+    },
+    "0x2001": {
+     "idle": 0,
+     "online": 691,
+     "name": "Boiler temp[dC]"
+    },
+    "0x2250": {
+     "idle": 0,
+     "online": 100,
+     "name": "Burner brightness"
+    },
+    "0x226c": {
+     "idle": 0,
+     "online": 691,
+     "name": "Burner feeder temperature [dC]"
+    },
+    "0x2110": {
+     "idle": 0,
+     "online": 691,
+     "name": "Hot water 1 measured temperature"
+    },
+    "0x201a": {
+     "idle": 0,
+     "online": 30,
+     "name": "Hot water 1 result temperature"
+    },
+    "0x2278": {
+     "idle": 0,
+     "online": 1,
+     "name": "Hot water pump state"
+    },
+    "0x350a": {
+     "idle": 0,
+     "online": 1,
+     "name": "Return to boiler temperature sensor"
+    },
+    "0x3607": {
+     "idle": 0,
+     "online": 1,
+     "name": "Reserve sensor state"
+    },
+    "0x4014": {
+     "idle": 0,
+     "online": 196613,
+     "name": "Alarm register"
+    },
+    "0x4028": {
+     "idle": 0,
+     "online": 975542400,
+     "name": "Alarm date timestamp"
+    },
+    "0x403c": {
+     "idle": 5678,
+     "online": 0,
+     "name": "Alarm confirm timestamp"
+    },
+    "0x404c": {
+     "idle": 4,
+     "online": 5,
+     "name": "Alarm next index"
+    },
+    "0x404d": {
+     "idle": 3,
+     "online": 4,
+     "name": "Number of alarms"
+    }
+   }
+  },
+  "0x45": {
+   "name": "CAN IO 5",
+   "object": "0x20021A40",
+   "pdo_slots": {
+    "PDO2 (0x280+node)": "kanaly 0-3",
+    "PDO3 (0x380+node)": "kanaly 4-7",
+    "PDO4 (0x480+node)": "kanaly 8-11"
+   },
+   "slots": {
+    "0": {
+     "pdo": "PDO2",
+     "byte_offset": 0,
+     "pids_primary": [
+      "0x3171"
+     ],
+     "names": [
+      "Buffer T1 measured temperature"
+     ],
+     "also_changes": [
+      [
+       "0x3174",
+       "Buffer internal energy [%]"
+      ]
+     ]
+    },
+    "1": {
+     "pdo": "PDO2",
+     "byte_offset": 2,
+     "pids_primary": [
+      "0x2112"
+     ],
+     "names": [
+      "Buffer top measured temperature"
+     ],
+     "also_changes": [
+      [
+       "0x2004",
+       "Boiler set result temp[C]"
+      ],
+      [
+       "0x2211",
+       ""
+      ],
+      [
+       "0x3174",
+       "Buffer internal energy [%]"
+      ]
+     ]
+    },
+    "2": {
+     "pdo": "PDO2",
+     "byte_offset": 4,
+     "pids_primary": [
+      "0x2113"
+     ],
+     "names": [
+      "Buffer bottom measured temperature"
+     ],
+     "also_changes": [
+      [
+       "0x3174",
+       "Buffer internal energy [%]"
+      ]
+     ]
+    },
+    "4": {
+     "pdo": "PDO3",
+     "byte_offset": 0,
+     "pids_primary": [
+      "0x3172"
+     ],
+     "names": [
+      "Buffer T2 measured temperature"
+     ],
+     "also_changes": [
+      [
+       "0x3174",
+       "Buffer internal energy [%]"
+      ]
+     ]
+    },
+    "5": {
+     "pdo": "PDO3",
+     "byte_offset": 2,
+     "pids_primary": [
+      "0x2109"
+     ],
+     "names": [
+      "Solar temperature 1 [C]"
+     ],
+     "also_changes": []
+    },
+    "6": {
+     "pdo": "PDO3",
+     "byte_offset": 4,
+     "pids_primary": [
+      "0x2102"
+     ],
+     "names": [
+      "Solar temperature 2 [C]"
+     ],
+     "also_changes": [
+      [
+       "0x311c",
+       "Solar pump state"
+      ],
+      [
+       "0x3120",
+       "Solar status"
+      ]
+     ]
+    },
+    "7": {
+     "pdo": "PDO3",
+     "byte_offset": 6,
+     "pids_primary": [
+      "0x2103"
+     ],
+     "names": [
+      "Solar temperature 3 [C]"
+     ],
+     "also_changes": []
+    },
+    "8": {
+     "pdo": "PDO4",
+     "byte_offset": 0,
+     "pids_primary": [
+      "0x2104"
+     ],
+     "names": [
+      "Solar temperature 4 [C]"
+     ],
+     "also_changes": []
+    },
+    "9": {
+     "pdo": "PDO4",
+     "byte_offset": 2,
+     "pids_primary": [
+      "0x3173"
+     ],
+     "names": [
+      "Buffer T3 measured temperature"
+     ],
+     "also_changes": [
+      [
+       "0x3174",
+       "Buffer internal energy [%]"
+      ]
+     ]
+    }
+   },
+   "online_effects": {
+    "0x2112": {
+     "idle": 0,
+     "online": 691,
+     "name": "Buffer top measured temperature"
+    },
+    "0x2113": {
+     "idle": 0,
+     "online": 691,
+     "name": "Buffer bottom measured temperature"
+    },
+    "0x2280": {
+     "idle": 0,
+     "online": 45,
+     "name": "Buffer top set temperature"
+    },
+    "0x3171": {
+     "idle": 19990,
+     "online": 691,
+     "name": "Buffer T1 measured temperature"
+    },
+    "0x3172": {
+     "idle": 19990,
+     "online": 691,
+     "name": "Buffer T2 measured temperature"
+    },
+    "0x3173": {
+     "idle": 19990,
+     "online": 691,
+     "name": "Buffer T3 measured temperature"
+    },
+    "0x3174": {
+     "idle": 0,
+     "online": 100,
+     "name": "Buffer internal energy [%]"
+    },
+    "0x2109": {
+     "idle": 0,
+     "online": 691,
+     "name": "Solar temperature 1 [C]"
+    },
+    "0x2102": {
+     "idle": 0,
+     "online": 691,
+     "name": "Solar temperature 2 [C]"
+    },
+    "0x2103": {
+     "idle": 0,
+     "online": 691,
+     "name": "Solar temperature 3 [C]"
+    },
+    "0x2104": {
+     "idle": 0,
+     "online": 691,
+     "name": "Solar temperature 4 [C]"
+    },
+    "0x3620": {
+     "idle": 5678,
+     "online": 150,
+     "name": "Inside temp [C] CAN IO 5"
+    }
+   }
+  },
+  "0x50": {
+   "name": "Lambda module",
+   "evidence": "MEASURED (PASS 70, live_scan, config 0x3605=1 itd.)",
+   "pdo_slots": {
+    "PDO2 (0x280+node)": "kanaly 0-3"
+   },
+   "slots": {
+    "3": {
+     "pdo": "PDO2",
+     "byte_offset": 6,
+     "pids_primary": [
+      "0x2120"
+     ],
+     "names": [
+      "Lambda oxygen [%]"
+     ],
+     "also_changes": [
+      [
+       "0x371F",
+       "Lambda oxygen averaged [%]"
+      ]
+     ],
+     "scale": "raw u16 = wartosc PID 1:1 (500->500, 2000->2000); 0x371F = usredniona"
+    }
+   },
+   "pdo1": "bajty 0-1 = wersja SW modulu lambda (0x365A/0x365B)"
+  },
+  "0x54": {
+   "name": "Airflowmeter 1",
+   "evidence": "MEASURED (PASS 70, 12 rund ramki PDO1, konfiguracja 0x362B=1)",
+   "pdo1": "0x180+node: bajt 6 = czesc calkowita, bajt 7 = ulamek (8.8, big-endian: X=(b6<<8)|b7); wartosc PID = X * 1469/65536 (= b6 * 5.738 + b7 * 0.0224); bajty 0-1 = wersja SW (Airflowmeter 1: PID 0x3666/0x3667)",
+   "pids_primary": [
+    "0x371A"
+   ],
+   "raw_to_value_samples": {
+    "b6=0": 0,
+    "b6=100": 574,
+    "b6=200": 1148,
+    "b6=255": 1464
+   },
+   "note": "ERRATA: wczesniejszy opis \"u16 LE bajty 6-7 z nieregularna krzywa\" byl bledny; nieregularnosc wynikala z wysylania u16 do bajtu 6 (obcinanie do 8 bitow, zawijanie co 256). Krzywa jest liniowa.",
+   "formula": "PID = round((b6*256+b7) * 0.022415); max 1469 przy 0xFFFF; MEASURED: 0..4100 co 25 (flow_a/b/c, tools/flow_curve.py), b7 osobno: b6=100,b7=255 -> 579"
+  },
+  "0x55": {
+   "name": "Airflowmeter 2",
+   "evidence": "MEASURED (PASS 70, 12 rund ramki PDO1, konfiguracja 0x362B=1)",
+   "pdo1": "0x180+node: bajt 6 = czesc calkowita, bajt 7 = ulamek (8.8, big-endian: X=(b6<<8)|b7); wartosc PID = X * 1469/65536 (= b6 * 5.738 + b7 * 0.0224); bajty 0-1 = wersja SW (Airflowmeter 1: PID 0x3666/0x3667)",
+   "pids_primary": [
+    "0x371E"
+   ],
+   "raw_to_value_samples": {
+    "b6=0": 0,
+    "b6=100": 574,
+    "b6=200": 1148,
+    "b6=255": 1464
+   },
+   "note": "ERRATA: wczesniejszy opis \"u16 LE bajty 6-7 z nieregularna krzywa\" byl bledny; nieregularnosc wynikala z wysylania u16 do bajtu 6 (obcinanie do 8 bitow, zawijanie co 256). Krzywa jest liniowa.",
+   "formula": "PID = round((b6*256+b7) * 0.022415); max 1469 przy 0xFFFF; MEASURED: 0..4100 co 25 (flow_a/b/c, tools/flow_curve.py), b7 osobno: b6=100,b7=255 -> 579"
+  }
+ },
+ "derived_by_controller": [
+  "0x2278 Hot water pump state, 0x350A, 0x3607, 0x201A, 0x2250 (po wlaczeniu modulu 0x56)",
+  "0x3174 Buffer internal energy [%] z temperatur bufora (T1..T3)",
+  "0x311C/0x3120 Solar pump state/status z temperatur solarnych",
+  "stany pomp i palnika (0x2277, 0x2007) wyliczane przez logike EstymaTask z temperatur - nie sa wejsciami"
+ ],
+ "unmapped_live": [],
+ "scan_pass70": {
+  "tool": "tools/live_scan.py",
+  "method": "kazdy z 12 kanalow wezla dostaje surowe 500/2000/3000 (reszta 1000), roznica wszystkich PID-ow wzgledem bazy; bez hakow",
+  "nodes_scanned": [
+   "0x56",
+   "0x45",
+   "0x40",
+   "0x46",
+   "0x78",
+   "0x50",
+   "0x54",
+   "0x55",
+   "0x7A"
+  ],
+  "result": "0x56: tylko sloty 0,3,4,6 (jak PASS 67), pozostale kanaly 1,2,5,7-11 NIE wplywaja na zadne PID (rowniez przy 0x350D=1, 0x350A=1, 0x3707=1); 0x45: sloty 0,1,2,4,5,6,7,8,9 (jak PASS 67), 3/10/11 puste; 0x40,0x46,0x78,0x54,0x55: brak wplywu na PID przez PDO analogowe; 0x50 kanal 3: 0x2120 (lambda) i 0x371F",
+  "not_via_pdo_analog": [
+   "0x3333 Boiler pressure",
+   "0x4000 Boiler return temp (wartosc 691 przy 0x350A online - nie z kanalu analogowego)",
+   "0x3628 energy",
+   "0x371A/0x371E flow",
+   "SLAVE 1..3 SDO"
+  ],
+  "next": "tylko odczyt: sledzenie zapisu do rekordu PID (hak MEM_WRITE przed uruchomieniem zawiesza emulator - blad PC=0, nie powtarzac) albo analiza statyczna funkcji wokol 0x8006970/0x80069f0 (flow), 0x800bd0e (energy)",
+  "correction": "wczesniejszy skan bez poprawnej konfiguracji nie widzial slotu 5; po 0x350A=1 kanal 5 wezla 0x56 -> 0x4000. Skan z 0x350D=1/0x3605/0x3629/0x362B/0x3707/0x3505/0x3529 nie wykryl zrodla 0x3333, 0x3628, 0x371A/E w kanalach 0x56/0x45/0x40 (dla 0x46/0x78 nie powtorzony z pelna konfiguracja)",
+  "flowmeters": "MEASURED: 0x54 PDO1 bajty 6-7 -> 0x371A; 0x55 PDO1 bajty 6-7 -> 0x371E (tools/live_scan_pdo1.py). PDO1 byl pomijany we wczesniejszych skanach."
+ },
+ "controller_fed": {
+  "evidence": "MEASURED (PASS 70): inject_param (ramka 0x584/0x42, odpowiedz sterownika) zapisuje wartosc do rekordu: 0x3333=1500 -> stored 1500, 0x3628=12345 -> stored 12345. Zadne PDO/kanal modulu nie zmienia tych PID-ow (skany PDO1-4 wezlow 0x40-0x5A, 0x78).",
+  "pids": [
+   "0x3333 Boiler pressure[mbar]",
+   "0x3628 Statistics - total energy produced [kWh]"
+  ],
+  "conclusion": "STRONG: te wartosci dostarcza sterownik kotla protokolem 0x584 (jak wiekszosc PID-ow), nie modul CAN IO; w modelu UI zrodlo = \"controller\", wstrzykiwanie przez 0x584 jest wlasciwe. Uwaga: 0x371A po inject 777 -> stored 65487 (nadpisywane przez wlasne zrodlo PDO1)."
+ },
+ "cascade_slaves": {
+  "evidence": "MEASURED (PASS 70, emulator; kaskada wlaczona: 0x350C=2, 0x351A=3 przez inject_param; odpowiedzi wstrzykiwane po jednej ramce, 8 powtorzen)",
+  "requests_from_panel": "co ~1000 tikow dla kazdego slave: 0x605/0x606/0x607 dane 40 01 20 01 00 00 00 00 (SDO upload obiektu 0x2001:01) oraz 20 04 30 01 00 00 00 00 (obiekt 0x3004:01, wartosc wysylana do slave: zadana temperatura wirtualnego odbiornika energii; w tym stanie 0)",
+  "responses": {
+   "frame": "0x585/0x586/0x587 = 0x580+node (node 5,6,7), dane 4B 01 20 01 <u16 LE> (SDO expedited 2 bajty) -> wartosc w dC bez krzywej",
+   "mapping": {
+    "0x585 (SLAVE 1)": "0x200A Remote boiler 1 temp[dC] s16 0..1500",
+    "0x586 (SLAVE 2)": "0x200B Remote boiler 2 temp[dC]",
+    "0x587 (SLAVE 3)": "0x200C Remote boiler 3 temp[dC]"
+   },
+   "notes": "wartosc ujemna (65436 = -100) zapisuje sie jako s16; odpowiedzi na 0x3004 (4B i ack 60) nie zmieniaja zadnego PID"
+  },
+  "open": [
+   "czy slave odpowiada tez na inne obiekty (kolejne zapytania pojawiaja sie wg poziomu mocy 0x3512..0x3514)",
+   "zachowanie przy braku odpowiedzi (offline slave) - wyswietlanie na ekranie Kaskada"
+  ]
+ }
+}

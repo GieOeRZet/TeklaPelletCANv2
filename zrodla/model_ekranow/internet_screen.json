@@ -1,0 +1,105 @@
+{
+ "schema_version": "1.0",
+ "evidence": "MEASURED (emulator, poziom 1, ekran INTERNET; storage ustawiany PRZED wejsciem (set_local), teksty/widgety z RAM; zapis z edytora tekstu: ramka 0x584 na 0x3730, patrz internet_editor.json)",
+ "fields": [
+  {
+   "label": "SSID:",
+   "pids": [
+    "0x3730",
+    "0x3731",
+    "0x3732",
+    "0x3733",
+    "0x3734",
+    "0x3735"
+   ],
+   "type": "tekst do 24 znakow = 6 x u32 big-endian (pierwszy znak = najstarszy bajt), 4 znaki na PID; ciag konczy sie na pierwszym pustym (0) chunku",
+   "text_xy": [
+    50,
+    85
+   ],
+   "evidence": "MEASURED (3 chunki 'ABCDEFGHIJKL', 6 chunkow 24 znaki; sam 0x3731 bez 0x3730 -> pole puste)"
+  },
+  {
+   "label": "PASSWORD:",
+   "pids": [
+    "0x3736",
+    "0x3737",
+    "0x3738",
+    "0x3739",
+    "0x373A",
+    "0x373B"
+   ],
+   "type": "tekst, jak SSID (pokazywany jawnie, bez maskowania)",
+   "text_xy": [
+    80,
+    137
+   ],
+   "evidence": "MEASURED dla 0x3736..0x3738; 0x3739..0x373B nie zmierzone osobno (wzorzec)"
+  },
+  {
+   "label": "SERIAL:",
+   "pids": [
+    "0x373F"
+   ],
+   "type": "liczba u32 dziesietnie: 'SERIAL: <n>'; 0 -> brak liczby",
+   "evidence": "MEASURED (1, 5, 1094861636)"
+  },
+  {
+   "label": "PIN:",
+   "pids": [
+    "0x3740"
+   ],
+   "type": "liczba dziesietnie, obcinana do 6 znakow ('PIN: 109486' dla 1094861636); 0 -> pusto",
+   "evidence": "MEASURED (1, 5, 1234, 1094861636)"
+  },
+  {
+   "label": "WiFi",
+   "pids": [
+    "0x373E"
+   ],
+   "type": "przelacznik: wartosc !=0 -> ON (galka przesunieta, ikona (168,155)->(168,184)), 0 -> OFF",
+   "evidence": "MEASURED (1, 5, 0x41424344 -> ON)"
+  },
+  {
+   "label": "Zmiany zdalne",
+   "pids": [
+    "0x3741"
+   ],
+   "type": "przelacznik jak WiFi (galka (198,155)->(198,184))",
+   "evidence": "MEASURED"
+  },
+  {
+   "label": "wskaznik przy SSID (ikona x=435,y=50)",
+   "pids": [
+    "0x373D"
+   ],
+   "type": "ikona pojawia sie dla wartosci !=0 (znaczenie: np. polaczono/status - niepotwierdzone)",
+   "evidence": "MEASURED (widocznosc), znaczenie OPEN"
+  }
+ ],
+ "not_sources": [
+  "0x3742..0x3745",
+  "0x2170 (PIN videRoom)"
+ ],
+ "open": [
+  "znaczenie ikony 0x373D",
+  "pelna lista znakow edytora (symbole/cyfry)",
+  "przycisk kasowania i kursor",
+  "trwalosc po wyjsciu z ekranu",
+  "0x5B VIDE NET WIFI vs ekran INTERNET"
+ ],
+ "code_analysis_2026_11_25": {
+  "evidence": "STRONG (presenter 0x0803dcc6 + settery 0x08045792..0x08045870 w decompiled.c)",
+  "uwaga": "KOREKTA 'not_sources 0x3742..0x3745': 0x3744 i 0x3745 sa czytane przez presenter ekranu INTERNET, ale zmieniaja KOLOR elementu (nie tekst ani widocznosc), dlatego pomiar widocznosci ich nie wykryl",
+  "pids": {
+   "0x373D": "stan polaczenia (key 0x137): 0 = brak, 1 = (stan posredni), 2 = polaczono -> pokazuje ikone zasiegu",
+   "0x373C": "poziom sygnalu (key 0x136), uzywany przy stanie 2: < 33 -> bitmapa 155 (0x9b), < 66 -> bitmapa 154 (0x9a), wyzej -> bitmapa 153 (0x99)",
+   "0x3746": "widocznosc elementu przy wartosci > 1 (key 0x138, widget +0xca5)",
+   "0x3744": "kolor elementu: wartosc == 1 -> czarny, inaczej bialy (key 0x139, widget +0xc10)",
+   "0x3745": "kolor drugiego elementu: wartosc == 1 -> czarny, inaczej bialy (key 0x13a, widget +0xc48)",
+   "0x373E": "WiFi (przelacznik) + zdarzenie odswiezenia (setter 0x08045870)",
+   "0x373F": "SERIAL (format 'SERIAL: %u'), 0x3740 PIN ('PIN: %u')"
+  },
+  "open": "nazwy elementow koloru dla 0x3744/0x3745 (np. stan WiFi / chmury) - do zdjecia ekranu INTERNET przy polaczeniu"
+ }
+}

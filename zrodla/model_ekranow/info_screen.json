@@ -1,0 +1,82 @@
+{
+ "schema_version": "1.0",
+ "evidence": "MEASURED (emulator, poziom 1, ekran INFO; storage ustawiany PRZED wejsciem na ekran (set_local), teksty z RAM)",
+ "layout": [
+  {
+   "y": 50,
+   "x": 40,
+   "text": "igneoTouch v<wersja> TE...",
+   "source": "PID 0x3664 (soft. version, u16) - MEASURED"
+  },
+  {
+   "y": 82,
+   "x": 40,
+   "text": "Bio Compact 10kW",
+   "source": "OPEN: 0x3665 (igneTouch boiler short name, u32) NIE zmienia tekstu przy 0/1/100/1000/5678/4294967295 - zrodlo inne (stala? nazwa z pamieci konfiguracji)"
+  },
+  {
+   "y": 114,
+   "x": 40,
+   "text": "videRoom PIN 0",
+   "source": "OPEN: 0x2170 nie zmienia tekstu (0/1/1234/5678/65535); wartosc 0 przy domyslnym 5678"
+  },
+  {
+   "y": 147,
+   "x": 40,
+   "text": "Controller by Estyma (www.estyma.pl)",
+   "source": "stala"
+  },
+  {
+   "y": 152,
+   "x": 470,
+   "text": "0",
+   "source": "OPEN (maly licznik/znacznik w prawym dolnym rogu)"
+  }
+ ],
+ "version_format": {
+  "pid": "0x3664",
+  "rule": "v >= 2100 -> '%d.%03d' % (v//1000, v%1000); v < 2100 -> '%d.%02d' % (v//100, v%100)",
+  "samples": {
+   "0": "v0.00",
+   "1": "v0.01",
+   "99": "v0.99",
+   "100": "v1.00",
+   "999": "v9.99",
+   "1000": "v10.00",
+   "1234": "v12.34",
+   "2001": "v20.01",
+   "2099": "v20.99",
+   "2100": "v2.100",
+   "2212": "v2.212",
+   "2213": "v2.213",
+   "2214": "v2.214",
+   "3000": "v3.000",
+   "65535": "v65.535"
+  },
+  "note": "prefiks 'igneoTouch v' i sufiks (' TE...' obciety w widoku) niezalezne od wartosci; dla FW2213 wartosc 2213 -> 'v2.213'"
+ },
+ "open": [
+  "zrodlo 'Bio Compact 10kW' (0x3665?)",
+  "zrodlo wartosci 'videRoom PIN'",
+  "znaczenie liczby 0 w prawym dolnym rogu"
+ ],
+ "real_panel_2026_11_25": {
+  "evidence": "MEASURED (zdjecie wlasciciela z prawdziwego panelu + odczyt HA tylko odczyt)",
+  "lines": [
+   "igneoTouch v2.118 TE",
+   "Draco Bio Compact FBII 18kW",
+   "Controller by Estyma (www.estyma.pl)",
+   "1 (maly numer pod trzecia linia, po lewej)"
+  ],
+  "ha_reads": {
+   "0x3664": 2118,
+   "0x3665": "0x54450000 = 'TE'",
+   "0x350B": 258
+  },
+  "conclusions": [
+   "wersja w linii 1 to wersja STEROWNIKA (PID 0x3664 = 2118 odczytane z kotla -> 'v2.118'), a nie binarki panelu (FW2213TK = 2.213 domyslnie w emulatorze); regula formatu 0x3664 potwierdzona",
+   "linia 2 (nazwa kotla) na prawdziwym panelu = 'Draco Bio Compact FBII 18kW', w emulatorze domyslne 'Bio Compact 10kW': to dana z kotla/konfiguracji, nie stala binarki; NIE zalezy od 0x350B (258) ani 0x3665 w emulatorze - zrodlo OPEN (kandydat: rejestr tekstowy sterownika, np. 0x1008 - odczyt przez integracje bez odpowiedzi)",
+   "mala liczba: w emulatorze '0' po prawej, na panelu '1' po lewej pod linia 3 - zrodlo OPEN"
+  ]
+ }
+}

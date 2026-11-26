@@ -1,0 +1,288 @@
+# RAPORT POSTEPU agenta UI (najnowszy na gorze). Format: etap - zrobilem X z Y - pozostalo Z
+
+### 2026-11-25 - Ikony animowane / napisy nad ikonami: luka i wynik pierwszych sond
+- Luka (przyznana): analiza objela strukture, dane i wskazniki przez wstrzykiwanie parametrow; animowane ikony dolnych belek, liczby nad nimi (PALNIK: 52, 2.1, 3:00) i kolor diody palnika w niektorych stanach nie sa sterowane parametrami - zrodlo stanu nieodtworzone.
+- Sonda PDO (0x184-0x484 od wezla 4): brak wlaczen diod/ikon (`tools/pdo_sweep.py`, `UI/bind_raw/pdo_*.json`). Emulator animuje ikony bez bodzca; 0x216D=2 zwieksza animacje mieszacza.
+- Dla ESP: nie trzeba odtwarzac mechanizmu panelu - ESP czyta rejestry sterownika (pompy 0x2299/0x229A/0x2278, mieszacze 0x22B9/0x216D, dmuchawa 0x2254, zapalarka 0x2253, jasnosc 0x2250 - z katalogu starego projektu) i rysuje wlasne ikony. Do zrobienia: mapa komorka->rejestr z korelacji zdjec/nagran panelu z odczytami HA.
+
+## 2026-11-26 - domykanie luk z audytu binarki
+
+- 42 ukryte parametry: przeszukanie kodu - ZADNA funkcja panelu ich nie czyta ani nie zapisuje; maja pelne deskryptory i zakresy, ale builder list ich nie dodaje (martwe wiersze w tej wersji); wlasciciel: dwa tryby nieaktywne -> w specyfikacji ESP zablokowane (WE_BLOCKED).
+- PALNIK: widgety 0x2119, 0x228C, 0x300A, 0x371A/0x362B sa skonstruowane, ale maja prostokat 0x0 (nigdy nieumieszczone) - nie wyswietlane; 0x300B ma ikone 52x36 (bitmapy 182/183) bez pozycji. Pomiar: odczyt obiektow widoku z RAM (view+offset z setterow).
+- Teksty niewidziane (45): sklasyfikowane - 9 martwych napisow alarmow (starszy zestaw), 11 zestawow znakow klawiatury, 5 fragmentow formatow, 5 dni tygodnia (ten sam dialog), 3 teksty powietrza (drewno), slowa stanow z tabel, 'Nastepny serwis' (PID 0x3719 i tekst istnieja, zaden kod ich nie czyta).
+- Funkcje 0x0803EC18 i 0x0803EB4A to NIE osobne ekrany, tylko odswiezacze wierszy list NASTAW (callbacki rejestru wierszy, PASS 99).
+- Warstwa magistrali: poller 655 zadan SDO (0x604 -> odpowiedz 0x584), PDO z modulow IO (temperatury), stany wyjsc z SDO (mlodszy bajt) - opisane w `live_sources.json`, `poll_sequence_655.csv`; OPEN: okres pollera.
+- OPEN: ekran INTERNET w emulatorze; tempo klatek animacji; okres pollera (wymaga pomiaru na zywym panelu).
+
+## 2026-11-25 - tabela wierszy list z binarki; zrodlo list NASTAW
+
+- WYKONANE: z binarki odczytano tabele deskryptorow wierszy (186 rekordow 16 B: klucz UI, id tekstu, typ, opcje radio) -> `ui_model/firmware_row_table.json`; typ: 0 liczba, 1 przelacznik, 3 radio (z etykietami opcji, np. Typ paliwa: pellet/drewno; IN17: brak/czujnik rezerwy/czujnik temp. spalin), 256 liczba x0.1, 257 przelacznik/komenda (INFERENCE). Odtworzono builder list NASTAW (`0x0803e714`): lista = wycinki tablicy kluczy zalezne od poziomu dostepu (0 / >=1 / >=2); lista PALNIK = 5+19+4 = 28 wierszy zgodnie z emulatorem.
+- WYNIK (po poprawce dlugosci tablicy kluczy; odtworzone listy zgodne z emulatorem dla WSZYSTKICH 13 list): 42 wiersze tabeli NIE wchodza do zadnej listy panelu (poziomy 0-2): drewno (0x3000/0x3005-0x3007), napiecia i pozycja rusztu (0x228E/0x228F/0x218C - poza katalogiem 655), spaliny 0x3701-0x3703/0x3707, przeplywomierz 0x362B, kominiarz 0x3750, tryb cichy 0x2151/0x216B, wtorne powietrze 0x3008/0x3009, przedmuch modulacji 0x3713/0x3714, zrodlo/cyrkulacja CWU 0x2214/0x374B/0x374C i in. To parametry serwisowe/wariantowe; odsloniecie konfiguracja (16 wariantow) i poziomem dostepu 4-9 nie dalo nowych wierszy.
+- WERYFIKACJA: validate PASS, smoke PASS; narzedzia `tools/list_reveal.py` (warianty konfiguracji + LR_ACCESS).
+- OPEN: gdzie panel pokazuje te 42 wiersze (inny wariant urzadzenia / menu serwisowe z innym PIN-em) - do sprawdzenia w kodzie.
+
+## 2026-11-25 - glebokie listy ustawien: przewijanie przez RAM
+
+- WYKONANE: wiersze list NASTAW sa tworzone w kontenerze zawartosci (klasa 0x807c6f0, 740 px, wiersze 0x807b730 co 50 px) wewnatrz kontenera przewijanego (0x8079b00, okno 237 px); drag w emulatorze przestawal dzialac, wiec `tools/list_dialogs.py` ustawia y kontenera zawartosci w RAM (LD_RAMSCROLL=1). Wynik: +37 zmierzonych wierszy (suwaki 140, radio 23 lacznie).
+- WERYFIKACJA: wiersze 0x00/5-6 (Wybieg pompy 0-120, Cisza nocna od 0-24), 0x0A/6-7, 0x01/20 (Czas mieszacza 60-360 s) zmierzone; validate PASS.
+- OPEN: 5 wierszy NIE_DOSZEDL (brak widgetu etykiety, konfiguracja warunkowa), 44 przelaczniki/liczniki bez dialogu (inferowane).
+
+## 2026-11-25 - mapa wyjsc: PID testowy -> PID stanu -> ikona (wszystkie ekrany z dolna belka)
+
+- WYKONANE: z kodu (setery 0x08044950/08044ef4/08044e78/08046514/08044774/0803c550) i z ekranu TEST WYJSC: pompa = wspolny spinner 138-143 (wartosc != 0), mieszacz = luk 106 (1, niebieski, zamykanie) / 107 (2, czerwony, otwieranie), PALNIK 5 komorek + 3 liczby (tylko tam). 21 par test->stan w `real_panel_screens.json` -> `bottom_bar_static_2026_11_25.pary_test_stan`. Stan = (SDO & 0xFF) - zmierzone (pompy 0x0101 = wlaczone).
+- WERYFIKACJA: nazwy PID w katalogu zgodne ('X test' <-> 'X state'), outputs_test.json (MEASURED) laczy mieszacze z 0x22B9..0x22BC i 0x216F. Zapisow na kotle nie robiono. validate PASS, smoke PASS.
+- OPEN: tempo zmiany klatek animacji; wentylator 0x2254 = 0x013C przy wylaczonym palniku (zdjecie PALNIK); zrodlo PID 0x4005/0x4008/0x4009 (liczone na panelu).
+
+## 2026-11-25 - dolne belki: mapa komorka -> PID z KODU (PALNIK, KOCIOL, OGRZEWANIE, CWU, BUFOR, SOLARY, MAGAZYN, KASKADA)
+
+- WYKONANE: zamiast szukac stanow w CAN, odczytano presentery aktywacji ekranow w `decompiled.c` (adres decompiled = runtime - 0x10000). Widgety dolnej belki = klasa `0x0807e43c` (animowany obraz); widocznosc komorki = (wartosc PID != 0). PALNIK: wentylator 0x2254, podajnik zasobnika 0x2251, podajnik palnika 0x2252, zapalarka 0x2253, ruszt 0x2276; liczby nad ikonami: 0x2254 (np. 52), 0x226D (czas podawania, 2.1), 0x3711 (czas do czyszczenia, h:mm = "3:00", gdy stan 5 i typ spalania 0). Pozostale ekrany: patrz `real_panel_screens.json` -> `bottom_bar_static_2026_11_25`.
+- WERYFIKACJA: kod = STRONG; emulator: wstrzykniecie 0x2252 zapala komorke x=81 (MEASURED), pozostale pojedyncze wstrzykniecia nie odswiezyly widoku (do wyjasnienia). validate_ui_model PASS, smoke PASS.
+- OPEN: numery klatek bitmap komorek na ekranach innych niz PALNIK; czy 0x2251..0x2254 przychodza z kotla przez SDO poll (odczyt z HA).
+- Poprawka wczesniejszego wniosku: 0x4005/0x4008/0x4009 to PID-y 0x4xxx (wyliczane na panelu) - dlatego moc[%]=30 mimo 0 w rejestrze.
+
+## 2026-11-25 - Ikona 'E' paliwa ZNALEZIONA (sugestia wlasciciela: rezerwa > 0)
+- Emulator, rezerwa 0x3603=10, pojemnosc 135: dla paliwa <= rezerwa kafelek pokazuje pomaranczowy zasobnik z 'E' (bitmapa 53) i pomaranczowy tekst ilosci; 0 kg - sam obrys; powyzej rezerwy kropki. Przy rezerwie 0 (kociol wlasciciela) 'E' sie nie pojawia.
+- Test na prawdziwym kotle wymaga zapisu konfiguracji 0x3603 - nie wykonany (zgoda wlasciciela + nieznany wplyw na sterownik).
+
+## 2026-11-25 - Kropki zasobnika: regula w procentach pojemnosci (emulator + kod); mapa powiazan dolnych belek
+- Kod (Ghidra): FUN_080540de liczy udzial w promilach (A*1000/(A+B)); FUN_08054104/FUN_08054162 porownuja z dwoma progami i pokazuja/chowaja elementy ikony; FUN_080541ac - animacja/miganie. Wniosek: ikona zalezy od PROCENTU pojemnosci (0x3600) i rezerwy (0x3603), nie od kg.
+- Skan emulatora (pojemnosc 135, rezerwa 0 jak u wlasciciela): 0-10 kg obrys; 11-33: 2 kropki; 34-51: 5; 52-76: 9; 77-99: 14; 100-117: 19; >=118: 24. Rezerwa domyslna 40: miganie dla 2-39 kg. Zgodne ze zdjeciami co do struktury (10 kg: roznica 1 kg).
+- Dolne belki: animowane ikony wyjsc nie sa wiazane parametrami (stany wyjsc); wyniki sond: `UI/bind_raw/*`.
+
+## 2026-11-25 - Stan 2 'Rozzarzanie': dioda palnika zolta; ekran PALNIK z prawdziwego panelu
+- Kod stanu 2 (panel: 'Rozżarzanie', HA: 'Zarzenie'): dioda palnika na kafelku zolta, fizyczna bursztynowa. Dioda zolta w stanach 1, 2 i 7 (STRONG); stan 0 - brak diody.
+- Ekran PALNIK (Rozpalanie): 'spalanie[kg/h]=0.0', 'jasność=100', 'T. palnika=32' (zgodne z HA: spalanie 0.0, jasnosc plomienia 100, temperatura palnika 32); '46' w rogu - zrodlo OPEN; dolny wiersz: wentylator, wskazniki, zapalarka, kolo zebate.
+- Zegar panelu ok. 2 min do tylu wzgledem realnego czasu.
+
+## 2026-11-25 - Ikona paliwa: seria 80/60/30/15/5 kg (zdjecia, zapis licznika co ok. 10 s), druga linia temp. = srednia
+- Kropki zasobnika (orientacyjnie): 80 kg ~3 rzedy (~12), 60 kg ~2 rzedy (~6-7), 40 kg 3-4, 30 kg ~3, 21/15/10 kg 2, 5/2/0 kg 0. Hipoteza: siatka kropek (bitmapa 52) odslaniana od dolu proporcjonalnie do paliwa na tle obrysu (51); pojemnosc odniesienia (135 kg?) i dokladne progi do dopasowania. Licznik przywrocony do 21 kg.
+- Wlasciciel: druga linia temperatury zewnetrznej w rogu = srednia. Fizyczne diody od gory: zasilanie, palnik, alarm (nieaktywny).
+
+## 2026-11-25 - Rozpalanie: dioda fizyczna pulsuje; ikona pogody
+- Fizyczna dioda palnika PULSUJE w Rozpalaniu (w Czyszczeniu swiecila stale). Wartosci z panelu (wlasciciel): kociol 47.9, zewn. -3.5, CO 30.6, CWU 53.0; HA chwile pozniej: 47.1 / -3.6 / 30.8 / 52.6 (rozne chwile odczytu).
+- Korekta hipotezy: 'chmurka' w rogu to ikona POGODY (chmura ze sloncem) przy temperaturze zewnetrznej, nie wskaznik internetu.
+
+## 2026-11-25 - Rozpalanie: dioda palnika zolta; KOREKTA ukladu pulpitu (zadana vs zewnetrzna)
+- Rozpalanie (kod 1): dioda palnika zolta (jak w czyszczeniu); HA: zapalarka 1, podajnik palnika on, dmuchawa on. STRONG dla stanow 1 i 7.
+- KOREKTA: kapsula z AUTO pokazuje ZADANA WYNIKOWA kotla (60), nie temperature zewnetrzna. Temperatura zewnetrzna jest w prawym gornym rogu z ikona pogody ('-3.5' w dwoch liniach; druga linia OPEN). Nasze makiety karty (prototyp/karta_v2) opisaly kapsule blednie - poprawic w nastepnych renderach.
+- `home_indicators.json` uzupelniony (home_layout_real_panel).
+
+## 2026-11-25 - INFO i SIEC z prawdziwego panelu, diody fizyczne
+- INFO (zdjecie): 'igneoTouch v2.118 TE' / 'Draco Bio Compact FBII 18kW' / 'Controller by Estyma (www.estyma.pl)' / '1'. Odczyt HA: 0x3664=2118, 0x3665='TE', 0x350B=258. Wersja w linii 1 to wersja sterownika (2118), nie binarki (2.213 to domyslna emulatora). Nazwa kotla jest daną z kotla - w emulatorze nie zalezy od 0x350B ani 0x3665; zrodlo OPEN.
+- SIEC (zdjecie): CAN IO BIG Node 86 SW v4.0; UNKNOWN Node 87 (= ESP wlasciciela, bez SW). Wniosek: prawdziwy SW modulu to v4.0 (emulator pokazuje v0.0); ESP o Node ID 87 jest klasyfikowany jako UNKNOWN. Ryzyko kolizji Node ID 87 z drugim CAN IO BIG - decyzja dla ESP v2.
+- Diody fizyczne (Czyszczenie): zasilanie zielona, palnik bursztynowa, alarm zgaszona. Paliwo 21 kg: obrys + 2 kropki.
+- Zaktualizowane: `info_screen.json`, `siec_modules.json`, `home_indicators.json`.
+
+## 2026-11-25 - Dioda palnika: ZOLTA w czyszczeniu (obserwacja wlasciciela + HA)
+- Kociol w czyszczeniu: dioda palnika zolta (bitmapa 31). HA (tylko odczyt): palnik_kod_stanu=7 'Czyszczenie', dmuchawa on, podajnik palnika off, moc 0%, alarm off, zakaz rozpalania off.
+- Zgodne z emulatorem: wstrzykniecie 0x2007=7 pokazalo diode palnika. STRONG dla stanu 7. OPEN: rozpalanie (1), zarzenie (2), modulacja (5), wygaszanie (6), pauza (8) - wlasciciel zglosi kolor przy wystapieniu; ja loguje stan z HA.
+
+## 2026-11-25 - Dioda CWU w trybach (obserwacja wlasciciela, prawdziwy panel)
+- CWU: Eko = biala, Harmonogram = biala, Off = zgaszona (brak paska), Komfort = biala. Wlasciciel zmieniał tryb na panelu; ja tylko odczyt HA (CWU wrocilo na Komfort, CO bez zmian).
+- Wniosek (STRONG): dioda CO/CWU jest biala gdy program obwodu != Off i zgaszona dla Off; kolor nie zalezy od trybu (Eko/Harmonogram/Komfort) ani od stanu pompy. Zgodne z emulatorem. CO1 nie testowane (Off zatrzymalby ogrzewanie).
+
+## 2026-11-25 - Ikona paliwa: serie zdjec z prawdziwego panelu (zapis licznika 0x3601 przez integracje HA, za zgoda wlasciciela)
+- Zapisy licznika: 100, 40, 10, 2, 0 kg, na koncu przywrocone 21 kg (kazdy zapis zweryfikowany odczytem z HA; alarm/rezerwa/zakaz rozpalania bez zmian).
+- Panel: 100 kg pelna siatka kropek; 40 kg kilka kropek; 10 kg 2 kropki; 2 kg i 0 kg sam obrys (bez 'E'). Liczba kropek maleje stopniowo z poziomem paliwa. Pomaranczowe 'E' nie pojawilo sie nawet przy 0 kg - warunek inny (OPEN: czujnik rezerwy 0x3529, alarm).
+- Rozjazd z emulatorem: emulator ukrywa obrys przy <=1 kg; panel pokazuje go przy 0-2 kg. Ikona chmurki w rogu (bitmapa 181) - hipoteza: polaczenie z internetem.
+- `home_indicators.json` -> `fuel_tile.owner_photos_real_panel`.
+
+## 2026-11-25 - PIERWSZY ZAPIS NA ZYWYM KOTLE (na wyrazne polecenie wlasciciela): ilosc paliwa w zasobniku
+- Polecenie: zwiekszyc ilosc pelletu w zasobniku o 15 kg. Stan przed: 6.0 kg (HA, `sensor.*_zbiornik_paliwo`, pojemnosc 135, tryb mirror OFF, CAN OK).
+- Wykonane: JEDNO wywolanie `teklapelletcan.tekla_set_param {key: 47, value: 21}` (punkt 47 = 0x3601 'Zbiornik - ilosc paliwa [kg]', kodowanie Plain). Zadnego innego zapisu.
+- Weryfikacja: po ok. 5 s odczyt `zbiornik_paliwo` = 21.0 kg, zapelnienie 16%, alarm nieaktywny. MEASURED: zapis 0x3601 zwykla liczba kg przez integracje dziala na prawdziwym sterowniku (potwierdza kodowanie 'plain' dla tej nastawy).
+- Uwaga: stan zasobnika to licznik programowy (nie czujnik); wartosc 21 = 6 + 15 zgodnie z poleceniem.
+
+## 2026-11-25 - Diody HOME: obserwacja wlasciciela na prawdziwym panelu + emulator (zgodne)
+- Wlasciciel (prawdziwy panel): CO1 biala dioda (pompa dziala, obwod zamkniety termostatem), CWU biala dioda przy NIECZYNNEJ pompie. Odczyt HA (tylko odczyt): CO tryb Komfort, CWU tryb Komfort, pompa CO on, pompa CWU off, zgoda regulatora on, kociol wlaczony.
+- Emulator (sonda 655 PID): dioda CO1 widoczna gdy 0x2064 != 0, CO2 gdy 0x2065 != 0, CWU gdy 0x2014 != 0 (ukrywa sie przy 0x2005=0 i 0x2106=0), zasilanie gdy 0x2005 != 0; bitmapa stale 32 (biala), zasilanie 28 (zielona).
+- Wniosek (STRONG): biala dioda CO/CWU = obwod aktywny (program != Off), nie stan pompy. OPEN: zmiana koloru w innych trybach (Eko/Harmonogram) - do zobaczenia na panelu przy zmianie trybu (zmiany tylko przez wlasciciela).
+- `home_indicators.json` uzupelniony i wlaczony do `device_model.json`.
+
+## 2026-11-25 - Pelny zestaw grafik: trasowanie do SVG (vtracer) - pomiar
+- `tools/bitmap_trace.py` + `tools/render_svgs.js` -> `UI/bitmap_trace_fit.json` (3 presety x 188 bitmap, render Chromium 1x, porownanie pikseli). Pierwsza wersja renderu miala blad (obraz nie ladowal sie z about:blank -> wszystko RASTER, MAE identyczne dla presetow) - wykryty po identycznych wynikach, naprawiony (SVG otwierany bezposrednio).
+- Wynik (najlepszy preset na bitmape): WEKTOR 5, DOBRY (MAE<=6) 48, SLABY (<=12) 44, RASTER 91. Czyli 53 bitmapy dalo sie odtworzyc z bledem <=6, ale **SVG jest ok. 8x wieksze od PNG** (po gzip ok. 950 KB wobec 124 KB PNG) - oplacalne rozmiarowo tylko 14 (SVG gz <= 1.5x PNG: m.in. 65, 73-76, 96, 98, 114, 126, 132, 133, 135, 157, 166).
+- Razem z modelem parametrycznym (gradienty, 31 bitmap): ok. 38 bitmap mozna zastapic CSS/SVG przy akceptowalnym bledzie i rozmiarze; ikony i kotly (cieniowane, wiele kolorow) zostaja PNG - trasowanie daje duze SVG lub widoczna degradacje (SLABY).
+- Katalog SVG (ok. 12 MB) nie jest w repo (do regeneracji narzedziem).
+
+## 2026-11-25 - Bitmapy vs wektor (SVG/CSS): pomiar, co da sie odtworzyc
+- `tools/bitmap_vectorize.py` -> `UI/bitmap_vector_fit.json`, montaz `eksport_grafik/wektor_vs_bitmapa_montaz.png` (oryginal | odtworzenie | roznica x4). Modele: stala, gradient pionowy/poziomy, rozdzielny (profil Y+X), z zaokraglonymi rogami; blad liczony na pikselach (kompozyt na szarym i bialym tle).
+- Wynik na 188 bitmapach: WEKTOR 12 (MAE<=2.5, 30 KB PNG), PRZYBLIZONY 19 (MAE<=6, 48 KB), RASTER 157 (267 KB: ikony, kotly, grafiki). Czyli tla/gradienty/linie/przyciski/paski daja sie zastapic CSS/SVG (31 bitmap, ok. 78 KB PNG), reszta (ikony, schematy) zostaje PNG.
+- Przyblizone (kafle 73/74/75/76, przyciski 6/7, 102/103, listy 81): brak szumu/faktury i drobnych detali (np. ciemny slot LED w 74/75) - do dorysowania jako osobne elementy; wtedy blad spada.
+- Pamiec: bitmapy jako PNG razem ok. 345 KB (surowe RGB565 ok. 1 MB); zamiana 31 tel/gradientow na CSS oszczedza ok. 78 KB, glowny zysk to skalowalnosc i motywy.
+
+## 2026-11-25 - Odczyt na zywym kotle przez integracje HA (TYLKO ODCZYT, zgoda wlasciciela)
+- Uzyte: `teklapelletcan.tekla_sdo_read` (2 odczyty docelowe + 1 omylkowy 0x3865 - blad przeliczenia hex->dec, odczyt, bez skutkow) i stany encji `*_tekla_*` (ha_search/ha_get_state). ZADNYCH zapisow (sdo_write/set_*), skan zakresu nie uruchamiany. Kod serwisow sprawdzony w `firmware/components/core/engine.cpp` (sdo_read/sdo_scan = tylko zlecenia odczytu SDO; skan wstrzymuje odczyt cykliczny na czas trwania).
+- MEASURED (zywy kociol): 0x3664 = 2118 (wersja programu sterownika -> wg reguly INFO 'v2.118'; regula >=2100 -> '%d.%03d' ma sens), 0x3665 = 0x54450000 = 'TE' (znaki big-endian jak SSID; krotka nazwa kotla).
+- Migawka stanu (z encji): kociol wlaczony, CAN OK, palnik kod stanu 0 (Wylaczony), pompa CO ON, pompa CWU OFF, regulator pokojowy zgoda ON, zakaz rozpalenia OFF, paliwo rezerwa OFF, zbiornik 7 kg z 135 (5%), alarm aktywny OFF (ostatni: kod 140 Brak ognia/opalu). Do porownania z diodami na prawdziwym panelu (CO ON, CWU OFF, zasilanie ON, palnik OFF?).
+- Encje HA daja gotowe zrodla stanow pomp/palnika/zakazu rozpalania (binary_sensor *_co_pompa, *_cwu_pompa, *_zakaz_rozpalenia, *_dmuchawa_pracuje, *_podajnik_palnika_pracuje) - kandydaci na PID-y do diod HOME (OPEN: ktory rejestr stoi za kazdym).
+
+## 2026-11-25 - Etap E3: ekran INTERNET - pola i PID-y zmierzone
+- `tools/internet_probe.py` -> `UI/internet_screen.json`. Teksty wypelniane przy wejsciu (set_local PRZED wejsciem).
+- SSID = 0x3730..0x3735 (6 x u32 big-endian, 24 znaki, koniec na pustym chunku); PASSWORD = 0x3736..0x373B (jawnie); SERIAL = 0x373F (u32 dziesietnie); PIN = 0x3740 (obciety do 6 znakow); WiFi = 0x373E, Zmiany zdalne = 0x3741 (przelaczniki, !=0 -> ON); ikona przy SSID = 0x373D (widocznosc !=0, znaczenie OPEN). 0x3742..0x3745 i 0x2170 nie sa zrodlami ekranu.
+- OPEN: pelna lista znakow edytora, kasowanie, trwalosc, 0x5B <-> INTERNET.
+
+## 2026-11-25 - Etap E2: ekran INFO - zrodlo wersji zmierzone
+- `tools/info_probe.py`, `tools/info_probe2.py` -> `UI/info_screen.json`. Wniosek metodyczny: teksty INFO wypelniane sa PRZY WEJSCIU na ekran (wstrzykniecie po wejsciu nic nie zmienia) - storage trzeba ustawic przed wejsciem.
+- MEASURED: linia 1 `igneoTouch v<wersja>` z PID 0x3664: v>=2100 -> `%d.%03d` (v//1000, v%1000), v<2100 -> `%d.%02d` (v//100, v%100); 2213 -> v2.213, 65535 -> v65.535.
+- OPEN: 'Bio Compact 10kW' (0x3665 nie zmienia tekstu), 'videRoom PIN 0' (0x2170 nie zmienia), liczba 0 w prawym dolnym rogu. Linia 'Controller by Estyma (www.estyma.pl)' stala.
+
+## 2026-11-25 - Etap E1 ZAMKNIETY: ekran SIEC - pelna tabela Node ID -> modul
+- `tools/siec_probe.py` -> `UI/siec_modules.json`: skan Node ID 1..127 (MEASURED, emulator, po jednym module). Klasy: SLAVE 1-3 (0x05-07), RADIO GATEWAY 0x08, CAN IO 0-7 (0x40-47, kolumna 4 T=temp), MODUL LAMBDA 0x50, IO BOARD PRO 0x51, FLOWMETER 1/2 (0x54/55), CAN IO BIG 0x56/57, VIDE GSM 0x5A, VIDE NET WIFI 0x5B, VIDE NET 0x5C, VIDE ROOM 1-4 (0x64-67), CAN GATEWAY 0-7 (0x6E-75), CAN IO MINI 0-7 (0x78-7F), reszta = UNKNOWN. Format wiersza: nazwa | Node ID=<dec> | SW v<ver> (tylko czesc klas) | T=<temp> (CAN IO / MINI 0). Kolejnosc wg Node ID.
+- OPEN: SW v0.0 widoczne tylko dla czesci klas przy samej identyfikacji; prawdziwa wersja z PDO1; 3+ modulow naraz / >8 wpisow.
+- `device_model.json` -> `modules.network_table`. Poprawka: 0x57 i 0x5B (raport ChatGPT 24.11 mylnie "pusty/negatywny") - widoczne.
+
+## 2026-11-25 - Etap D ZAMKNIETY: PID-y harmonogramu (PROGRAM) wszystkich dni i obwodow
+- `tools/program_write_probe.py` + `tools/build_program_pids.py` -> `UI/program_pids.json` (42 PID-y: Kociol, CO1-CO4, CWU x Pn..Nd). MEASURED: ramka zapisu panelu po zmianie godziny w dialogu dnia; dzien potwierdzony tytulem dialogu (pierwszy przebieg mylil dni po przewinieciu listy - wykryte i naprawione).
+- Kociol 0x2209+dzien; CO_k = 0x2126 + 4*dzien + (k-1); CWU 0x2154+dzien (Pn..Sb), niedziela 0x2160. Wzory potwierdzone na wszystkich 42 PID-ach, braki: 0.
+- Maska u32 (24 bity, bit h = godzina h, 1 = komfort); zapis przy OK tylko gdy wartosc sie zmienila.
+- `device_model.json` -> `program.pids_by_circuit` z tych danych.
+
+## 2026-11-25 - Etap C: wskazniki HOME = paski LED (bitmapy 28/31/32), sonda 655 PID
+- Wskazniki kafelkow belki to paski LED 68x28: bitmapa 28 zielona, 31 zolta, 32 biala (id bitmapy w widgecie +0x26). Mapa bitmap 45-55 (wlasciciel): 045 plomien, 046 slimak, 047 zielona dioda, 048/049 paski, 050 suwak, 051 obrys zasobnika, 052 zasobnik z peletem, 053 zasobnik z E (pusty).
+- MEASURED: LED zasilania (x414, zielony) i CWU (x345, bialy) widoczne domyslnie; 0x2005=0 chowa oba; LED CO1 (x207)/CO2 (x276) pojawiaja sie przy 0x2064/0x2065=3; LED palnika (x138) bez reakcji na PID. Zmiana KOLORU (28/31/32) nie zaobserwowana w zadnym tescie - OPEN (stany od sterownika).
+- Paliwo: >=100 kg ikony stale, <=30 kg miga; ikona 053 'E' - widget nie znaleziony (OPEN). Wczesniejsza regula progow 1/40 kg wycofana.
+- Pliki: `UI/home_indicators.json`, `UI/bind_raw/*`, narzedzie `tools/home_indicators_probe.py`.
+
+## 2026-11-25 - Etap C: HOME - dolna belka kafelkow i diody (spec od wlasciciela + pomiar)
+- SPEC (wlasciciel, do potwierdzenia na panelu/zdjeciach): diody sprzetowe (zasilanie, palnik, alarm) sterowane tym samym mechanizmem co wskazniki na ekranie. Wskazniki na kafelkach dolnej belki: zasilanie (prawy) = kociol ON/OFF; CWU = czy dziala pompa CWU; CO1/CO2 = pompa/ogrzewanie/zgoda termostatu; paliwo = tekst + dynamiczna ikona; palnik = stan palnika + ikona zakazu rozpalania. Kolor/animacja wskaznika niezmierzone (OPEN).
+- POMIAR (emulator, HOME): belka y=197, kafelki x=0(box/menu),69(paliwo, tekst "180kg" 0x2001b398),138,207,276,345,414; wskazniki = widgety "image" 0x20016504(138) 0x20016530(207) 0x2001655c(276) 0x20016588(345) 0x200165b4(414); ukryte domyslnie: 138/207/276, widoczne 345/414. Wskaznik 207 pojawia sie po 0x2064=3 (tryb CO), 276 zmienia przypisanie wraz z 0x2064.
+- 0x2007 (kod stanu palnika) = 10 (ALARM) przestawia ukad calej belki (kafelki zamieniaja bitmapy 0x6330/0x648c/0x6360..., box 0x20016330 zmienia kolor) - pozostale kody (1,2,5,6,8) bez efektu przez wstrzykniecie 0x584. Wniosek: wskazniki stanu nie biora danych z 0x2007/0x2299/0x2278 wprost; wymagana analiza kodu odswiezajacego (OPEN).
+- Narzedzie robocze: skrypt diff surowej pamieci widgetow belki po wstrzyknieciu (id bitmapy obrazu nie jest w ui_extras.extract; do dopisania).
+
+## 2026-11-25 - Etap C (w toku): bindingi HOME - diagnoza "0 powiazan"
+- Wynik `HOME 0` (z 24.11) NIE byl regresja: (1) `bind_screen.py` porownywal tylko TEKSTY (diody/ikony = btn/image/box nie byly mierzone); (2) po `load_state` HOME przestaje sie odswiezac (wstrzykniecia nie dawaly zadnych zmian); (3) bledy TypeError = PID bez rekordu w tabeli (pomijane - OK).
+- Narzedzie: `bind_screen.py` dostal BIND_STATE=1 (stany btn/box/image), BIND_REVERT=1 (bez load_state, cofanie wartosci, filtr szumu), BIND_SHARD=i/n (rownolegle), BIND_ALLPIDS=1 (655 PID + parametry producenta). Surowe wyniki: `UI/bind_raw/HOMER_*.json`.
+- Zmierzone (MEASURED): 0x2001 (temp kotla, LiveSim) -> tekst 0x2001b360; 0x3601 (zapas paliwa kg) -> tekst 0x2001b398 ("180kg"); 0x22A1/0x22A5/0x22A6/0x22A7.. (czujniki CO/pokoj) -> ikona 0x2001b2d0; 0x2266/0x226B -> bitmapa przycisku 0x2001adf8 (168->169); 0x2064 (tryb CO) -> ikona 0x20016530.
+- OPEN: diody stanu palnika/pomp NIE reaguja na wstrzykniecie 0x2007/0x2299/0x2278/0x229A/0x4005 (ramki 0x584) - zrodlo stanu jest inne (statusowa sciezka CAN/PDO od sterownika). Widgety 0x2001b29c i 0x2001b328 zmieniaja sie same (szum/animacja) - wykluczone z bindingow.
+- Nastepny krok: sledzenie odczytow pamieci kodu odswiezajacego kafelki HOME (ktory adres RAM czyta dioda palnika) zamiast brute-force po PID.
+
+## 2026-11-25 - Etap B: kodowanie zapisu panelu (emulator)
+- `tools/write_probe.py` + `tools/build_write_frames.py` -> `UI/write_frames.json` (135 wierszy list nastaw, 4 procesy).
+- Ramka zapisu: CAN id 0x584 `42 idx_lo idx_hi 01 u32LE(raw)`. Kodowanie: plain (63), raw = wyswietlana/scale (13; np. 21.1 degC -> 211, histereza 0.6 -> 6), indeks opcji radio (12), przelacznik 0/1 (12). Kodowania "flaga+256" (stary projekt) NIE zaobserwowano. MEASURED (emulator); zapis do prawdziwego kotla NIE testowany.
+- OPEN: 35 wierszy bez ramki (13 statystyk listy 0x11 - prawdopodobnie tylko odczyt; pozostale to przelaczniki wymagajace potwierdzenia/zagniezdzone; CO3/CO4 tylko wnioskowane z CO1).
+- `device_model.json`: pole `panel_write` przy PID; sekcja `program` z PID-ami dni (kociol 0x2209-0x220F, CWU 0x2154-0x2160, CO 0x2126+4*dzien+obwod-1), dialogiem dnia.
+- Walidator 27 plikow/0 bledow, smoke PASS.
+
+## ETAP A (2026-11-25) ALARMY I STATUSY: BLAD ZNALEZIONY I NAPRAWIONY, 71 kodow z binarki
+Zrobilem: (1) `vendor_sdo_scada.json` - dane z PDF producenta (SDO_SCADA.pdf od wlasciciela): wezel 4, SDO 0x604/0x584, typy, **kody stanow palnika** (OFF=0, FIRE_UP=1, INCANDESCING=2, MODULATION=5, BURNING_OFF=6, CLEANING=7, PAUSE=8, STOP=9, ALARM=10) i **trybow kotla** (TIME_AUTO=0, TIME_MANUAL=1, AUTO=2, MANUAL=3), bity rejestru alarmu (16 aktywny, 17 potwierdzony, **18 zadanie potwierdzenia**), 54 kody alarmow, 20 parametrow z RO/RW; (2) `tools/alarm_texts.py` - wstrzykniecie kodu do pierscienia historii (po tym jak silnik skonczy wlasne wpisy) i odczyt tekstu z ekranu Historia alarmow: **71 kodow, pokazany kod = wstrzykniety 71/71**; (3) `alarm_codes_verified.json`: kod -> nazwa producenta + tekst panelu w 8 jezykach (z binarki). **BLAD: wszystkie 68 wpisow starego `alarms.json` (kod->tekst z analizy statycznej) mialy zly tekst** (np. 110 to 'Komunikacja z modulem BIG', nie 'czujnik zbiornika solarnego'; 140 'Brak ognia/opalu'); stary plik oznaczony ostrzezeniem, poprawne dane w nowym. Kody tylko z binarki (poza PDF): 36, 52, 53, 80-83, 124, 139, 204-206, 250-254; 117, 121, 122 maja w panelu 'Brak opisu'. (4) `tools/build_device_model.py` + `device_model.json` (pakiet modelu urzadzenia dla ESP/HA/karty/Androida/WWW). Nastepny etap B: kodowanie zapisu z panelu (ramki SDO po OK w dialogu).
+
+### KONIEC POMIARU DIALOGOW LIST (2026-11-25): 135 z 166 wierszy zmierzone (81%), krok = 1 jednostka surowa
+Zrobilem: poprawka metody (zakres polozenia wiersza 55-255 px - gorne wiersze odrzucane przy progu 75) i dokonczenie pomiaru: **76 suwakow, 14 dialogow radio (z etykietami opcji), 45 wierszy bez dialogu (przelaczniki i liczniki tylko do odczytu)**; krok +1 = 1 surowa we wszystkich (60 x 1.0, 13 x 0.1 przy skali 0.1, 3 bez zmiany na granicy zakresu). Nie dotarlem do 31 wierszy gleboko na dlugich listach (Kociol 7-12, Palnik 6+...): przewijanie dragiem nie dociera do konca - zalozony krok 1 (INFERENCE). CO3/CO4 = jak CO1 (INFERENCE). Dane: `ui_model/list_dialogs.json`.
+
+### ZAMKNIECIE (2026-11-25): ekrany i listy per konfiguracja zmierzone; projekt zamkniety na dzis
+Zrobilem: `tools/screens_config.py` (11 kombinacji): listy nastaw Kociola/Palnika/CO1 stale; schematy ekranow Kociol/CWU/Solary/Bufor zaleza od liczby obwodow CO (0x2105) i obecnosci CWU/solara/bufora; listy Solary i Bufor zaleza od CWU. Podglad SVG/CSS (jednorazowy). Stan: ~93% wiedzy o wygladzie i zachowaniu; TODO wlasciciela: ESPHome wykrywa konfiguracje kotla i udostepnia odpowiednie widoki (HANDOFF pkt 11). Niedokonczone: pomiar dialogow list (116/212), 2 komorki Konfiguracji (kaskada), Kopiuj/INTERNET kosmetyka.
+
+### 1:1 (2026-11-25) CO SIE POJAWIA PRZY JAKIEJ KONFIGURACJI: reguly zweryfikowane w emulatorze (36/36)
+Zrobilem: `tools/menu_rows_probe.py` - napisy wierszy MENU czytane z RAM (bez przewijania i zrzutow, ~20 s na kombinacje) dla 36 kombinacji (poziomy 0,1,2,3 x 9 konfiguracji: obwody CO 0-4, CWU, bufor, solar, kaskada, magazyn); porownanie z regulami `menu_tree` (config_cond, level_min): **zgodne 36 z 36** (`ui_model/menu_rules_check.json`), w tym poziom 2 (bylo zalozone, teraz zmierzone). Razem z `home_config.json` (HOME: Ogrzewanie 1 <=> 0x2105>=1, Ogrzewanie 2 <=> >=2, CWU <=> 0x2106!=0; bufor/solar/obwody 3-4 nie zmieniaja HOME): kompletna wiedza 'co przy jakiej konfiguracji i poziomie'. Alarmy widoczne od poziomu 0 w kazdej konfiguracji (potwierdzone w teście). Wiersze menu: Kociol, Palnik, Alarmy, Info, Konfiguracja, PIN zawsze; Ogrzewanie n <=> 0x2105>=n; CWU <=> 0x2106!=0; Solary <=> 0x2108!=0; Bufor <=> 0x2107!=0; Kaskada <=> 0x350C!=0; Magazyn <=> 0x3525!=0; Jezyk, Alarm dzwiekowy, Test wyjsc, Statystyki, Siec, Internet od poziomu 1.
+Wznawiam pomiar dialogow list (3 procesy).
+
+### 1:1 (2026-11-25) HOME zalezny od konfiguracji: ZMIERZONE (40 kombinacji, 3 procesy)
+Zrobilem: `tools/home_config.py`: widocznosc elementow HOME z RAM przy kazdej kombinacji 0x2105 (0..4) x 0x2106/0x2107/0x2108 (0/1). Reguly (`ui_model/home_config.json`): kafel **Ogrzewanie 1 <=> 0x2105>=1**, **Ogrzewanie 2 <=> 0x2105>=2**, **CWU <=> 0x2106!=0** (inaczej pusty kafel, bitmapa 73); bufor (0x2107), solar (0x2108) i obwody 3-4 NIE zmieniaja HOME; reszta HOME stala. Pozostalo: tani test regul wierszy menu (liczba wierszy: przewidziana vs faktyczna na probce kombinacji), pomiar dialogow list (wstrzymany na czas limitu 3 procesow).
+
+### 1:1 (2026-11-25) KROK DIALOGU LICZBOWEGO: FACT-DYNAMIC dla 52 wierszy, krok = 1 jednostka surowa
+Zrobilem: znaleziona przyczyna zawodnosci dialogow list: **po wczytaniu punktu kontrolnego w srodku sesji (load_state) przewiniecie + stukniecie nie otwiera dialogu** (zmierzone: bez load_state 55.6% zmiany obrazu, z load_state 0.0%) - nowa metoda: swiezy rozruch na wiersz + polozenie wiersza z RAM (abs_y widgetu etykiety) + 3000 tikow po przewinieciu. `tools/list_dialogs.py`; wynik `ui_model/list_dialogs.json`: **52 suwaki zmierzone (krok +1 = 1 surowa; wyswietlane 1 lub 0.1 wg skali; 3 bez zmiany na granicy zakresu), 10 dialogow radio z etykietami opcji (np. Tryb pracy: reczny/pogodowy), 38 wierszy bez dialogu (przelaczniki, liczniki tylko do odczytu)**, 41 wierszy bez pomiaru (nie dotarlem przewijaniem). Wniosek: krok dialogu = 1 raw dla wszystkich zmierzonych (zakladane dla reszty, INFERENCE). Zamyka wpis BACKLOG o kroku dialogu (czesciowo).
+
+### 1:1 (2026-11-24) stan 'online' (moduly CAN karmia panel): zmierzony
+Zrobilem: `COV_LIVE=1 tools/coverage_gen.py` (LiveSim 500 tikow przed zrzutem) dla 4 konfiguracji (L0 FULL, L1 FULL, L1 DEFAULT, L3 kaskada+magazyn): ~95 komorek, mediana 0.2-0.3%, wszystkie < 3% poza ALARMY L0 (artefakt emulatora). Dane `ui_model/coverage_matrix_online.json`. Wniosek: renderer zgodny takze gdy zrodla live sa aktywne. Pozostalo: krok dialogu wszystkich wierszy (zakladany 1 raw), 2 komorki Konfiguracja przy kaskadzie, Kopiuj/INTERNET (kosmetyka), 'alarm aktywny' wstrzykniety (bez wlasnych danych).
+
+### 1:1 (2026-11-24) ETYKIETY OPCJI ENUM: FACT-DYNAMIC; etykiety PL wierszy 212 z 213
+Zrobilem: `tools/enum_labels.py` - bez dialogu: wstrzykniecie kazdej wartosci PID (emulator) i odczyt tekstu wiersza listy z RAM. Wynik `ui_model/enum_labels.json`: Czujnik pokojowy CO (brak/CTP1/CTP2/videROOM/termostat/CAN), Czujnik temp. zewnetrznej (brak/CTZ1/CAN), Konfiguracja IN17 (brak/czujnik rezerwy paliwa/czujnik temp. spalin), Pompa kotlowa (ladujaca/ochrony powrotu/buforowa), Pomiar energii (brak/ciepłomierz/przeplywomierz), Glowny modul IO (BIG/STD), Modul rozszerzajacy CO (STD/MINI); enumy liczbowe (obiegi, stopnie mocy kaskady, profil, czyszczenia rusztu) pokazuja liczby; przelaczniki = galka. CO2-4 dziedzicza opcje CO1 (INFERENCE). Etykiety PL list: **212 z 213 wierszy z PID** (kolejne wolne sloty miedzy kotwicami rozwiazaly separatory), Statystyki 13/13. Wiersz bez etykiety: 1 (wykres). Pozostalo: stan 'online', krok dialogu wszystkich wierszy (zakladany 1 raw), 2 komorki Konfiguracja przy kaskadzie, Kopiuj/INTERNET.
+
+### 1:1 (2026-11-24) etykiety PL list: wszystkie wiersze z PID w 13 listach (Statystyki 13/13)
+Zrobilem: nawigacja do Statystyk (ogon MENU L3), ekstrapolacja slotow z kotwic na krancach; etykiety PL (MEASURED z RAM) dla praktycznie wszystkich wierszy z PID, w tym Statystyki i Konfiguracja 21/26 (reszta bez PID). Dane: `ui_model/list_labels_pl.json`. Pozostalo: etykiety opcji enum tekstowych, stan online, krok dialogu wszystkich wierszy, Kopiuj/INTERNET, 2 komorki Konfiguracja przy kaskadzie.
+
+### 1:1 (2026-11-24) nawigacja do ogona MENU naprawiona: 634 komorki, 0 nierozstrzygnietych poza 2
+Zrobilem: fallback przewijania do konca menu i stukania od dolu (`coverage_gen.py`) - 16 komorek (Test wyjsc, Statystyki, Siec, Internet w konfiguracjach DEFAULT, 2105=0, 2105=2, L3 DEFAULT) zmierzone: **0.2-2.3%** (wiersze istnieja w kazdej konfiguracji, wiec `visible_in` bylo poprawne; 'prawdopodobnie niedostepne' bylo bledem). Wynik calosci: **634 komorki, mediana 0.2%, 99.7% < 3%, 0 > 8%**. Zostaly 2 komorki: KONFIGURACJA przy kaskadzie+magazynie (L1, L3) - stukniecie trafia o jeden wiersz dalej (okno 'Wpisz PIN'), blad przewijania przyrostowego. Pozostalo: etykiety enum tekstowych, Statystyki/Siec etykiety, stan 'online', krok dialogu wszystkich wierszy, Kopiuj/INTERNET.
+
+### FINISZ PRZEBIEGU KONTROLNEGO (2026-11-24): po poprawce renderera 606 komorek, mediana 0.2%, 99.7% < 3%, 0 > 8%
+Zrobilem: pelny przebieg pokrycia (36 zadan, 4 procesy) po poprawce Box/role=image i wszystkich zmianach renderera - brak regresji. Stan rewersu 1:1: dialogi 16/16 < 6%, HOME 0.0%, PROGRAM 0.5%, ekrany menu mediana 0.2%. Pozostalo (wg BACKLOG): 18 komorek bez pomiaru (nawigacja do ogona MENU), etykiety opcji enum tekstowych, Statystyki/Siec etykiety, stan 'online bez alarmow', Kopiuj 5.8% / edytor INTERNET 5.0% (kosmetyka). Wszystko wypchniete na ccr-be8a1bcb-5t76j0.
+
+### 1:1 (2026-11-24) BLAD RENDERERA ZNALEZIONY: Box z role=image byl pomijany; PROGRAM 0.5%
+Zrobilem: przyczyna artefaktow PROGRAM (brak segmentu, ikona): `ui_extras.py` klasyfikowal widget Box (vptr 0x807f24c) bez bitmapy jako 'image' i go nie rysowal; poprawione (Box sprawdzany przed role=image). Wynik: PROGRAM (oba widoki, Pn-Cz i Cz-Nd) **0.5%**, HOME 0.0%; 16 dialogow bez regresji (suma: 16 dialogow/ekranow, najwyzsze Kopiuj 5.8, INTERNET 5.0). To poprawia tez wszystkie ekrany z takimi boxami - pelny przebieg pokrycia do powtorzenia przy najblizszej okazji. Kasuje wpis BACKLOG o artefaktach PROGRAM.
+
+### 1:1 (2026-11-24) po Twojej uwadze wrocilem do domykania rewersu: HOME 0.0%, krok dialogu liczbowego
+Zrobilem: pelny render HOME ze stanem bazowym = **0.0%** roznicy (z danych firmware); Kopiuj 5.8% i edytor INTERNET 5.0% - roznica to 1 px przesuniecie/alfa bitmap checkboxow i przyciemnienie naglowka (zmierzone, nie blokuje); `tools/list_dialogs.py` (dialog edycji wiersza listy: rodzaj, tytul PL, min/max, krok +/-): FACT-DYNAMIC dla wierszy Kociola 0,1,2,4: suwak, **krok = 1 jednostka surowa** (+1 daje 66/11/1/46), zakresy zgodne z lists.json (60-80, 0-20, 0-20, 20-70). Przewijanie do dalszych wierszy dalej zawodne (offset po drag) - narzedzie eksperymentalne, reszta wierszy w BACKLOG. Wniosek: krok dialogu = 1 raw dla wszystkich dotychczas zmierzonych; dla pozostalych wierszy przyjmuje sie 1 (INFERENCE).
+Pozostale luki 1:1 (po kolei): etykiety opcji enum tekstowych (poza IN17/Energy meter/Glowny modul IO), Statystyki/Siec etykiety, render PROGRAM z danych, stan online, 18 komorek pokrycia.
+
+### E7 (2026-11-24) PROGRAM: przewijanie dni (Pn-Cz <-> Cz-Nd)
+Zrobilem: drugi ekran PROGRAM (zrzut z emulatora po przewinieciu), przewijanie kolkiem myszy/przeciagnieciem w karcie; test Playwright OK. Stan E7: 18 ekranow + PROGRAM x2, 5 okien HOME, dialog liczbowy, dialogi PROGRAM (dzien/Kopiuj), etykiety PL, tryb API (odczyt), karta Lovelace. Pozostalo: edycja segmentow PROGRAM i dialog radio dla enum tekstowych (OPEN: brak pelnych etykiet), listy Statystyki/Siec (przewijanie), test w prawdziwym HA, nawigacja pokrycia (18 komorek).
+
+### E3 (2026-11-24) ponowny pelny przebieg po wszystkich poprawkach renderera: 606 komorek, mediana 0.2%, 99.7% < 3%
+Zrobilem: pelny przebieg 3 poziomy x 12 konfiguracji (4 procesy) + powtorka 14 zadan po poprawce stukania w ogon menu (najpierw zszyty obraz, potem przewijanie przyrostowe). ALARMY L0 wylaczone z oceny (artefakt emulatora potwierdzony zdjeciem wlasciciela). Wynik: **606 komorek, mediana 0.2%, 99.7% < 3%, 0 komorek > 8%**. Nierozstrzygniete 18 komorek (nie zmierzone, nie bledy renderera): 16 x stukniecie w Test wyjsc/Statystyki/Siec/Internet w konfiguracjach DEFAULT/2105=0/2105=2 (L1) i DEFAULT (L3) - wiersze istnieja w menu (potwierdzone zrzutem dla 2105=2), ale przewijanie nie dociera; 2 x KONFIGURACJA przy kaskadzie+magazynie (stukniecie trafia w inny wiersz). Pozostalo: ta nawigacja (BACKLOG), przewijanie PROGRAM w karcie, wlaczenie zdjec prawdziwego panelu do porownan (wlasciciel moze dostarczac zdjecia ekranow).
+
+### OPEN#2 ROZWIAZANE (2026-11-24) dzieki zdjeciu wlasciciela
+Historia alarmow na L0 w prawdziwym panelu ma normalny uklad (ikony po prawej, przyciski gora/dol), wiec przesuniecie ~100 px w emulatorze to artefakt emulatora; komorki ALARMY L0 nie liczone do bledu renderera (po wylaczeniu: mediana nadal 0.2%, >8% prawie 0). Karta uzywa ukladu normalnego (z L1). Dopisane: status NIEAKTYWNY zielony / AKTYWNY czerwony, linia Potwierdz. - zgodne z danymi.
+### E7 (2026-11-24) etykiety PL list: 173 z ~190 wierszy (bylo 144)
+Zrobilem: wnioskowanie slotow miedzy zmierzonymi kotwicami (`tools/list_labels.py`, pole `how`), wspolna nawigacja `tools/ui_nav.py` (tap_incremental). Konfiguracja 14 z 26, reszta list 91-100%. Pozostalo: Statystyki (nie da sie wejsc z L3 w tej metodzie), skrajne wiersze bez kotwic. PROGRAM: ikona w kolku, ktora zaznaczyles, to artefakt MOJEGO renderu z danych (nie ma jej w panelu) - tlo PROGRAM w karcie to teraz zrzut z emulatora, bug renderu w BACKLOG.
+
+### E7 (2026-11-24) dialog liczbowy jak w panelu, PROGRAM klikalny, etykiety PL list
+Zrobilem: (1) uwaga wlasciciela - suwak mial niebieska galke przegladarki: dialog liczbowy odbudowany z bitmap i pozycji firmware (tor, wypelnienie, srebrna galka 46x46, przyciski -/+, OK; przeciaganie), tlo `dialogs/number_bg.png` z danych (`tools/export_dialog_static.py`); (2) PROGRAM: klik w dzien -> dialog dnia, Kopiuj -> dialog kopiowania, OK zamyka (obrazy z danych; edycja segmentow OPEN); (3) `tools/list_labels.py` + `ui_model/list_labels_pl.json`: 144 etykiety PL wierszy list (MEASURED) - karta pokazuje polskie nazwy zamiast angielskich nazw rejestrow (Konfiguracja 7 z 26, Statystyki 0 - inny uklad ekranu, do dopracowania). Ikona w lewym gornym rogu PROGRAM (zaznaczona w uwagach): nie ma jeszcze funkcji w karcie - sprawdze w firmware co robi.
+
+### E7 (2026-11-24) karta Lovelace `estyma-panel-card` dziala na atrapie HA
+Zrobilem: `web/estyma-panel-card.js` (custom element: iframe z prototypem + most postMessage; stany z `hass.states`, mapowanie `entities:` albo domyslnie sensor.*_<id>), strona testowa `estyma_prototype/test_card.html`; test Playwright: temperatura Kotla 77.7 z atrapy hass pojawia sie na ekranie karty, 0 bledow. TYLKO ODCZYT (zero uslug HA). Instalacja opisana w naglowku pliku (kopiowanie do /config/www). Nie testowane w prawdziwym Home Assistant (brak dostepu). Pozostalo: etykiety PL list, PROGRAM edycja, dialog radio, ALARMY L0, stan online, porzadek HANDOFF/PLAN.
+
+### E7 (2026-11-24) edycja wartosci + tryb odczytu z urzadzenia
+Zrobilem: dialog liczbowy w liscie nastaw (suwak, -/+, OK; wartosci domyslne z firmware, edycja tylko w pamieci strony), tryb `?api=http://host` - odczyt `GET /api/v1/states` co 2 s i podstawienie wartosci pol (binding po id punktu); test na atrapie serwera: karta pokazuje 81.7 z API. Prawdziwego urzadzenia nie dotykalem. Pozostalo: etykiety PL w listach (dane `settings_labels` do zweryfikowania dialogami), PROGRAM edycja, dialog radio dla enum tekstowych, ALARMY L0, stan online; porzadek dokumentacji (HANDOFF/PLAN) na koniec.
+
+### E3 korekta (2026-11-24): 644 komorek, 0 falszywych 'niewidocznych'; 8 nierozstrzygnietych
+Zrobilem: poprawka metody - wczesniejsze 'NOT_VISIBLE' (19) byly w czesci bledem pomiaru (zszyty obraz MENU urywa sie po 13 wierszach; po przewinieciu do konca widac Test wyjsc/Statystyki/Siec/Internet, np. L1 + 2105=2). Teraz stukanie przewija i sumuje przesuniecia (`tap_incremental`). Wynik: **644 komorki, mediana 0.2%, 93.5% < 3%, 96.3% < 8%**. Nierozstrzygniete 8: L1/L3 DEFAULT (Test wyjsc, Statystyki, Siec, Internet - lista konczy sie przed nimi, prawdopodobnie realnie niedostepne w tej konfiguracji) i KONFIGURACJA przy kaskadzie+magazynie (stukniecie trafia w inny wiersz). Pozostalo: ALARMY L0 (12.6%, OPEN#2 - stan statyczny, niezalezny od taktowania; ramka obrazu przesunieta o ~100 px z zawinieciem, mechanizm nieznany), stan online.
+
+### E7 (2026-11-24) ekran PROGRAM w karcie + poprawka kafla Paliwo
+Zrobilem: ekran PROGRAM (harmonogram tygodniowy z danych firmware) otwierany z Kociola paskiem harmonogramu, wstecz `<`; poprawiony konflikt obszarow dotyku HOME (kafel MENU vs Paliwo); testy Playwright: HOME->MENU, 5 okien HOME, Kociol->PROGRAM->Kociol: OK. README prototypu. Stan E7: 18 ekranow + 5 okien. Pozostalo: edycja PROGRAM/dialogow, listy przewijalne, /api/v1/states (tylko odczyt), ALARMY L0 (OPEN#2), stan 'online'.
+
+### E7 (2026-11-24) okna HOME w karcie: 5 z 5 otwieraja sie i zamykaja (OK)
+Zrobilem: nakladki Paliwo, Zasilanie, Auto, Czas, Data (obrazy z renderera z danych firmware, 0.0-4.0% roznicy) otwierane kafelkami HOME, zamykane OK; test Playwright 5/5, 0 bledow. Obrazy statyczne (bez edycji wartosci). Pozostalo: edycja wartosci w oknach/dialogach, podpiecie /api/v1/states (tylko odczyt), listy przewijalne, PROGRAM; BACKLOG: ALARMY L0, stan 'online'.
+
+### E7 (2026-11-24) bindingi PID pol ekranow: zmierzone w emulatorze, karta pokazuje zywa temperature
+Zrobilem: `tools/bind_screen.py` (wstrzykniecie ~220 PID + zrodla live przez LiveSim, porownanie tekstow widgetow; FACT-DYNAMIC), `tools/merge_bindings.py`; 16 ekranow, wyniki w `ui_model/card_bindings/`. Znalezione powiazania pol->PID (np. duza temperatura Kociol = 0x2001 skala 0.1, T. palnika 0x226C, temperatury CWU/Solary 0x2110/0x2112/0x2113, 11 pol Testu wyjsc, 6 pol Alarmow); w karcie (demo) temperatura Kociol zmienia sie na zywo. Szum (licznik % w naglowku) odfiltrowany. Pozostalo: 7 ekranow z 0 powiazan (HOME tylko 1, INFO, INTERNET, MAGAZYN - wartosci przez inne zrodla/tekst), pola tekstowe (statusy, nazwy) bez skali, podpiecie /api/v1/states (tylko odczyt) i okna HOME w karcie.
+
+### E7 (2026-11-24) 17 ekranow w karcie: HOME + 16 ekranow menu
+Zrobilem: eksport HOME, Alarmy, Info, Test wyjsc, Statystyki, SIEC, INTERNET, Kaskada, Magazyn (razem z 8 poprzednimi = 17 ekranow w `screens/`), start karty = HOME, nawigacja HOME -> MENU -> ekran -> nastawy -> wstecz, ikona domu wraca na HOME; test Playwright 0 bledow. Dane pol = przykladowe z emulatora (np. alarm 110). Pozostalo: bindingi PID (w toku), podpiecie /api/v1/states (tylko odczyt), przewijalne listy (Statystyki/SIEC/INFO), okna HOME (Paliwo, Zasilanie, Auto, Czas, Data) i dialogi w karcie.
+
+### E7 (2026-11-24) 6 z 9 ekranow glownych w karcie: Kociol, Palnik, Ogrzewanie 1-4, CWU, Solary, Bufor
+Zrobilem: eksport 8 ekranow z emulatora (`screens/*.png|json`, w tym Solary i Bufor) i ich widok w prototypie (tlo + pola dynamiczne), nawigacja do list nastaw wg instancji; test Playwright MENU->ekran->nastawy->wstecz dla 5 pierwszych wierszy: 0 bledow. Pozostalo: bindingi PID (data_binding w toku, ~40% z 655), HOME, Kaskada/Magazyn/INFO/ALARMY/TEST/SIEC jako ekrany, podpiecie /api/v1/states.
+
+### E7 (2026-11-24) ROZBUDOWA: ekran Kociol w karcie wyglada jak panel
+Zrobilem: `tools/export_card_screen.py` (tlo PNG z danych firmware bez pol dynamicznych + JSON pol dynamicznych: pozycja, czcionka, kolor, wyrownanie, szablon, binding PID), `web/estyma_prototype/screens/KOCIOL.{png,json}`, widok SCR w prototypie: tlo + zywe pola (demo, odswiezane co 1 s), klik w naglowek = wstecz, klik w kafel nastaw (prawy dol) = lista nastaw, klik wstecz -> MENU. Test Playwright: 0 bledow, nawigacja MENU->Kociol->Nastawy->Kociol->MENU OK; zrzut zgodny z panelem. Bindingi PID pol (duza temperatura, zadana) - dane z `data_binding.py` jeszcze licza sie w tle (~25% z 655 PID); do tego czasu pola pokazuja wartosci przykladowe. Pozostalo: bindingi PID -> /api/v1/states, eksport pozostalych ekranow (Palnik, Ogrzewanie, CWU, Solary, Bufor), HOME, test na prawdziwym API (po zgodzie wlasciciela; tylko odczyt).
+
+### E5 (2026-11-24) DOMKNIETY: freeze + porzadek, `analiza` -> `analiza_archiwum`
+Zrobilem: `git mv analiza analiza_archiwum` (1013 plikow, historia zachowana), poprawa odwolan w 104 plikach (narzedzia, dokumentacja, CLAUDE.md), `tools/paths.py` jako jedyne zrodlo sciezek, mapa `NewEstyma/MAPA_PRZENIESIEN.md`, smoke_test PASS przed i po, walidator ui_model PASS (16 plikow, 0 bledow), dialogi PIN/czas renderuja sie identycznie. Znane: pytest `tests/` wymaga pakietu pytest_homeassistant_custom_component (poza zakresem). Pozostalo: E7 rozbudowa prototypu karty (ekran Kociol z kafelkami, zywe wartosci), brakujace: ALARMY L0 (OPEN#2), online-bez-alarmow (BACKLOG), szlif Kopiuj/INTERNET. Uwaga dla nowych czatow: katalog zrodlowy to `analiza_archiwum/`.
+
+### E4 (2026-11-24) DOMKNIETY: renderer ekranow, mediana 0.2% (cel < 3%)
+Zrobilem: poprawki renderera: bitmapa spoczynkowa par przyciskow (listy nastaw 8.6% -> 0.3-0.8%), tlo bitmapowe etykiet-przyciskow (POTWIERDZ), wysrodkowanie etykiety, z-order po next, clipping. Wynik E3/E4 na 621 komorek: mediana **0.2%**, 92.6% < 3%, 96.5% < 8%; dialogi 13 z 13 < 6% (8 z 13 < 1.2%; Kopiuj 5.8 i edytor INTERNET 5.0 - roznica = bitmapy checkboxow/przyciemnienie naglowka). Poza celem zostaje tylko ALARMY w L0 (3.8-12.6%: ramka obrazu przesunieta/zawinieta o ~100 px - wyglada na artefakt emulatora/LTDC, OPEN#2, INFERENCE). Pozostalo: E5 (zamrozenie, `git mv analiza analiza_archiwum`, odwolania, smoke before/after), potem rozbudowa E7.
+
+### E3 (2026-11-24) DOMKNIETY: automat pokrycia, 27 z 27 zadan (poziom x konfiguracja)
+Zrobilem: `tools/coverage_gen.py` + `run_coverage_par.sh` (4 procesy) + `coverage_agg.py`; wynik `ui_model/coverage_matrix_agent.json|md`: **621 komorek zmierzonych** (ekran+nastawy, poziomy 0/1/3, 9 konfiguracji wg visible_in), **mediana 0.2%, 92.6% komorek < 3%, 96.5% < 8%**. Poza progiem: ALARMY 3.8-12.6% (uklad L0 +80 px i przycisk POTWIERDZ, OPEN#2), TEST_WYJSC 2.3. Dane do poprawy: 19 komorek (L1 DEFAULT/2105=0/2105=2: Test wyjsc, Statystyki, SIEC, INTERNET, ...) wg `visible_in` powinny byc w MENU, a emulator ich nie pokazuje (dlugosc menu < oczekiwanej; 4 zadania maja rows_match=false) - wymagany przeglad menu_tree.visible_in. L3 istnieje tylko dla 3 konfiguracji w danych. Stany alarm/offline: emulator bez modulow sam podnosi alarmy 100/105/110, wiec zmierzone komorki = stan 'offline+alarm'; stan 'online bez alarmow' (LiveSim) -> BACKLOG. Pozostalo: E4 (ALARMY, HOME, INTERNET/SIEC/STATYSTYKI), E5 zamrozenie+porzadek.
+
+### E3 w toku (2026-11-24): 9 z 36 zadan (poziom x konfiguracja) gotowe
+Zrobilem: 254 komorek (ekran/nastawy) zmierzonych, **mediana 0.2%, 93.7% komorek < 3%, 100% < 8%**; 15 komorek oczekiwanych wg visible_in nie istnieje w MENU emulatora. Pozostalo: 27 zadan (~35 min), potem stany alarm/offline (E3c) i raport koncowy E3 z tabela w `ui_model/coverage_matrix_agent.json|md`.
+
+### E4 (czesc) + start E3 (2026-11-24): listy nastaw 8.6% -> 0.3-0.8%
+Zrobilem: znaleziona przyczyna najwiekszego bledu renderera ekranow nastaw: wiersze listy to przyciski z para bitmap (80 = linia 440x1 w spoczynku, 81 = podswietlenie 440x50 gdy wcisniety); renderer rysowal wcisnieta -> poswiata na calej liscie. Poprawka w `ui_extras.py` (rysuj bitmape spoczynkowa). Pomiar na 4 punktach kontrolnych (L0 DEFAULT/FULL, L1 DEFAULT, L3 kaskada+magazyn): ekrany 0.2%, nastawy 0.3-0.8% (Kociol, Palnik, Ogrzewanie 1-4, CWU, Solary, Bufor, Kaskada, Magazyn). Znalezione: KONFIGURACJA 'nastawy' = ta sama lista (artefakt metody, pomijam kafel), ALARMY w L0 FULL 12.6% (znany uklad L0, OPEN#2), przy L1 DEFAULT wiersze 17-20 (Test wyjsc, Statystyki, SIEC, INTERNET) NIE ISTNIEJA w MENU emulatora mimo visible_in (dane do poprawy). `coverage_gen.py` mierzy teraz prawdziwa dlugosc menu. Uruchomiony pelny przebieg E3: 3 poziomy x 12 konfiguracji na 4 procesach (~40-60 min). Pozostalo: wynik E3 (tabela pokrycia), stany alarm/offline/dialog (E3c), HOME ekran, INTERNET/SIEC/TEST/STATYSTYKI (E4).
+
+### E2b (2026-11-24) dialog enum: DONE, 13 z 13 dialogow wyrenderowanych
+Zrobilem: 3 dialogi wyboru z listy KONFIGURACJA/KASKADA: enum liczbowy (np. Ilosc obwodow 0..4, Liczba kotlow slave 1..3) otwiera TEN SAM dialog z suwakiem i +/- co liczbowy (**FACT-DYNAMIC**: render 0.1-0.2%), enum tekstowy (Glowny modul IO: BIG/STD) otwiera dialog radio (**0.4%**; roznica = stan zaznaczenia radio - rysowany pierwszy kandydat bitmapy). Dane dialogow (teksty opcji z firmware) w `ui_model/dialog_render/enum_*_data.json`. Pozostalo z E2: tor suwaka, Kopiuj 5.8 -> <5 (kosmetyka, odkladam do E4). Teraz: E3 (automat pokrycia).
+
+### E2a+ (2026-11-24) KRYTERIUM E2 SPELNIONE: 10 z 10 dialogow < 8%, 8 z 10 < 1.2%
+Zrobilem: poprawka kolejnosci rysowania (z-order) w `ui_extras.py` (glowa listy rodzenstwa po wskazniku next - prev bywa nieaktualny; to naprawia tez warstwy nakladek w calym renderze), literalne `\\n` w tekstach, wielolinijkowe teksty. Wyniki: paliwo 0.0, czas 0.0, zasilanie 0.0, liczbowy 0.2, PIN 0.3, dzien 0.4, data **1.1** (bylo 20.4), auto **4.0** (bylo 9.6), INTERNET 5.2, Kopiuj 5.8. Pozostalo z E2: dialog enum (E2b), Kopiuj <5%. Dalej: E2b, potem E3.
+
+### E2a (2026-11-24) okna HOME: 5 z 5 wyrenderowane, 3 z 5 < 1%
+Zrobilem: HOME okna w `dialog_render_eval.py` (swiezy rozruch, log konstrukcji zachowany - okna to ukryte kontenery), renderer: przycinanie do kontenerow-przodkow, tekst wieloliniowy, klasa kolek wyboru (vptr 0x807ddd8). Wyniki (% pikseli rozni): paliwo **0.0**, czas **0.0**, zasilanie **0.0**, auto **9.2**, data **20.4**. Przy okazji: liczbowy 2.5 -> **0.2**, INTERNET 6.0 -> **5.2**, PIN 0.3, PROGRAM dzien 0.4, Kopiuj 5.8 (bez regresji). Nowe: `tools/run_dialogs_par.sh` (4 procesy, 1.5 min na 10 dialogow). Pozostalo z E2: auto (suwak), data, Kopiuj <5%, dialog enum, tor suwaka.
+
+### PLAN (2026-11-24): firmware wgrany, srodowisko /tmp/w odtworzone; start E2a. Plan i kadencja raportow: PLAN_PRACY_AGENT_UI.md (dol). Stan: E1,E6,E7 gotowe, E5 czesciowo, E2 ~90%, E3-E4 przed nami.
+
+### E7 (2026-11-24) SZKIELET DZIALA: prototyp karty z ui_model (`web/estyma_prototype/`)
+Zrobilem: `tools/build_proto_model.py` -> `model.json` (58 KB), `index.html`+`app.js` (vanilla, nie dotyka istniejacych kart): MENU z filtrem poziomu PIN i warunkow konfiguracji (0x2105-0x3525), klik Kociol -> lista nastaw z wartosciami domyslnymi z firmware i formatem ze skal, przycisk wstecz. Test Playwright: L0 = 9 wierszy menu, L3 = 15, Kociol 3 wiersze na L0, 0 bledow konsoli. Dane przykladowe, brak lacznosci z urzadzeniem (zero zapisow). Pozostalo: ekran Kociol z kafelkami (renderer), zywe wartosci przez /api/v1/states + pid_to_point.json, pozostale ekrany, wyglad 1:1 (po E3/E4).
+
+### E6 (2026-11-24) DOMKNIETY (statycznie): kontrakt API <-> ui_model
+Zrobilem: `ui_model/API_KONTRAKT.md` (podzial: struktura z ui_model, wartosci z `/api/v1/states`, zapis `/api/v1/call|write`, reguly renderowania), generator `tools/build_api_contract.py` -> `ui_model/pid_to_point.json` (+ schemat), walidator PASS, smoke PASS. Wynik: z 144 PID w listach panelu 68 ma punkt w `rejestry/odczyty.csv|punkty.csv`, **76 bez punktu w urzadzeniu** (lista w API_KONTRAKT.md - kandydaci do dodania, decyzja wlasciciela; nie zmienialem katalogu urzadzenia). Zrodla live: 6 z 23 PID ma punkt odczytu. Pozostalo: decyzja o dodaniu brakujacych punktow; etykiety enum (OPEN).
+
+### E5 (2026-11-24) CZESCIOWO (bez emulatora): paths.py + test dymny
+Zrobilem: `tools/paths.py` (jedno miejsce na sciezki, nadpisanie `ESTYMA_ANALIZA`), przepiecie 17 narzedzi (cg_*, validate/index/coverage_matrix, list_scales_build) na `paths`, `tools/smoke_test.py` (kompilacja, walidator, zgodnosc INDEX; PASS), odswiezony INDEX.json. Pozostalo: `git mv analiza analiza_archiwum` + poprawa ~207 odwolan w dokumentacji - CELOWO PO E3/E4 (te etapy zapisuja do `analiza_archiwum/`, wymagaja emulatora i firmware, ktorego brak w tym czacie). Znane, istniejace wczesniej bledy: `tools/re_scan.py`, `tools/test_cg_alarm_asymmetry_audit.py` (skladnia), 7 testow cg_* bez CSV.
+
+### E2 (2026-11-24) DOMKNIETY W 90%: dialogi renderowane z danych firmware
+Zrobilem: render 5 dialogow z danych (`tools/dialog_render_eval.py`, wyniki w `ui_model/dialog_render/`): PIN **0.3%** (bylo 98.7%), PROGRAM dzien **0.4%**, PROGRAM Kopiuj **5.8%**, dialog liczbowy **2.5%**, edytor INTERNET **6.0%**. Poprawki: sledzenie konstrukcji od przebudowy widoku (PIN), ikony w przyciskach (ButtonWithIcon: id ikony +0x34, iconX/iconY +0x38/+0x3A), przyciemnienie tla okna modalnego (`dim`), tor suwaka. Pozostalo z E2: okna HOME (5: paliwo, zasilanie, auto, czas, data) i dialog wyboru enum, tor suwaka (ciemna czesc), Kopiuj 5.8% -> <5%.
+
+### E1 (2026-11-24) DONE
+Zrobilem: HANDOFF (pelny kontekst), `tools/rebuild_env.sh`, plan etapow E2-E7, ten raport. Wszystko scalone do `ccr-be8a1bcb-5t76j0`, walidator ui_model PASS. Pozostalo: E2-E7 wg `PLAN_PRACY_AGENT_UI.md`.

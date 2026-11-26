@@ -8,7 +8,8 @@ Dane o urządzeniu (menu, PID-y, kodowanie zapisu, alarmy, moduły) pochodzą z 
 | Katalog | Zawartość |
 |---|---|
 | `docs/` | specyfikacje (API v2, pamięć/OTA, bezpieczeństwo, interfejs), decyzje |
-| `data/` | `device_model.json` (źródło prawdy dla ESP i klientów) |
+| `data/` | `device_model.json` (źródło prawdy dla ESP i klientów), `menu_rows.json` |
+| `zrodla/` | zamrożone dowody z analizy panelu: modele ekranów, pełne bitmapy, atlas, dokumenty, narzędzia pochodzenia |
 | `esp/` | firmware ESP32-C6 (ESP-IDF; rdzeń testowalny na hoście) |
 | `ui/` | wspólny opis ekranów (JSON) + renderer JS (WWW i karta HA) |
 | `ha/` | integracja HA + karta Lovelace |
@@ -22,3 +23,6 @@ Dane o urządzeniu (menu, PID-y, kodowanie zapisu, alarmy, moduły) pochodzą z 
 
 ## Status
 Szkielet + specyfikacja API v2 (`docs/ESP_API_V2.md`) z decyzjami wlasciciela (runda 1 i 2) - do akceptacji; makiety `ui/mockups/`. Kodu ESP jeszcze nie ma.
+
+
+**Instrukcja dla kogoś, kto chce złożyć własnego klienta lub moduł niezależnie: `docs/INSTRUKCJA_BUDOWY_NIEZALEZNEJ.md`.**

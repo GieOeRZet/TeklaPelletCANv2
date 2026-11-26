@@ -1,0 +1,211 @@
+# NewEstyma — TOOLING
+
+## Current tools
+
+### tools/re_scan.py
+Broad static RE scan: BL edges, literals, object-relative operations, parameter/PID references.
+
+### tools/vtable_scan.py
+Finds executable pointer-table candidates and vptr literal occurrences. Candidate detector only; RAW proof remains authoritative.
+
+### tools/runtime_trace_analyzer.py
+Aggregates CALL/RETURN/READ/WRITE/INDIRECT_CALL and correlates runtime object addresses/offsets. Main improvement target: stronger object/vtable identity and scheduler correlation.
+
+### tests
+tools/test_re_scan.py
+tools/test_re_tools.py
+
+## Planned automatic extensions
+When needed, add:
+- tools/object_lifecycle_scan.py
+- tools/vtable_interface_scan.py
+- tools/pid_matrix_builder.py
+
+The target graph is:
+constructor -> this -> argument objects -> field stores -> vptr -> methods
+
+and:
+vptr -> slot -> implementation -> callers -> callees -> object offsets
+
+and:
+catalog -> PID -> runtime record -> storage -> type -> min/max/default -> provider -> CAN -> UI
+
+## Tool rules
+- deterministic output
+- RAW, PROJECT and RUNTIME addresses together
+- runtime base is 0x08010000; PROJECT base is 0x08000000
+- never silently apply address offsets
+- vtable/function-pointer values are runtime addresses and must be translated before RAW indexing
+- candidate/proven status explicit
+- JSON output where useful
+- tests for new parsers/decoders
+- preserve failed/rejected matches
+
+
+## PASS 18 additions
+
+- `tools/provider_interface_scan.py` — evidence-first inspection of a known provider/interface address; deliberately does not assume a contiguous vtable.
+- `tools/test_provider_interface_scan.py` — scanner self-tests.
+- Provider interface workflow now distinguishes code-pointer entries from mixed data in interface-adjacent regions.
+
+
+## PASS 19 address-base correction
+
+The firmware image has a runtime/repacked base of 0x08010000 while static PROJECT addresses use 0x08000000 + RAW. Vtable analysis must inspect RAW at RUNTIME - 0x08010000. Provider vtable 0x080A31F0 therefore lives at RAW 0x931F0, not RAW 0xA31F0.
+
+
+## PASS 21 additions
+
+- `tools/menu_matrix_scan.py` — deterministic extraction of the canonical 21×6 B MenuTree table plus whole-BIN literal-anchor audit for the runtime class table, access/update table, row constructor and row-selection resolvers.
+- `tools/test_menu_matrix_scan.py` — regression test against the canonical BIN SHA-256 and known anchor offsets.
+
+
+## PASS 22 additions
+
+- `tools/iar_data_extract.py` — deterministic reproduction of the IAR LZ77 `.data` decoder and extraction of the two 21-byte MenuTree runtime tables.
+- `tools/test_iar_data_extract.py` — regression test for decompressed size, exact table bytes and equality with root selectors.
+
+
+## PASS 24 additions
+
+- `tools/pointer_flow_scan.py` was upgraded to be Thumb-2 instruction-width aware. The previous scanner could interpret the second halfword of a 32-bit instruction as a false Thumb-1 memory operation.
+- The scanner now recognizes common Thumb-2 immediate load/store forms, MOVW/MOVT candidates, and Thumb-2 PUSH.W function starts.
+- SRAM targets are kept in SRAM address space; PROJECT/RUNTIME translation is applied only to firmware code addresses.
+- `tools/test_pointer_flow_scan.py` now contains a regression proving that RAW 0x3C1FE is not a STRB and that the 0x080422C8 function start is recovered through PUSH.W.
+- Canonical BIN regression passed.
+
+
+## PASS 25 analysis note
+
+No new scanner was required. The Thumb-2-safe pointer-flow output was combined with whole-BIN runtime-pointer/vtable searches and direct Thumb disassembly to close the ownership of PROJECT 0x080422C8 and the 21-row object geometry around constructor PROJECT 0x08074508.
+
+Reusable rule:
+- when a recovered consumer is a vtable method, resolve the runtime function pointer in the vtable before assigning ownership;
+- when a loop uses a fixed stride/count, derive the object-relative field mathematically and carry the relation into the next call boundary.
+
+
+## PASS 26 analysis note
+
+Negative-result workflow was extended:
+- when a resolver table is reached, enumerate its complete static key domain before promoting a call edge;
+- distinguish resolver input keys from resolved output/PID values;
+- preserve "no static match -> no downstream call" as a first-class closure.
+
+
+## PASS 27 analysis note
+
+Pointer-flow correlation was extended from a row-relative field to its constructor-established pointer target. This preserves the distinction between:
+- row[i]+offset as a field;
+- the pointer stored in that field;
+- the memory read performed through that pointer.
+
+This distinction is now required for UI/object graph work.
+
+
+## PASS 28 analysis note
+
+The runtime-class TBB table is now treated as a first-class graph node:
+runtime class -> handler -> common/special tail -> UI construction state.
+
+For UI graph work, preserve the distinction:
+- root MenuTree selector;
+- runtime class byte;
+- handler-internal selector bytes at object+0x12B/object+0x12C;
+- widget/page constructor inputs.
+
+
+## PASS 29 tooling
+
+Added `tools/ui_dispatch_scan.py` and `tools/test_ui_dispatch_scan.py`.
+
+The scanner:
+- reads the exact 21-byte TBB table at RAW 0x3C076;
+- resolves 16-bit and 32-bit trampoline branches;
+- follows only bounded local trampolines;
+- stops at an unconditional branch leaving the local case, preserving inline/special cases;
+- records resolved PROJECT handler addresses;
+- records direct selector-byte stores where statically recognizable.
+
+Regression coverage includes all 21 class entries, classes 1..4 shared handler parameters, class 12 special path, class 14 return, class 15 direct 0x42318 path, and classes 16..20.
+
+
+## PASS 30 analysis note
+
+The UI graph now treats vtable-backed callback objects as explicit graph nodes:
+constructor -> vtable -> object fields -> indirect dispatch -> callback.
+
+Future UI tracing must follow both:
+- static callback/config pointers;
+- vtable calls through object+0x110.
+
+
+## PASS 35 additions — EMULACJA STARTUPU (nowa klasa dowodu: stan RAM po inicjalizacji)
+
+- `tools/emu_startup.py` — emulacja startupu FW2213TK w Unicornie (Cortex-M4). Obraz pod RUNTIME 0x08010000. Opcje: `--max`, `--ram`, `--watch LO:HI`, `--trace-calls ADDR`, `--stub ADDR=VAL`, `--first-task`, `--patch-nop`.
+  API: `boot(bin)` zwraca `(mu, raw)` po startupie + pierwsze zadanie FreeRTOS. Pomijane: pętle RCC (3 NOP-y tylko w kopii w pamięci), `RCC_GetFlagStatus` 0x08028AE4 -> 1, svc #0 odtwarzane ręcznie.
+  NIE modeluje przerwań, PendSV/kolejnych zadań ani peryferiów. Nie dodawaj hooków UC_HOOK_BLOCK ani zapisu pamięci w hookach odczytu (zakłóca emulację).
+  Hook na każdą instrukcję jest ~100x wolniejszy; używaj hooków jednoadresowych.
+- `tools/runtime_param_table.py` — tabela runtime 655 rekordów (CSV).  `tools/test_runtime_param_table.py` — regresja.
+- `tools/resolver_tables.py` — tabele rezolwera 08036FF2 (49 + 372 rekordy).  `tools/test_resolver_tables.py` — regresja.
+- `tools/bl_xref.py` — wszystkie BL/B.W do adresów (UWAGA: adresy RUNTIME = PROJECT + 0x10000).
+- `tools/disasm_thumb.py` — dezasemblacja Thumb-2 z adresu RUNTIME (`--project` dla PROJECT).
+
+Reguła adresowa (częsty błąd): argumenty narzędzi to adresy RUNTIME; adresy w raportach to PROJECT. 0x0801143C (PROJECT) = 0x0802143C (RUNTIME).
+Reguła odczytu tabel: rekordy 4-bajtowe są wyrównane do bazy tabeli; odczyt z przesunięciem 2 B daje fałszywe pary (błąd PASS 26).
+
+- `tools/pid_matrix.py` (PASS 36) — macierz PID: storage/typ/zakres/tryb dostępu/sync/klucze UI z danych PASS 35 -> data/pid_matrix_655.csv.
+
+- `tools/poller_trace.py` (PASS 37) — wywołanie pollera 0x080729FC w emulatorze, przechwycenie rekordów do kolejki TX -> data/poll_sequence_655.csv.
+- `tools/can_rx_inject.py` (PASS 37) — wstrzykiwanie ramek 0x0584 do RX handlera 0x08072A90 + asercje zachowania; wzorzec function-level harness (LR = wartownik, emu_start do wartownika, stub kolejki 0x08067224).
+Function-level harness: ustaw r0/r1, LR=SENT|1, SP w SRAM, hook UC_HOOK_CODE na SENT -> emu_stop; wywołuj funkcje firmware po boot() bez schedulera.
+
+- `tools/publish_probe.py` (PASS 38) — zmiana storage + callback managera 0x08020FCE w emulatorze; asercja ramki 0x584/0x42.
+
+- `tools/lang_cycle_probe.py` (PASS 39) — wykonanie sciezki class 12 (GET/SET key 3 + setLanguage) w emulatorze z asercjami.
+
+- `tools/menu_rows_probe.py` (PASS 40) — budowa ekranu menu (RUNTIME 0x0804BF7C + 0x08052160) i odczyt argumentow row-buildera dla access 0/3; asercje 15/21 wierszy.
+
+- `tools/menu_click_probe.py` (PASS 41) — wywolanie handlera przycisku wiersza 0x0808EB00 dla wierszy 0..20; efekty na key3/currentLanguage i ctx +0x12A/B/C; asercje.
+
+## PASS 42 — EMULATOR SYSTEMOWY (preferowany od emu_startup.py dla UI/zadan)
+- `tools/cortexm_rtos.py` — klasa `Board`: pelny model wyjatkow Cortex-M (SVC/SysTick/PendSV/IRQ, STKALIGN), scheduler FreeRTOS firmware, `raise_irq(n)`, `task_name()`, `switches`, `diag()` po awarii, `enable_dma2d()`. Uzycie: `b=Board(bin,tick=100000); b.run(slices=3000, hook=fn)`.
+- `tools/stm32_dma2d.py` — model DMA2D (M2M/PFC/blend/R2M); loguje `unsupported`.
+- `tools/render_screen.py` / `test_render_screen.py` — render ekranu do PNG z bufora LTDC (adres/format z rejestrow), test z asercjami.
+Zasady: tick ~100000 instrukcji (nie 2000); SysTick dopiero po `svc`; PendSV zatrzymuj PO instrukcji zapisu ICSR; ramka wyjatku wyrownana do 8 B z bitem 9 xPSR; SDRAM 0xC0000000 (16 MB) zmapowana z gory.
+Czas: ~9 s na 3000 tikow. Debug: `Board.diag()` (zadanie, rejestry, slad wywolan ze stosu); GUITask blokuje sie na semaforze bufora [0x20005F20] dopoki DMA2D nie zgłosi TCIF.
+
+- `tools/stm32_can.py` (PASS 43) — model CAN2: TME w TSR, przechwyt TX (TIxR.TXRQ), `inject(id,data)` do FIFO0 + IRQ 64; `Board.enable_can2()`.
+- `tools/can_boot_trace.py` (+ `test_can_boot_trace.py`) — ruch CAN po starcie; `--inject 701:05@3500`. Pierwsze ramki dopiero ok. ticku 3300 (scheduler okresowy), wiec symuluj >= 4000 tikow.
+
+## PASS 44 (w toku) — DOTYK
+- `tools/stm32_i2c.py` — model I2C (flagi START/ADDR/TXE/BTF/RXNE, log transakcji) + slave `FT5x06` (adres 0x38; rejestry 0x02..0x06; `touch(x,y)`, `release()` niesie ostatnia pozycje). `Board.enable_i2c(slaves={0x38: ft})`.
+- `tools/touch_screen.py` — sesja z dotykiem: `--tap X,Y@TICK`, zrzuty PNG; pierwsze odpytanie kontrolera ok. ticku 141, potem co ~40 tikow.
+- Ustalone: firmware odpytuje FT5x06 sekwencja START, 0x70, 0x03, START, 0x71, odczyt 1 B, STOP (potem blok 0x03..0x07 po wykryciu dotyku). Dotkniecie zegara (30,40) otwiera dialog "Ustaw czas"; mapowanie wspolrzednych wymaga kalibracji (siatka w toku, patrz kolejny raport).
+
+- `tools/ui_session.py` (PASS 44) — klasa `UiSession`: `boot()`, `wait()`, `tap(x,y)`, `swipe()`, `shot(name)`, `can()`, `set_param(pid,val)`; wspolrzedne ekranowe 480x272 (przeliczane na surowe FT5x06). Preferowane do eksploracji UI.
+
+- `tools/panel_lists.py` (PASS 46) — wykonuje FUN_0803E714 dla klas 0..0x11 i poziomow 0..3, zapisuje listy parametrow (CSV) i rozwiazuje klucze do PID/nazw.
+- `Board.save_state/load_state`, `UiSession.checkpoint/from_checkpoint` — punkty kontrolne (zapis 0.1 s, odczyt natychmiast, wynik identyczny z biegiem ciaglym).
+- `tools/ui_explore.py` v3 — `--prepare`, `--row IDX`, `--all`; tylko przewijanie w gore; rownolegle.
+
+- `tools/export_bitmaps.py` (PASS 47) — eksport 188 bitmap do PNG + manifest SHA-256 + plansze + ZIP. `tools/access_gates_scan.py` — skan wszystkich odczytow poziomu dostepu. `tools/compare_levels.py` — porownanie zrzutow poziomow. `tools/resource_coverage.py` + `UiSession.enable_trace/dump_trace` — pokrycie zasobow przez obejrzane ekrany.
+
+- `ui_session.stitch_body`, `tools/settings_tall.py` (PASS 47) — pelne listy ustawien zszyte w jeden obraz (zamiast ucinanych stron). `UiSession.enable_trace` zapisuje tez PID-y czytane przez GUITask (`pids` w trace_*.json).
+
+
+## PASS 59 — UI-MODEL: widget.view_off -> presenter -> PID
+
+- `tools/ui_model.py` — laczy wynik `screen_inventory_menu.py` / `widget_inventory.py` z `data/presenter_map.csv` po `view_off` = this - aktywny widok.
+- Dopasowanie nie jest zgadywane po geometrii. Wynik ma trzy stany: EXACT_VIEW_OFF, AMBIGUOUS_VIEW_OFF, UNRESOLVED_VIEW_OFF.
+- Dla wieloznacznego offsetu wszystkie kandydatury prezentera sa zachowane; narzedzie nie wybiera arbitralnie PID.
+- Wyjscie: JSON z grafem widget -> presenter candidates oraz opcjonalnie CSV i raport Markdown.
+- `tools/test_ui_model.py` — test regresyjny przypadkow exact/ambiguous/unresolved.
+- Uzycie:
+  `python3 -I tools/ui_model.py presenter_map.csv inventory.json ui_model.json --csv ui_model.csv --report ui_model_report.md`
+- Uwaga: pliki stanow/scratchpad z `ui_explore.py` nie sa w repo; pelny model wymaga lokalnego uruchomienia inventory na firmware. Repozytorium przechowuje narzedzie i model wynikowy, nie wymyslone dane.
+
+## PASS 60 — UI ACTION GRAPH
+
+- `tools/action_graph.py` — laczy UI-MODEL z logiem akcji: widget/this albo node+tap -> handler -> efekty.
+- `tools/test_action_graph.py` — test exact widget, exact node+tap i unresolved target.
+- Narzedzie nie zgaduje efektu PID/CAN; efekty musza pochodzić z trace/harnessu firmware.
