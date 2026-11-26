@@ -1,0 +1,58 @@
+// Mala wbudowana strona serwisowa (bez partycji UI): pierwsza konfiguracja, Wi-Fi, adres IP, nazwa, haslo, sparowani klienci, aktualizacja firmware, restart, reset.
+// Nie pokazuje danych z kotla - to zadanie aplikacji (Android/Windows/HA).
+#pragma once
+static const char kServicePage[] = R"HTML(<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TeklaPellet - serwis</title>
+<style>body{font:15px system-ui,sans-serif;background:#101014;color:#eee;margin:0;padding:16px;max-width:560px;margin:auto}h1{font-size:20px}h2{font-size:13px;color:#9a9aa5;text-transform:uppercase;letter-spacing:.8px;margin:22px 0 8px}
+.c{background:#1a1a20;border:1px solid #2a2a32;border-radius:12px;padding:14px;margin-bottom:12px}input,select,button{font:inherit;padding:9px 10px;border-radius:8px;border:1px solid #3a3a44;background:#23232a;color:#eee;width:100%;box-sizing:border-box;margin:4px 0}
+button{background:#ff7a1a;color:#000;border:0;font-weight:700;cursor:pointer}button.s{background:#2d2d36;color:#eee;border:1px solid #3a3a44}.m{color:#ffb066;min-height:20px}.e{color:#ff6b6b}small,.k{color:#9a9aa5}.r{display:flex;gap:8px}.r>*{flex:1}label{display:flex;align-items:center;gap:8px}label input{width:auto}</style></head><body>
+<h1>TeklaPellet - serwis</h1><div id="id" class="k"></div><div id="msg" class="m"></div><div id="app"></div>
+<script>
+const $=s=>document.querySelector(s);let T=sessionStorage.getItem('tpt'),ID={};
+const say=(t,e)=>{$('#msg').className='m'+(e?' e':'');$('#msg').textContent=t||''};
+const E={bad_password:'Błędne hasło.',locked:'Zbyt wiele prób, spróbuj za chwilę.',service_locked:'Najpierw odblokuj operacje serwisowe hasłem.',bad_request:'Błędne dane.',bad_signature:'Błędny podpis pliku.',unauthorized:'Zaloguj się ponownie.',too_many_clients:'Za dużo sparowanych klientów (max 8).',already_configured:'Urządzenie jest już skonfigurowane.'};
+async function api(m,p,b,raw){const h={};if(T)h.Authorization='Bearer '+T;if(b&&!raw)h['Content-Type']='application/json';const r=await fetch(p,{method:m,headers:h,body:raw?b:b?JSON.stringify(b):undefined});let j={};try{j=await r.json()}catch(e){}if(r.status===401&&p!=='/api/login'){T=null;sessionStorage.removeItem('tpt');init()}return j}
+const fail=j=>say(E[j.code]||('Błąd: '+(j.code||'nieznany')),true);
+async function init(){ID=await api('GET','/api/identity');$('#id').textContent=(ID.name||'')+' · '+(ID.id||'')+' · firmware '+(ID.fw||'')+' · API '+(ID.api||'');
+ if(ID.setup_needed)return setup();if(!T)return login();panel()}
+function setup(){$('#app').innerHTML=`<h2>Pierwsza konfiguracja</h2><div class="c"><small>Hasło urządzenia (min. 8 znaków) oraz PIN-y poziomów 1-3 (jak w panelu). Zapamiętaj je: nie ma ich nigdzie indziej.</small>
+<input id="p1" type="password" placeholder="Hasło urządzenia"><input id="p2" type="password" placeholder="PIN poziomu 1" inputmode="numeric"><input id="p3" type="password" placeholder="PIN poziomu 2" inputmode="numeric"><input id="p4" type="password" placeholder="PIN poziomu 3" inputmode="numeric">
+<h2>Wi-Fi</h2><button class="s" id="sc">Szukaj sieci</button><select id="nets" style="display:none"></select><input id="ss" placeholder="Nazwa sieci (SSID)"><input id="wp" type="password" placeholder="Hasło Wi-Fi"><button id="ok">Zapisz i uruchom ponownie</button></div>`;
+ $('#sc').onclick=async()=>{say('Szukam sieci…');const j=await api('GET','/api/wifi/scan');say('');const s=$('#nets');s.innerHTML=(j.networks||[]).map(n=>`<option>${n.ssid}</option>`).join('');s.style.display='block';s.onchange=()=>$('#ss').value=s.value;if(s.value)$('#ss').value=s.value};
+ $('#ok').onclick=async()=>{const j=await api('POST','/api/setup',{password:$('#p1').value,pin1:$('#p2').value,pin2:$('#p3').value,pin3:$('#p4').value,ssid:$('#ss').value,wifi_pass:$('#wp').value});j.ok?say('Zapisano. Urządzenie uruchamia się ponownie i łączy z Wi-Fi. Dodaj je w aplikacji (wykryje je po nazwie).'):fail(j)}}
+function login(){$('#app').innerHTML=`<div class="c"><input id="pw" type="password" placeholder="Hasło urządzenia"><button id="go">Zaloguj</button></div>`;
+ $('#go').onclick=async()=>{const j=await api('POST','/api/login',{password:$('#pw').value});if(j.token){T=j.token;sessionStorage.setItem('tpt',T);say('');panel()}else fail(j)};$('#pw').onkeydown=e=>{if(e.key==='Enter')$('#go').click()}}
+async function panel(){const ip=await api('GET','/api/ip');const cl=await api('GET','/api/clients');const w=await api('GET','/api/wifi');const d=ip.saved||{};
+ $('#app').innerHTML=`${ip.pending?'<div class="c"><b>Zmiana adresu IP czeka na potwierdzenie.</b><button id="cf">Potwierdź nowy adres</button></div>':''}
+<h2>Operacje serwisowe</h2><div class="c"><small>Zmiany poniżej wymagają podania hasła (ważne 5 minut).</small><div class="r"><input id="up" type="password" placeholder="Hasło urządzenia"><button id="un" style="max-width:130px">Odblokuj</button></div></div>
+<h2>Wi-Fi</h2><div class="c"><div class="k">Zapisana sieć: ${w.ssid||'-'} ${w.connected?'(połączono)':''}</div><button class="s" id="sc">Szukaj sieci</button><select id="nets" style="display:none"></select><input id="ss" placeholder="Nazwa sieci"><input id="wp" type="password" placeholder="Hasło Wi-Fi"><button id="sw">Połącz z siecią</button><small>Jeśli nowa sieć nie nada adresu w 40 s, urządzenie wróci do poprzedniej.</small></div>
+<h2>Adres IP</h2><div class="c"><label><input type="checkbox" id="dh" ${d.dhcp!==false?'checked':''}> Automatycznie (DHCP)</label><input id="i1" placeholder="Adres IP" value="${ip.current&&ip.current.ip||''}"><input id="i2" placeholder="Maska" value="${ip.current&&ip.current.mask||''}"><input id="i3" placeholder="Brama" value="${ip.current&&ip.current.gw||''}"><input id="i4" placeholder="DNS 1" value="${ip.current&&ip.current.dns1||''}"><input id="i5" placeholder="DNS 2 (opcjonalnie)" value="${ip.current&&ip.current.dns2||''}"><button id="si">Zastosuj</button><small>Po zmianie otwórz nowy adres i potwierdź w ciągu 60 s, inaczej urządzenie wróci do poprzednich ustawień.</small></div>
+<h2>Nazwa urządzenia</h2><div class="c"><input id="nm" value="${ID.name||''}" maxlength="23"><button id="sn">Zapisz nazwę</button></div>
+<h2>Hasło urządzenia</h2><div class="c"><input id="np" type="password" placeholder="Nowe hasło (min. 8 znaków)"><button id="sp">Zmień hasło</button></div>
+<h2>Sparowani klienci</h2><div class="c">${(cl.clients||[]).map(c=>`<div class="r"><span>${c.name}</span><button class="s" data-rv="${c.i}" style="max-width:100px">Usuń</button></div>`).join('')||'<span class="k">Brak</span>'}</div>
+<h2>Aktualizacja firmware</h2><div class="c"><input type="file" id="fw"><button id="uf">Wgraj podpisany plik</button></div>
+<h2>Konto DEV</h2><div class="c" id="dv"></div>
+<h2>Urządzenie</h2><div class="c"><button class="s" id="rs">Restart</button><button class="s" id="fr">Reset fabryczny (kasuje hasło, sieć, klientów)</button></div>
+<div class="c"><button class="s" id="lo">Wyloguj</button></div>`;
+ const un=async()=>{const j=await api('POST','/api/service/unlock',{password:$('#up').value});j.ok?say('Operacje serwisowe odblokowane na 5 minut.'):fail(j)};$('#un').onclick=un;
+ if($('#cf'))$('#cf').onclick=async()=>{const j=await api('POST','/api/net/confirm');j.ok?(say('Adres potwierdzony.'),panel()):fail(j)};
+ $('#sc').onclick=async()=>{say('Szukam sieci…');const j=await api('GET','/api/wifi/scan');say('');const s=$('#nets');s.innerHTML=(j.networks||[]).map(n=>`<option>${n.ssid}</option>`).join('');s.style.display='block';s.onchange=()=>$('#ss').value=s.value;if(s.value)$('#ss').value=s.value};
+ $('#sw').onclick=async()=>{const j=await api('POST','/api/wifi',{ssid:$('#ss').value,pass:$('#wp').value});j.ok?say('Łączę z siecią… Jeśli się powiedzie, adres urządzenia może się zmienić; znajdź je po nazwie.'):fail(j)};
+ $('#si').onclick=async()=>{const dh=$('#dh').checked;const j=await api('POST','/api/ip',{dhcp:dh,ip:$('#i1').value,mask:$('#i2').value,gw:$('#i3').value,dns1:$('#i4').value,dns2:$('#i5').value});j.ok?say('Zastosowano. Otwórz '+(dh?'adres nadany przez router':j.new_ip)+' i potwierdź w ciągu 60 s.'):fail(j)};
+ $('#sn').onclick=async()=>{const j=await api('POST','/api/device',{name:$('#nm').value});j.ok?(say('Nazwa zapisana.'),init()):fail(j)};
+ $('#sp').onclick=async()=>{const j=await api('POST','/api/password',{new:$('#np').value});j.ok?say('Hasło zmienione.'):fail(j)};
+ document.querySelectorAll('[data-rv]').forEach(b=>b.onclick=async()=>{const j=await api('DELETE','/api/clients/'+b.dataset.rv);j.ok?(say('Klient usunięty.'),panel()):fail(j)});
+ $('#uf').onclick=async()=>{const f=$('#fw').files[0];if(!f)return say('Wybierz plik.',true);say('Wgrywam…');const j=await api('POST','/api/ota/fw',f,true);j.ok?say('Wgrano. Urządzenie uruchamia się ponownie.'):fail(j)};
+ $('#rs').onclick=async()=>{const j=await api('POST','/api/restart',{});j.ok?say('Restart…'):fail(j)};
+ $('#fr').onclick=async()=>{if(!confirm('Skasować hasło, Wi-Fi i sparowanych klientów?'))return;const j=await api('POST','/api/factory_reset',{confirm:'RESET'});j.ok?say('Reset wykonany, urządzenie uruchamia się ponownie.'):fail(j)};
+ dev();
+ $('#lo').onclick=()=>{T=null;sessionStorage.removeItem('tpt');init()}}
+async function dev(){const d=await api('GET','/api/dev');const b=$('#dv');
+ if(!d.configured){b.innerHTML=`<small>Osobne hasło konta DEV (min. 8 znaków) odblokowuje aktualizację z kanału BETA. Ustawienie wymaga odblokowania operacji serwisowych.</small><input id="dp" type="password" placeholder="Nowe hasło DEV"><button id="ds">Ustaw hasło DEV</button>`;
+  $('#ds').onclick=async()=>{const j=await api('POST','/api/dev/set',{password:$('#dp').value});j.ok?(say('Hasło DEV ustawione.'),dev()):fail(j)};return}
+ if(!d.unlocked){b.innerHTML=`<div class="r"><input id="dp" type="password" placeholder="Hasło DEV"><button id="du" style="max-width:130px">Odblokuj</button></div>`;
+  $('#du').onclick=async()=>{const j=await api('POST','/api/dev/unlock',{password:$('#dp').value});j.ok?(say('Konto DEV odblokowane na 5 minut.'),dev()):fail(j)};return}
+ b.innerHTML=`<div class="k">Kanał BETA: ${d.beta_url}</div><button class="s" id="bc">Sprawdź wersję BETA</button><div id="bv" class="k"></div><button id="bu" style="display:none">Aktualizuj do BETA</button><div id="bs" class="m"></div>`;
+ $('#bc').onclick=async()=>{$('#bv').textContent='Sprawdzam…';const j=await api('GET','/api/dev/beta');if(!j.ok){$('#bv').textContent='Nie udało się: '+(j.code||'');return}$('#bv').textContent='BETA: '+j.version+' (obecna: '+j.current+')';$('#bu').style.display='block'};
+ $('#bu').onclick=async()=>{if(!confirm('Pobrać i zainstalować wersję BETA? Urządzenie uruchomi się ponownie.'))return;const j=await api('POST','/api/dev/beta/update');if(!j.ok)return fail(j);const t=setInterval(async()=>{const s=await api('GET','/api/dev/beta/status');if(!s.ok){clearInterval(t);return}$('#bs').textContent=s.msg+(s.state==2?' '+s.pct+'%':'');if(s.state>=4)clearInterval(t)},1500)}}
+init();
+</script></body></html>)HTML";
