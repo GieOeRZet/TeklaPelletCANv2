@@ -338,7 +338,7 @@ fun PowerTile(ui: Ui, modifier: Modifier, wide: Boolean = false) {
 @Composable
 fun TileGrid(ui: Ui, entries: List<String>, rowH: androidx.compose.ui.unit.Dp = 116.dp) {
     for (pair in entries.chunked(2)) {
-        Row(Modifier.height(if (pair.size == 1) 78.dp else rowH), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.height(if (pair.size == 1) 70.dp else rowH), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             for (id in pair) { val m = if (pair.size == 1) Modifier.fillMaxWidth().fillMaxHeight() else Modifier.weight(1f).fillMaxHeight(); when (id) { "fuel" -> FuelTile(ui, m); "power" -> PowerTile(ui, m, pair.size == 1); else -> SysTile(ui, id, m) } }
         }
     }
@@ -377,7 +377,7 @@ fun HomeView(ui: Ui) {
     val kix = ui.m.screens.getValue("palnik").bar.mapNotNull { barIx(ui, it, "palnik") } + ui.m.screens.getValue("kociol").bar.filter { it.k != "anim" }.mapNotNull { barIx(ui, it, "kociol") }
     val entries = visibleTileIds(ui) + listOf("fuel", "power"); val rows = (entries.size + 1) / 2
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val tileH = ((maxHeight - 430.dp) / rows - 10.dp).coerceIn(124.dp, 160.dp)
+        val tileH = ((maxHeight - 430.dp) / rows - 10.dp).coerceIn(116.dp, 160.dp)
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             GlowCard(Modifier.fillMaxWidth(), if (run) Warn else null, { ui.go("kociol") }) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -400,11 +400,11 @@ fun HomeView(ui: Ui) {
                         KvRow("Temp. palnika", f1(ui.n("0x226C"), 0) + " °C")
                     }
                 }
-                Spacer(Modifier.height(8.dp)); IxRow(kix)
+                Spacer(Modifier.height(4.dp)); IxRow(kix)
                 if (ui.hist.size >= 2) {
-                    Spacer(Modifier.height(10.dp))
+                    Spacer(Modifier.height(6.dp))
                     Row(Modifier.fillMaxWidth()) { Text("Temperatura kotła", color = Mut, fontSize = 10.5.sp, modifier = Modifier.weight(1f)); Text("ostatnie ${ui.hist.size / 4} min", color = Color(0xFF5D5D68), fontSize = 10.5.sp) }
-                    Spark(ui.hist, set?.toFloat(), Modifier.fillMaxWidth().height(44.dp).padding(top = 4.dp))
+                    Spark(ui.hist, set?.toFloat(), Modifier.fillMaxWidth().height(34.dp).padding(top = 2.dp))
                 }
             }
             TileGrid(ui, entries, tileH)
