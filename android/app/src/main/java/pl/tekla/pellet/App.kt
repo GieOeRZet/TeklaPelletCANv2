@@ -54,7 +54,7 @@ class Ui(val src: DataSource, val v: Map<String, Double>, val level: Int, val fu
 
 fun f1(x: Double?, d: Int = 1): String = if (x == null || x.isNaN()) "--" else if (d == 0) Math.round(x).toString() else String.format(java.util.Locale.US, "%.${d}f", x)
 val PROGICON = listOf(133, 135, 122, 128, 120)
-val TABS = listOf(Triple("home", "Pulpit", "⌂"), Triple("circuits", "Obwody", "▥"), Triple("sched:co1", "Harmonogram", "▦"), Triple("more", "Menu", "≡"))
+fun navTabs(v: Map<String, Double>): List<Triple<String, String, String>> {\n    val out = mutableListOf(Triple("kociol", "Kocioł", "60"), Triple("palnik", "Palnik", "61"))\n    val co = (v["0x2105"] ?: 1.0).toInt().coerceIn(0, 4)\n    if (co >= 1) out += Triple("co1", if (co >= 2) "CO1" else "CO", "62")\n    if (co >= 2) out += Triple("co2", "CO2", "63")\n    if ((v["0x2106"] ?: 0.0) != 0.0) out += Triple("cwu", "CWU", "66")\n    out += Triple("more", "Menu", "≡")\n    return out\n}
 
 fun fuelDots(fuel: Double, cap: Double, res: Double): Pair<Int, Boolean> {
     if (cap <= 0) return 0 to false
@@ -70,7 +70,7 @@ fun TeklaApp() {
         if (AppLock.isSet() && !Ctl.appUnlocked) { LockScreen { Ctl.appUnlocked = true }; return@TeklaTheme }
         val src = Ctl.source ?: return@TeklaTheme
         val ctx = Ctl.ctx
-        val vals by src.values.collectAsState(); val level by src.level.collectAsState(); val full by src.fullMode.collectAsState(); val conn by src.connected.collectAsState()
+        val vals by src.values.collectAsState(); val level by src.level.collectAsState(); val full by src.fullMode.collectAsState(); val conn by src.connected.collectAsState(); val tabs = navTabs(vals)
         var frame by remember { mutableIntStateOf(0) }
         LaunchedEffect(Unit) { while (true) { delay(130); frame++ } }
         val stack = remember { mutableStateListOf("home").also { l -> Ctl.startScreen?.let { if (it != "home") l.add(it) } } }
@@ -89,7 +89,7 @@ fun TeklaApp() {
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
                     NavigationBar(containerColor = Color(0xFF101014)) {
-                        for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) } }, label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
+                        for ((id, t, ic) in tabs) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) } }, label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
                             colors = NavigationBarItemDefaults.colors(selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2, unselectedIconColor = Mut, unselectedTextColor = Mut))
                     }
                 },
