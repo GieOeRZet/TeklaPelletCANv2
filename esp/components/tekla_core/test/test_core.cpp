@@ -25,10 +25,8 @@ int main() {
   CanFrame w = sdo_write_frame(4, 0x2003, 66); const uint8_t exp[8] = {0x42, 0x03, 0x20, 0x01, 0x42, 0, 0, 0}; CHECK(w.id == 0x604 && memcmp(w.data, exp, 8) == 0);
   // model: liczba PID i wyszukiwanie
   CHECK(kPidCount == 655); CHECK(find_pid(0x2003) && find_pid(0x2003)->min == 60 && find_pid(0x2003)->max == 80); CHECK(!find_pid(0x1234));
-  // straznik: tryb tylko-odczyt blokuje wszystko
-  CHECK(plan_write(Mode::ReadOnly, 3, 4, 0x2003, 65).err == WriteErr::ReadOnlyMode);
-  // zakres i zapis poprawny (kociol: temperatura zadana reczna 60..80, poziom >= level_min)
-  WriteResult ok = plan_write(Mode::Full, 3, 4, 0x2003, 66); CHECK(ok.err == WriteErr::Ok && ok.raw == 66 && ok.frame.data[4] == 66);
+  // zapis nie zalezy od poziomu PIN ani trybu; ograniczenia wynikaja z modelu PID
+  WriteResult ok = plan_write(Mode::ReadOnly, 0, 4, 0x2003, 66); CHECK(ok.err == WriteErr::Ok && ok.raw == 66 && ok.frame.data[4] == 66);
   CHECK(plan_write(Mode::Full, 3, 4, 0x2003, 90).err == WriteErr::OutOfRange);
   // 42 parametry poza listami: WE_BLOCKED (kominiarz 0x3750, drewno 0x3000, typ paliwa 0x299F, ruszt 0x2151)
   CHECK(plan_write(Mode::Full, 3, 4, 0x3750, 1).err == WriteErr::Blocked);
