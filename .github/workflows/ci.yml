@@ -4,7 +4,9 @@ on:
   push:
     paths: ["esp/**", "ui/**", "tools/**", "data/**", "android/**", ".github/workflows/ci.yml"]
   workflow_dispatch:
-concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   host-tests:
     runs-on: ubuntu-latest
