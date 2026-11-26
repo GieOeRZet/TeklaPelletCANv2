@@ -24,6 +24,7 @@ object Ctl {
     var source by mutableStateOf<DataSource?>(null)
     val icons = HashMap<Int, ImageBitmap?>()
     val devices = mutableStateListOf<Paired>()
+  var appUnlocked by mutableStateOf(false)
     var activeId by mutableStateOf<String?>(null)
     fun init(c: Context) {
         if (::ctx.isInitialized) return
@@ -45,12 +46,16 @@ object Ctl {
     fun icon(n: Int): ImageBitmap? = icons.getOrPut(n) { try { ctx.assets.open("ic/$n.png").use { BitmapFactory.decodeStream(it)?.asImageBitmap() } } catch (e: Exception) { null } }
 }
 
-class MainActivity : ComponentActivity() {
+class MainActivity : androidx.fragment.app.FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Ctl.startTick = intent?.getIntExtra("tick", 0) ?: 0
         Ctl.init(this)
+        Ctl.appUnlocked = !AppLock.isSet()
         Ctl.startScreen = intent?.getStringExtra("screen")   // do zrzutow w CI: am start --es screen kociol
         setContent { TeklaApp() }
     }
+
+    override fun onResume() { super.onResume(); Ctl.appUnlocked = !AppLock.isSet() }
+    override fun onPause() { BoilerAccess.lock(); Ctl.appUnlocked = false; super.onPause() }
 }
