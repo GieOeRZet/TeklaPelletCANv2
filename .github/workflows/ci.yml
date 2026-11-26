@@ -41,6 +41,36 @@ jobs:
             esp/build/bootloader/bootloader.bin
             ui/ui_pack.bin
           retention-days: 14
+  android-shots:
+    needs: android-build
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.9" }
+      - name: Budowa APK
+        working-directory: android
+        run: gradle --no-daemon assembleDebug
+      - name: KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Emulator + zrzuty ekranow
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: pixel_6
+          script: sh tools/android_shots.sh
+      - name: Zapis zrzutow w repo (galaz biezaca)
+        run: |
+          git config user.name "ci"; git config user.email "ci@users.noreply.github.com"
+          git add -f docs/zrzuty_android
+          git commit -m "CI: zrzuty ekranow Androida [skip ci]" || exit 0
+          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"
   android-build:
     runs-on: ubuntu-latest
     steps:

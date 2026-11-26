@@ -67,7 +67,7 @@ fun TeklaApp() {
         val vals by src.values.collectAsState(); val level by src.level.collectAsState(); val full by src.fullMode.collectAsState(); val conn by src.connected.collectAsState()
         var frame by remember { mutableIntStateOf(0) }
         LaunchedEffect(Unit) { while (true) { delay(130); frame++ } }
-        val stack = remember { mutableStateListOf("home") }
+        val stack = remember { mutableStateListOf("home").also { l -> Ctl.startScreen?.let { if (it != "home") l.add(it) } } }
         var dlg by remember { mutableStateOf<Dlg?>(null) }
         fun go(s: String) { if (s == "home") { stack.clear(); stack.add("home") } else if (stack.last() != s) stack.add(s) }
         BackHandler(stack.size > 1) { stack.removeAt(stack.lastIndex) }

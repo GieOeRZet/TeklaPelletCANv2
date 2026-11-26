@@ -18,6 +18,7 @@ object Ctl {
     lateinit var ctx: Context
     lateinit var model: AppModel
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    var startScreen: String? = null
     var source by mutableStateOf<DataSource?>(null)
     val icons = HashMap<Int, ImageBitmap?>()
     fun init(c: Context) {
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Ctl.init(this)
+        Ctl.startScreen = intent?.getStringExtra("screen")   // do zrzutow w CI: am start --es screen kociol
         setContent { TeklaApp() }
     }
 }
