@@ -253,7 +253,9 @@ fun HomeView(ui: Ui) {
     }
     // karty całej instalacji wg konfiguracji (menu panelu z warunkami); klik -> ekran szczegółów
     val ids = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { ui.m.routeOf(it) }.filter { it != "kociol" && ui.m.screens.containsKey(it) }
-    val entries = ids.flatMap { if (it == "palnik") listOf(it, "fuel") else listOf(it) }
+    val coIds = ids.filter { it.startsWith("co") && it.length == 3 }
+    if (coIds.isNotEmpty()) HeatingCard(ui, coIds)
+    val entries = ids.filter { it !in coIds }.flatMap { if (it == "palnik") listOf(it, "fuel") else listOf(it) }
     for (pair in entries.chunked(2)) {
         Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             for (id in pair) { if (id == "fuel") FuelCard(ui, Modifier.weight(1f).fillMaxHeight()) else SysCard(ui, ui.m.screens.getValue(id), Modifier.weight(1f).fillMaxHeight()) }
@@ -264,6 +266,29 @@ fun HomeView(ui: Ui) {
     if (act != null) Column(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(16.dp)).border(1.dp, Color(0xFF5A2A2A), RoundedCornerShape(16.dp)).clickable { ui.go("alarms") }.padding(14.dp)) {
         Text("ALARM AKTYWNY", color = Mut, fontSize = 11.sp, letterSpacing = 0.9.sp, fontWeight = FontWeight.SemiBold)
         Row(Modifier.padding(top = 6.dp)) { Text("kod ${act.code}", color = Bad, fontSize = 18.sp, fontWeight = FontWeight.Bold); Text(" · ${act.text}", color = Txt, fontSize = 18.sp) }
+    }
+}
+
+/** Jedna karta "Ogrzewanie": wiersz na każdy skonfigurowany obwód CO (klik -> ekran obwodu). */
+@Composable
+fun HeatingCard(ui: Ui, ids: List<String>) {
+    Column(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(16.dp)).border(1.dp, Line, RoundedCornerShape(16.dp)).padding(12.dp)) {
+        Text("OGRZEWANIE", color = Mut, fontSize = 11.sp, letterSpacing = 0.9.sp, fontWeight = FontWeight.SemiBold)
+        for ((i, id) in ids.withIndex()) {
+            val s = ui.m.screens.getValue(id)
+            if (i > 0) HorizontalDivider(color = Line, modifier = Modifier.padding(top = 8.dp))
+            Row(Modifier.fillMaxWidth().clickable { ui.go(id) }.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Box(Modifier.size(22.dp).background(Panel2, RoundedCornerShape(11.dp)).border(1.dp, Line, RoundedCornerShape(11.dp)), contentAlignment = Alignment.Center) { Text(id.takeLast(1), color = Acc2, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
+                Column(Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(f1(ui.n(s.big)), color = Txt, fontSize = 24.sp, fontWeight = FontWeight.Light); Text("°C", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(start = 3.dp, bottom = 3.dp))
+                        Spacer(Modifier.weight(1f))
+                        Text("zadana ${f1(ui.n(s.pill), 0)} · " + (ui.m.programModes.firstOrNull { it.v == (ui.n(s.mode)?.toInt() ?: -1) }?.label ?: "--"), color = Mut, fontSize = 13.sp, maxLines = 1)
+                    }
+                    Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) { for (c in s.bar) Ind(ui, c.l ?: "Wyjście", c.p, if (c.k == "mixer") "mix" else "on") }
+                }
+            }
+        }
     }
 }
 

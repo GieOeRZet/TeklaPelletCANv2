@@ -68,7 +68,9 @@ function homeView() {
   };
   const fuelCard = `<button class="hcard" data-go="magazyn"><h3>Paliwo</h3><div class="val">${f1(fuel, 0)}<small>kg z ${f1(cap, 0)}</small></div><div class="fbar"><i style="width:${cap ? Math.max(3, Math.min(100, fuel * 100 / cap)) : 0}%"></i></div>${kv('rezerwa', f1(num('0x3603'), 0) + ' kg')}</button>`;
   const ids = ST.app.menu.filter(r => condOk(r.cond) && r.level_min <= ST.level).map(routeOf).filter(r => r && ST.app.screens[r] && r !== 'kociol');
-  const cards = ids.map(id => card(id) + (id === 'palnik' ? fuelCard : '')).join('');
+  const coIds = ids.filter(i => /^co\d$/.test(i));
+  const heat = !coIds.length ? '' : `<div class="hcard heat"><h3>Ogrzewanie</h3>${coIds.map(id => { const sc = ST.app.screens[id]; return `<button class="corow" data-go="${id}"><span class="cn">${id.slice(2)}</span><span class="ct">${f1(num(sc.big[0]))}<small>°C</small></span><span class="cm">zadana ${f1(num(sc.pill), 0)} · ${modeLabel(num(sc.mode))}</span><span class="inds">${sc.bar.map(c => ind(c.l || 'Wyjście', c.p, c.k === 'mixer' ? 'mix' : '')).join('')}</span></button>`; }).join('')}</div>`;
+  const cards = ids.filter(i => !/^co\d$/.test(i)).map(id => card(id) + (id === 'palnik' ? fuelCard : '')).join('');
   const act = (ST.alarms || []).find(x => x.active);
   return `<div class="home">
    <div class="card gauge" data-go="kociol" role="button"><svg viewBox="0 0 140 140" class="arc" aria-hidden="true"><defs><linearGradient id="ag" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ffc233"/><stop offset="1" stop-color="#ff7a1a"/></linearGradient></defs>
@@ -76,7 +78,7 @@ function homeView() {
      <div class="gc"><div class="gv">${f1(t)}<small>°C</small></div><div class="gs">${ST.app.status.burner[bs] || '?'}</div><div class="gm">zadana ${f1(set, 0)} °C</div></div>
      <div class="kv gk">${kv('Powrót', f1(num('0x4000')) + ' °C')}${kv('Temp. palnika', f1(num('0x226C')) + ' °C')}${kv('Temp. zewnętrzna', f1(num('0x215F')) + ' °C')}${kv('Moc palnika', f1(num('0x4005'), 0) + ' %')}</div></div>
    ${act ? `<button class="card alarm" data-go="alarms"><h3>Alarm aktywny</h3><div class="al"><b>kod ${act.code}</b> · ${esc(act.text)}</div></button>` : ''}
-   <div class="hgrid">${cards}</div></div>`;
+   ${heat}<div class="hgrid">${cards}</div></div>`;
 }
 function modeChips(s) {
   if (!s.mode) return ''; const cur = num(s.mode);

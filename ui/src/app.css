@@ -90,3 +90,8 @@ table{width:100%;border-collapse:collapse}td,th{padding:8px 4px;border-bottom:1p
 #tabs a b{position:relative}.bdg{position:absolute;top:-6px;left:60%;background:var(--acc);color:#000;font-style:normal;font-size:10px;font-weight:800;border-radius:9px;padding:1px 5px}
 #top .tt{min-width:0}#top .date{overflow:hidden;text-overflow:ellipsis}@media (max-width:600px){#top .date{font-size:11px}}
 .hcard{display:flex;flex-direction:column;justify-content:flex-start}.hcard .inds{margin-top:auto;padding-top:10px}
+
+.heat{cursor:default}.corow{display:grid;grid-template-columns:22px auto 1fr;grid-template-areas:"n t m" "n i i";gap:2px 10px;align-items:center;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:10px 0;color:var(--txt);font:inherit;cursor:pointer}
+.corow:first-of-type{border-top:0}.corow .cn{grid-area:n;width:22px;height:22px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--acc2)}
+.corow .ct{grid-area:t;font-size:24px;font-weight:300}.corow .ct small{font-size:12px;color:var(--mut);margin-left:2px}.corow .cm{grid-area:m;color:var(--mut);font-size:13px;justify-self:end;text-align:right}.corow .inds{grid-area:i;margin-top:4px}
+@media (max-width:600px){#top .chip:nth-of-type(1){display:none}#top .date{font-size:12px}}
