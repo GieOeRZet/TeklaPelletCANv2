@@ -51,19 +51,16 @@ function cellHtml(c) {
 const boilerImg = () => `<img class="boiler" src="${IC(ST.app.boiler_images[String(num('0x370A') || 2)] || 12)}" alt="kocioł">`;
 const modeLabel = v => (ST.app.program_modes.find(m => m.v === Math.round(v)) || {}).label || '--';
 const modeIcon = v => (ST.app.program_modes.find(m => m.v === Math.round(v)) || {}).icon;
-// pastylka wyjscia: stala wysokosc 28 px; aktywna = kolor funkcji (polprzezroczyste tlo, ramka 40 %), nieaktywna = wygaszona (opacity .4). Mieszacz: O (czerwony, otwieranie) / Z (niebieski, zamykanie).
-const PC = { on: '#22C55E', burn: '#F59E0B', open: '#EF4444', close: '#38BDF8' };
-function pill(label, icon, val, on, col, frames) {
-  const im = frames ? `<img data-fr="${frames.join(',')}" src="${IC(frames[0])}" alt="">` : icon ? `<img src="${IC(icon)}" alt="">` : '';
-  return `<span class="pill ${on ? 'on' : ''}" style="--c:${col}">${im}<b>${esc(val || label)}</b></span>`;
-}
+// delikatny wskaznik wyjscia: mala kropka (swieci kolorem funkcji gdy aktywne, inaczej ledwie widoczna) + drobna etykieta. Mieszacz: O (otwieranie, czerwony) / Z (zamykanie, niebieski).
+const PC = { on: '#4fe38a', burn: '#ffb066', open: '#ff5d5d', close: '#5ab4ff' };
+function ix(label, val, on, col, extra) { return `<span class="ix ${on ? 'on' : ''}" style="--c:${col}"><i></i>${esc(label)}${val ? ` <em>${esc(val)}</em>` : ''}</span>`; }
 function barPill(c, id) {
   const v = num(c.p) || 0, on = v !== 0;
-  if (c.k === 'mixer') return pill('Mieszacz', v === 1 ? 106 : 107, v === 1 ? 'Z' : v === 2 ? 'O' : 'Mieszacz', on, v === 1 ? PC.close : PC.open);
-  if (c.k === 'pump') return pill(c.l || 'Pompa', 0, c.l || 'Pompa', on, PC.on, ST.app.pump_frames);
-  if (c.k === 'grate') return pill('Ruszt', 59, v === 1 ? '◀ Ruszt' : on ? 'Ruszt ▶' : 'Ruszt', on, PC.on);
-  let val = c.l || 'Wyjście'; if (c.n) { const x = num(c.n) || 0; if (c.hm) { const m = Math.round(x); val = Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); } else if (c.nd) val = f1(x, 1) + ' s'; else if (on && x) val = Math.round(x) + '%'; }
-  return pill(c.l, c.fr[0], val, on, id === 'palnik' ? PC.burn : PC.on, c.fr);
+  if (c.k === 'mixer') return ix('Mieszacz', v === 1 ? 'Z' : v === 2 ? 'O' : '', on, v === 1 ? PC.close : PC.open);
+  if (c.k === 'pump') return ix(c.l || 'Pompa', '', on, PC.on);
+  if (c.k === 'grate') return ix('Ruszt', v === 1 ? '◀' : on ? '▶' : '', on, PC.on);
+  let val = ''; if (c.n && on) { const x = num(c.n) || 0; if (c.hm) { const m = Math.round(x); val = Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); } else if (c.nd) val = f1(x, 1) + ' s'; else if (x) val = Math.round(x) + '%'; }
+  return ix(c.l, val, on, id === 'palnik' ? PC.burn : PC.on);
 }
 function hopper(fi, w = 34, h = 29) {
   const dots = Array.from({ length: 24 }, (_, i) => { const r = Math.floor(i / 4), c = i % 4, idx = (5 - r) * 4 + c; return `<circle cx="${9 + c * 5.4}" cy="${6 + r * 3.6}" r="1.35" fill="${idx < fi.dots ? '#F59E0B' : 'none'}" stroke="#475569" stroke-width=".4"/>`; }).join('');
@@ -76,24 +73,26 @@ function tile(id) {
   const mi = sc.mode ? modeIcon(num(sc.mode)) : null;
   const big = sc.state ? `<span style="font-size:20px">${ST.app.status[sc.state][num(sc.stateP || sc.big[0])] || '?'}</span>` : sc.big ? `${f1(num(sc.big[0]))}<small>${sc.big[1] === '°C' ? '°' : sc.big[1]}${sc.pill ? ' / ' + f1(num(sc.pill), 0) + '°' : ''}</small>` : '';
   const pills = sc.bar.map(c => barPill(c, id)).join('');
-  return `<button class="tl" data-go="${id}"><i class="led ${act ? 'w' : ''}"></i><div class="th"><h3>${tileTitle(id, sc)}</h3>${mi ? `<img src="${IC(mi)}" alt="">` : ''}</div><div class="tv">${big}</div><div class="tp">${pills}</div></button>`;
+  return `<button class="tl" data-go="${id}"><i class="led ${act ? 'w' : ''}"></i><div class="th"><h3>${tileTitle(id, sc)}</h3>${mi ? `<img src="${IC(mi)}" alt="">` : ''}</div><div class="tv">${big}</div><div class="ixs">${pills}</div></button>`;
 }
 const visibleIds = () => ST.app.menu.filter(r => condOk(r.cond) && r.level_min <= ST.level).map(routeOf).filter(r => r && ST.app.screens[r] && r !== 'kociol' && r !== 'palnik');
+function arcPath(cx, cy, r, a0, a1) { const f = a => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)]; const [x0, y0] = f(a0), [x1, y1] = f(a1); return `M${x0.toFixed(1)} ${y0.toFixed(1)}A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; }
 function homeView() {
-  // Pulpit wg przewodnika: karta "Kociol + Palnik" (duza temperatura, zadana z ikona trybu, metryki, pastylki wyjsc) + siatka kafli 2 kolumny (CO, CWU, bufor/solary/..., Paliwo, Zasilanie).
+  // Pulpit: karta kotla (luk z temperatura, metryki, delikatne wskazniki wyjsc palnika) + siatka kompaktowych kafli bez przewijania (CO, CWU, inne wg konfiguracji, Paliwo, Zasilanie).
   const t = num('0x2001'), set = num('0x2004'), bs = num('0x2007') || 0, on = num('0x2005') !== 0;
   const prog = PROGICON[on ? Math.min(num('0x2002') || 0, 4) : 4];
   const fuel = num('0x3601'), cap = num('0x3600'), res = num('0x3603') || 0, fi = fuelIcon(fuel || 0, cap || 0, res);
-  const run = bs >= 1 && bs <= 8, pulse = bs === 1 || bs === 2;
+  const run = bs >= 1 && bs <= 8, frac = Math.max(0, Math.min(1, ((t ?? 20) - 20) / 70)), a1 = 135 + 270 * frac;
   const m = (l, v, show = true) => show ? `<div>${l}<b>${v}</b></div>` : '';
-  const metrics = m('Moc', f1(num('0x4005'), 0) + '%') + m('Spalanie', f1(num('0x3710'), 1) + ' kg/h') + m('Powrót', f1(num('0x4000'), 1) + '°', (num('0x350A') || 0) !== 0) + m('Ciśnienie', f1(num('0x3333'), 0) + ' mbar', (num('0x350D') || 0) !== 0);
+  const metrics = m('Moc palnika', f1(num('0x4005'), 0) + ' %') + m('Spalanie', f1(num('0x3710'), 1) + ' kg/h') + m('Powrót', f1(num('0x4000'), 1) + ' °C', (num('0x350A') || 0) !== 0) + m('Ciśnienie', f1(num('0x3333'), 0) + ' mbar', (num('0x350D') || 0) !== 0) + m('Temp. palnika', f1(num('0x226C'), 0) + ' °C');
   const kp = [...ST.app.screens.palnik.bar.map(c => barPill(c, 'palnik')), ...ST.app.screens.kociol.bar.filter(c => c.k !== 'anim').map(c => barPill(c, 'kociol'))].join('');
-  const fuelTile = `<button class="tl" data-fuel="1"><i class="led ${fi.E ? 'o' : ''}"></i><div class="th"><h3>Paliwo</h3></div><div class="tv" style="display:flex;align-items:center;gap:10px">${hopper(fi)}<span>${f1(fuel, 0)}<small>kg</small></span></div><div class="tp"><span class="pill ${fi.E ? 'on' : ''}" style="--c:${PC.burn}"><b>${fi.E ? 'E · rezerwa' : 'z ' + f1(cap, 0) + ' kg'}</b></span></div></button>`;
-  const powerTile = `<button class="tl" data-go="kociol"><i class="led ${on ? 'g' : ''}"></i><div class="th"><h3>Zasilanie</h3><img src="${IC(prog)}" alt=""></div><div class="tv" style="font-size:20px">${on ? 'Włączone' : 'Wyłączone'}</div><div class="tp"><span class="pill ${on ? 'on' : ''}" style="--c:${PC.on}"><b>Kocioł</b></span></div></button>`;
-  return `<div class="dash"><div class="kcard"><i class="led ${run ? 'y' : ''} ${pulse ? 'pulse' : ''}"></i>
-   <div class="k1"><div><div class="kbig">${f1(t)}<small>°C</small></div><div class="badge"><i class="d ${run ? 'y' : ''}"></i>${ST.app.status.burner[bs] || '?'}</div></div>
-    <button class="cap" data-go="kociol" aria-label="Zadana">${f1(set, 0)}<img src="${IC(prog)}" alt="tryb"></button></div>
-   <div class="k2">${metrics}</div><div class="k3">${kp}</div></div>
+  const fuelTile = `<button class="tl" data-fuel="1"><i class="led ${fi.E ? 'o' : ''}"></i><div class="th"><h3>Paliwo</h3></div><div class="tv fl">${hopper(fi)}<span>${f1(fuel, 0)}<small>kg</small></span></div><div class="ixs">${ix(fi.E ? 'rezerwa' : 'z ' + f1(cap, 0) + ' kg', '', fi.E, PC.burn)}</div></button>`;
+  const powerTile = `<button class="tl" data-go="kociol"><i class="led ${on ? 'g' : ''}"></i><div class="th"><h3>Zasilanie</h3><img src="${IC(prog)}" alt=""></div><div class="tv sm">${on ? 'Włączone' : 'Wyłączone'}</div><div class="ixs">${ix('Kocioł', '', on, PC.on)}</div></button>`;
+  return `<div class="dash"><div class="kcard"><i class="led ${run ? 'y' : ''}"></i>
+   <button class="gwrap" data-go="kociol" aria-label="Kocioł"><svg viewBox="0 0 140 140" class="arc" aria-hidden="true"><defs><linearGradient id="ag" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ffc233"/><stop offset="1" stop-color="#ff7a1a"/></linearGradient></defs>
+     <path d="${arcPath(70, 70, 58, 135, 405)}" fill="none" stroke="var(--line)" stroke-width="8" stroke-linecap="round"/><path d="${arcPath(70, 70, 58, 135, Math.max(136, a1))}" fill="none" stroke="url(#ag)" stroke-width="8" stroke-linecap="round" class="arcv"/></svg>
+     <div class="gc"><div class="gv">${f1(t)}<small>°C</small></div><div class="gs">${ST.app.status.burner[bs] || '?'}</div><div class="gm"><img src="${IC(prog)}" alt="">zadana ${f1(set, 0)} °C</div></div></button>
+   <div class="kv gk">${metrics}</div><div class="ixs kx">${kp}</div></div>
    <div class="tg">${visibleIds().map(tile).join('')}${fuelTile}${powerTile}</div></div>`;
 }
 function circuitsView() { const ids = visibleIds().filter(i => /^co\d$/.test(i) || i === 'cwu'); return `<div class="tg">${ids.map(tile).join('') || '<div class="card">Brak skonfigurowanych obwodów</div>'}</div>`; }
