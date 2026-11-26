@@ -4,9 +4,10 @@
 | Element | Weryfikacja |
 |---|---|
 | `components/tekla_core` (ramki SDO, tablice modelu GENEROWANE, reguly ikon/stanow, straznik zapisu, live, JSON, base64url, paczka UI TPUI, ECDSA r\|s->DER) | **testy natywne PASS**: `sh components/tekla_core/test/run.sh` |
-| `components/mcp2515`, `main/` (bus, auth, ota, web, net, main) | **tylko kontrola skladni na atrapach naglowkow IDF** (g++ -fsyntax-only). **NIEKOMPILOWANE z ESP-IDF i NIEURUCHAMIANE na sprzecie** (brak toolchaina w srodowisku agenta: siec blokuje PlatformIO/Espressif) |
+| `components/mcp2515`, `main/` (bus, auth, ota, web, net, main) | **kompilacja ESP-IDF 5.4.1 (esp32c6) w GitHub Actions: PASS** (workflow `.github/workflows/ci.yml`, kontener `espressif/idf:v5.4.1`, jak w starym projekcie; run 2, artefakt `tekla-firmware`). **NIEURUCHAMIANE na sprzecie** - zadnej weryfikacji dzialania MCP2515/CAN/Wi-Fi/HTTP |
 
-## Budowanie (u wlasciciela, ESP-IDF 5.x)
+## Budowanie
+CI buduje automatycznie przy zmianach w `esp/`, `ui/`, `tools/`, `data/` (artefakt do pobrania z zakladki Actions). Lokalnie (ESP-IDF 5.x):
 ```
 cd esp && idf.py set-target esp32c6 && idf.py build
 ```
