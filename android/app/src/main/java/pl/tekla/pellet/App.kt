@@ -379,7 +379,16 @@ fun Spark(hist: List<Float>, set: Float?, modifier: Modifier) {
 
 @Composable
 fun HomeView(ui: Ui) {
+    if (ui.src.isDemo && Ctl.devices.isEmpty()) {
+        Card("Połącz z modułem") {
+            Text("Nie masz jeszcze sparowanego modułu. Poniżej widzisz dane DEMO — po dodaniu własnego modułu aplikacja automatycznie przełączy się na jego rzeczywiste dane.", color = Mut, fontSize = 13.sp)
+            Spacer(Modifier.height(10.dp))
+            Button({ ui.go("appset") }, Modifier.fillMaxWidth()) { Text("＋ Dodaj moduł") }
+            OutlinedButton({ ui.go("appset") }, Modifier.fillMaxWidth().padding(top = 6.dp)) { Text("Wykryj moduł w sieci") }
+        }
+    }
     // Pulpit: karta kotła (łuk z temperaturą, metryki, wskaźniki wyjść palnika, wykres temperatury) + siatka kompaktowych kafli wg konfiguracji; kafle rozkładają się na wysokość ekranu, przy dużej instalacji Pulpit się przewija.
+ karta kotła (łuk z temperaturą, metryki, wskaźniki wyjść palnika, wykres temperatury) + siatka kompaktowych kafli wg konfiguracji; kafle rozkładają się na wysokość ekranu, przy dużej instalacji Pulpit się przewija.
     val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0; val on = ui.n("0x2005") != 0.0
     val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
     val frac = (((t ?: 20.0) - 20.0) / 70.0).coerceIn(0.0, 1.0).toFloat(); val run = bs in 1..8
