@@ -55,38 +55,82 @@ fun PairDialog(host: String, label: String, close: () -> Unit, done: (Paired) ->
 
 @Composable
 fun AppSettings(ui: Ui) {
-    val scope = rememberCoroutineScope(); val found by Discovery.found.collectAsState()
-    var host by remember { mutableStateOf("") }; var pairing by remember { mutableStateOf<Pair<String, String>?>(null) }; var forget by remember { mutableStateOf<Paired?>(null) }
+    val found by Discovery.found.collectAsState()
+    var host by remember { mutableStateOf("") }
+    var pairing by remember { mutableStateOf<Pair<String, String>?>(null) }
+    var forget by remember { mutableStateOf<Paired?>(null) }
     LaunchedEffect(Unit) { Discovery.start(Ctl.ctx) }
-    Card("Moduły") {
-        Text(if (ui.src.isDemo) "Tryb demo: pokazuję przykładowe wartości. Sparuj moduł, aby zobaczyć prawdziwe dane." else "Połączono z: ${Ctl.activeName()}. Gdy moduł jest offline, widać ostatnie znane wartości, a próba zmiany pokazuje komunikat.", color = Mut, fontSize = 13.sp)
-        Spacer(Modifier.height(8.dp))
-        for (d in Ctl.devices) Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { Ctl.activate(d.id); ui.go("home") }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(8.dp).background(if (d.id == Ctl.activeId) Okc else Mut, androidx.compose.foundation.shape.RoundedCornerShape(4.dp))); Spacer(Modifier.width(10.dp))
-            Column(Modifier.weight(1f)) { Text(d.name, color = Txt, fontSize = 15.sp); Text(d.host + " · " + d.id, color = Mut, fontSize = 11.sp) }
-            TextButton({ forget = d }) { Text("Usuń", color = Bad) }
+
+    Card("MODUŁY TEKLA PELLET") {
+        if (Ctl.devices.isEmpty()) {
+            Text("Nie masz jeszcze sparowanego modułu. Aplikacja działa teraz w trybie DEMO.", color = Txt, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+            Text("Dodaj własny moduł poniżej. Po udanym sparowaniu DEMO zniknie całkowicie.", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp))
+        } else {
+            Text("Sparowane moduły: ${Ctl.devices.size}. Aktywny: ${Ctl.activeName()}.", color = Mut, fontSize = 13.sp)
         }
-        if (Ctl.devices.isEmpty()) { OutlinedButton({ Ctl.useDemo(); ui.go("home") }, Modifier.fillMaxWidth().padding(top = 8.dp)) { Text("Uruchom demo", color = Txt) } }
-    }
-    val fresh = found.values.filter { f -> Ctl.devices.none { it.id == f.id } }
-    Card("Wykryte w sieci") {
-        if (fresh.isEmpty()) Text("Brak nowych modułów. Wykrywanie działa w tej samej sieci Wi-Fi (mDNS); jeśli moduł jest nieskonfigurowany, użyj „Nowy moduł (Bluetooth)” poniżej.", color = Mut, fontSize = 13.sp)
-        for (f in fresh) Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { pairing = f.host to f.name }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) { Text(f.name, color = Txt, fontSize = 15.sp); Text(f.host + " · fw " + f.fw, color = Mut, fontSize = 11.sp) }; Text("Sparuj ›", color = Acc)
+        if (Ctl.devices.isNotEmpty()) {
+            Spacer(Modifier.height(8.dp))
+            for (d in Ctl.devices) Row(
+                Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable { Ctl.activate(d.id); ui.go("home") }.padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(Modifier.size(9.dp).background(if (d.id == Ctl.activeId) Okc else Mut, androidx.compose.foundation.shape.RoundedCornerShape(5.dp)))
+                Spacer(Modifier.width(10.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(d.name, color = Txt, fontSize = 15.sp, fontWeight = if (d.id == Ctl.activeId) FontWeight.SemiBold else FontWeight.Normal)
+                    Text(d.host + " · " + d.id, color = Mut, fontSize = 11.sp)
+                }
+                TextButton({ forget = d }) { Text("Usuń", color = Bad) }
+            }
         }
     }
-    Card("Dodaj ręcznie") {
-        OutlinedTextField(host, { host = it }, label = { Text("Adres modułu (np. 192.168.1.50 lub VPN)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-        Button({ pairing = host.trim() to host.trim() }, Modifier.fillMaxWidth().padding(top = 8.dp), enabled = host.isNotBlank()) { Text("Sparuj") }
+
+    Card("WYKRYJ MODUŁ W SIECI") {
+        Text("Tylko moduły TeklaPellet z usługi mDNS _teklapellet._tcp. To nie jest skan sieci Wi‑Fi.", color = Mut, fontSize = 12.sp)
+        val fresh = found.values.filter { f -> Ctl.devices.none { it.id == f.id } }
+        if (fresh.isEmpty()) {
+            Text("Brak nowych modułów.", color = Txt, fontSize = 14.sp, modifier = Modifier.padding(top = 10.dp))
+            Text("Telefon i moduł muszą być w tej samej sieci LAN.", color = Mut, fontSize = 11.sp)
+        } else {
+            for (f in fresh) Row(
+                Modifier.fillMaxWidth().heightIn(min = 52.dp).clickable { pairing = f.host to f.name }.padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(f.name, color = Txt, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Text(f.host + " · fw " + f.fw, color = Mut, fontSize = 11.sp)
+                }
+                Text("SPARUJ ›", color = Acc, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
     }
+
+    Card("DODAJ ADRES RĘCZNIE") {
+        Text("Gdy mDNS nie jest dostępne, podaj adres IP modułu.", color = Mut, fontSize = 12.sp)
+        OutlinedTextField(host, { host = it }, label = { Text("Adres IP modułu") }, placeholder = { Text("np. 192.168.1.50") }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
+        Button({ pairing = host.trim() to host.trim() }, Modifier.fillMaxWidth().padding(top = 8.dp), enabled = host.trim().isNotEmpty()) { Text("Sprawdź i sparuj") }
+    }
+
     BleSetupCard(ui)
     AppPinCard(ui)
     BoilerAccessCard(ui)
-    pairing?.let { (h, n) -> PairDialog(h, n, { pairing = null }) { p -> pairing = null; Ctl.addPaired(p); ui.toast("Sparowano: ${p.name}"); ui.go("home") } }
-    forget?.let { d -> AlertDialog(onDismissRequest = { forget = null }, title = { Text("Usunąć ${d.name}?") }, text = { Text("Aplikacja zapomni ten moduł. Token zostaje w module do czasu usunięcia na stronie serwisowej lub w Module ESP › Sparowani klienci.") },
-        confirmButton = { TextButton({ Ctl.forget(d.id); forget = null }) { Text("Usuń", color = Bad) } }, dismissButton = { TextButton({ forget = null }) { Text("Anuluj") } }) }
-}
 
+    pairing?.let { (h, n) ->
+        PairDialog(h, n, { pairing = null }) { p ->
+            pairing = null; Ctl.addPaired(p); ui.toast("Sparowano: ${p.name}"); ui.go("home")
+        }
+    }
+
+    forget?.let { d ->
+        AlertDialog(
+            onDismissRequest = { forget = null },
+            title = { Text("Usunąć ${d.name}?") },
+            text = { Text("Aplikacja zapomni ten moduł. Token pozostaje w module do czasu usunięcia klienta w Konfiguracji modułu ESP.") },
+            confirmButton = { TextButton({ Ctl.forget(d.id); forget = null }) { Text("Usuń", color = Bad) } },
+            dismissButton = { TextButton({ forget = null }) { Text("Anuluj") } }
+        )
+    }
+}
 private fun phoneSsids(c: Context): List<String> = try {
     val ok = c.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     @Suppress("DEPRECATION") if (!ok) emptyList() else (c.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager).scanResults.map { it.SSID }.filter { it.isNotEmpty() }.distinct()
