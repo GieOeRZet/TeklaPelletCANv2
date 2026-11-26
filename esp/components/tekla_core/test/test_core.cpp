@@ -3,10 +3,16 @@
 #include <cstring>
 #include "tekla/guard.hpp"
 #include "tekla/rules.hpp"
+#include "tekla/live.hpp"
+#include "tekla/b64.hpp"
+#include "tekla/ui_pack.hpp"
+#include <vector>
+#include <fstream>
+#include <iterator>
 using namespace tekla;
 static int fails = 0;
 #define CHECK(c) do { if (!(c)) { printf("FAIL %s:%d %s\n", __FILE__, __LINE__, #c); fails++; } } while (0)
-int main() {
+int main(int argc, char** argv) {
   // ramka odczytu 0x604: 40 idx_lo idx_hi 01 ...
   CanFrame r = sdo_read_frame(4, 0x3601); CHECK(r.id == 0x604 && r.data[0] == 0x40 && r.data[1] == 0x01 && r.data[2] == 0x36 && r.data[3] == 1);
   // odpowiedz 0x584 (przyklad z HA: 0x2277 = 257)
@@ -41,5 +47,19 @@ int main() {
   CHECK(fuel_icon(52, 135, 0).dots == 9 && fuel_icon(77, 135, 0).dots == 14 && fuel_icon(100, 135, 0).dots == 19 && fuel_icon(118, 135, 0).dots == 24);
   CHECK(fuel_icon(9, 135, 10).empty_E && !fuel_icon(11, 135, 10).empty_E);
   char b[16]; format_hmm(180, b, 16); CHECK(!strcmp(b, "3:00")); format_hmm(75, b, 16); CHECK(!strcmp(b, "1:15"));
+  // konwersje live
+  CHECK(live_value(LK_DC, 0x0270) == 62.4); CHECK(live_value(LK_DC, 0xFFEC) == -2.0); CHECK(live_value(LK_STATE, 0x0101) == 1.0); CHECK(live_value(LK_STATE, 0x013C) == 60.0); CHECK(live_value(LK_D10, 21) == 2.1);
+  CHECK(kLiveCount > 40); for (size_t i = 0; i < kLiveCount; i++) CHECK(find_pid(kLive[i].pid) != nullptr);   // kazdy PID zestawu live istnieje w modelu
+  LiveItem li[3] = {{0x2001, 62.4}, {0x2277, 1}, {0x215F, -3.5}}; char jb[160]; size_t jn = json_live(li, 3, jb, sizeof jb);
+  CHECK(jn > 0 && !strcmp(jb, "{\"t\":\"live\",\"v\":{\"0x2001\":62.4,\"0x2277\":1.0,\"0x215F\":-3.5}}")); char small[16]; CHECK(json_live(li, 3, small, sizeof small) == 0);
+  // token base64url
+  uint8_t tk[3] = {0xFB, 0xEF, 0xBE}; char tb[16]; CHECK(b64url(tk, 3, tb, sizeof tb) == 4 && !strcmp(tb, "----")); uint8_t t2[2] = {0xFF, 0xFF}; CHECK(b64url(t2, 2, tb, sizeof tb) == 3 && !strcmp(tb, "__8"));
+  // paczka UI (argv[1] = plik z tools/pack_ui.py)
+  if (argc > 1) {
+    std::ifstream f(argv[1], std::ios::binary); std::vector<uint8_t> d((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>()); CHECK(d.size() > 1000 && ui_verify(d.data(), d.size()));
+    UiFile uf; CHECK(ui_find(d.data(), d.size(), "index.html", &uf) && uf.gzip && !strcmp(uf.mime, "text/html; charset=utf-8") && uf.size > 100 && uf.data[0] == 0x1F && uf.data[1] == 0x8B);
+    CHECK(ui_find(d.data(), d.size(), "assets/ic/106.png", &uf) && !uf.gzip && uf.data[1] == 'P'); CHECK(!ui_find(d.data(), d.size(), "nie_ma.js", &uf));
+    d[d.size() / 2] ^= 0xFF; CHECK(!ui_verify(d.data(), d.size()));            // uszkodzona paczka wykrywana (healthy start)
+  }
   printf(fails ? "TESTY: %d BLEDOW\n" : "TESTY OK\n", fails); return fails ? 1 : 0;
 }
