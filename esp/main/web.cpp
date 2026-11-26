@@ -81,6 +81,25 @@ static esp_err_t h_param_put(httpd_req_t* r) { NEED_SESSION; unsigned pid = 0; i
   uint32_t back; if (!bus::read((uint16_t)pid, &back) || (e->type == TT_U8 ? (back & 0xFF) != (w.raw & 0xFF) : e->type == TT_U32 ? back != w.raw : (back & 0xFFFF) != (w.raw & 0xFFFF))) return jerr(r, "502 Bad Gateway", "verify_failed");   // odczyt zwrotny po zapisie
   double shown = decode_raw(e, back); char b[64]; snprintf(b, sizeof b, "{\"ok\":true,\"v\":%g}", shown); ws_broadcast_param((uint16_t)pid, shown); return jsend(r, "200 OK", b); }
 static esp_err_t h_alarms(httpd_req_t* r) { NEED_SESSION; (void)S; return jsend(r, "200 OK", "{\"ok\":true,\"alarms\":[]}"); }          // TODO: historia alarmow (rejestry 0x4011-0x404B)
+static esp_err_t h_time(httpd_req_t* r) {
+  NEED_SESSION;
+  if (r->method == HTTP_POST) {
+    cJSON* j = body_json(r);
+    const cJSON* e = j ? cJSON_GetObjectItem(j, "epoch") : nullptr;
+    if (!e || !cJSON_IsNumber(e)) { cJSON_Delete(j); return jerr(r, "400 Bad Request", "bad_request"); }
+    double d = e->valuedouble; cJSON_Delete(j);
+    if (d < 1700000000.0 || d > 4102444800.0) return jerr(r, "422 Unprocessable Entity", "range");
+    uint32_t epoch = (uint32_t)d, confirmed = 0;
+    if (!bus::sync_time(epoch, &confirmed)) return jerr(r, "502 Bad Gateway", "can_timeout");
+    char b[160]; snprintf(b, sizeof b, "{\"ok\":true,\"epoch\":%u,\"boiler_timestamp\":%u,\"synced\":%s}", epoch, confirmed, confirmed == epoch ? "true" : "false");
+    logx("synchronizacja czasu z telefonu");
+    return jsend(r, "200 OK", b);
+  }
+  uint32_t ts = 0; bool ok = bus::read(0x2165, &ts);
+  char b[160]; snprintf(b, sizeof b, "{\"ok\":true,\"boiler_timestamp\":%u,\"available\":%s}", ts, ok ? "true" : "false");
+  return jsend(r, "200 OK", b);
+}
+
 // ---- modul: Wi-Fi, haslo, restart, reset, dziennik, siec
 static char g_log[64][96]; static int g_logn;
 static void logx(const char* m) { snprintf(g_log[g_logn++ % 64], sizeof g_log[0], "%ds %s", (int)(esp_timer_get_time() / 1000000), m); }
@@ -140,7 +159,7 @@ bool web::start() {
   if (httpd_start(&g_srv, &c) != ESP_OK) return false;
   auto reg = [&](const char* u, httpd_method_t m, esp_err_t (*h)(httpd_req_t*), bool ws = false) { httpd_uri_t x{}; x.uri = u; x.method = m; x.handler = h; x.is_websocket = ws; httpd_register_uri_handler(g_srv, &x); };
   reg("/ws", HTTP_GET, h_ws, true); reg("/api/login", HTTP_POST, h_login); reg("/api/setup", HTTP_POST, h_setup);
-  reg("/api/info", HTTP_GET, h_info); reg("/api/state", HTTP_GET, h_state); reg("/api/params", HTTP_GET, h_params); reg("/api/param/*", HTTP_PUT, h_param_put); reg("/api/alarms", HTTP_GET, h_alarms);
+  reg("/api/info", HTTP_GET, h_info); reg("/api/time", HTTP_GET, h_time); reg("/api/time", HTTP_POST, h_time); reg("/api/state", HTTP_GET, h_state); reg("/api/params", HTTP_GET, h_params); reg("/api/param/*", HTTP_PUT, h_param_put); reg("/api/alarms", HTTP_GET, h_alarms);
   reg("/api/log/export", HTTP_GET, h_log_export); reg("/api/wifi", HTTP_GET, h_wifi); reg("/api/wifi", HTTP_POST, h_wifi); reg("/api/wifi/scan", HTTP_GET, h_wifi_scan); reg("/api/password", HTTP_POST, h_password); reg("/api/recover", HTTP_POST, h_recover); reg("/api/recovery", HTTP_POST, h_recovery_set); reg("/api/restart", HTTP_POST, h_restart); reg("/api/factory_reset", HTTP_POST, h_factory); reg("/api/log", HTTP_GET, h_log); reg("/api/network", HTTP_GET, h_network);
   reg("/api/ota/fw", HTTP_POST, h_ota_fw); reg("/api/identity", HTTP_GET, h_identity); reg("/api/pair", HTTP_POST, h_pair); reg("/api/service/unlock", HTTP_POST, h_unlock);
   reg("/api/clients", HTTP_GET, h_clients); reg("/api/clients", HTTP_DELETE, h_clients); reg("/api/clients/*", HTTP_DELETE, h_client_del); reg("/api/device", HTTP_POST, h_device);
