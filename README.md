@@ -1,29 +1,26 @@
 # TeklaPelletCANv2
 
-Nowy, **niezależny** projekt: dodatkowy sterownik/moduł **ESP32-C6 (Seeed XIAO) + MCP2515** podłączony do magistrali CAN kotła na pellet z panelem Estyma igneoTouch (firmware sterownika FW2213TK), z pełnym odczytem i (opcjonalnie) zapisem, oraz klienci: strona WWW, karta i integracja Home Assistant, aplikacja Android (natywna, Kotlin/Compose).
+Samodzielne monorepo: dodatkowy moduł **ESP32‑C6 (Seeed XIAO) + MCP2515** na magistrali CAN kotła na pellet z panelem Estyma igneoTouch (sterownik FW2213TK) oraz klienci (aplikacja Android, strona WWW, docelowo Windows i Home Assistant). W repo jest też **cała analiza panelu** (emulacja, dekompilacja, narzędzia, dowody), więc nie potrzeba żadnego innego repozytorium.
 
-Repozytorium jest **samodzielnym monorepo**: zawiera zarówno produkt (ESP, WWW, Android), jak i całą analizę panelu (emulacja, dekompilacja, narzędzia, dowody) w `analiza/`. Dane o urządzeniu (menu, PID-y, kodowanie zapisu, alarmy, moduły) pochodzą z odtworzenia panelu w emulatorze; gotowy model produktowy to `data/device_model.json`.
+**Nowy agent/osoba: zacznij od `docs/PROMPT_DLA_AGENTA.md`**, potem `docs/STATUS.md` (co działa, co nie) i `docs/ZADANIA.md` (lista prac).
+
+## Architektura w jednym akapicie
+ESP to **cienki most CAN ↔ API (REST + WebSocket)** z małą wbudowaną stroną serwisową (konfiguracja Wi‑Fi/IP, hasło, parowanie klientów, aktualizacja firmware). **Interfejsu użytkownika ESP nie serwuje**: robią to klienci (Android, Windows, HA), którzy parują się z modułem raz hasłem i dostają stały token. Moduł się ogłasza (mDNS, stały ID z MAC), więc można mieć wiele urządzeń. Strażnik zapisu (tryb odczyt/pełny, PIN-y poziomów, kodowanie z modelu, odczyt zwrotny) działa w ESP.
 
 ## Struktura
 | Katalog | Zawartość |
 |---|---|
-| `docs/` | specyfikacje (API v2, pamięć/OTA, bezpieczeństwo, interfejs), decyzje |
-| `data/` | `device_model.json` (źródło prawdy dla ESP i klientów), `menu_rows.json` |
-| `analiza/` | **kompletne środowisko analizy**: plik firmware sterownika, wynik dekompilacji (Ghidra), ~230 narzędzi (emulacja Cortex‑M, skany, budowa modelu), dowody i raporty, bitmapy i atlas panelu, dokumentacja procesu. Opis: `analiza/README.md` |
-| `archiwum_v1/` | historyczne: stary produkt v1 (firmware, WWW, Android, integracja HA) i dane sprzętowe PelletCAN (ESPHome); tylko do odczytu |
-| `esp/` | firmware ESP32-C6 (ESP-IDF; rdzeń testowalny na hoście) |
-| `ui/` | wspólny opis ekranów (JSON) + renderer JS (WWW i karta HA) |
-| `ha/` | integracja HA + karta Lovelace |
-| `android/` | aplikacja natywna (Kotlin + Jetpack Compose) |
-| `tools/` | generatory (tabele firmware z `device_model.json`), testy |
+| `docs/` | `PROMPT_DLA_AGENTA.md`, `STATUS.md`, `ZADANIA.md`, `API_ESP.md` (kontrakt API), `INSTRUKCJA_BUDOWY_NIEZALEZNEJ.md` (mapa zasobów, protokół, komendy), `interfejs_kompletny.json` (komplet danych do zbudowania interfejsu), `UI_ZASADY.md`, `zrzuty_android/` |
+| `data/` | `device_model.json` (źródło prawdy o urządzeniu), `menu_rows.json` |
+| `esp/` | firmware ESP32‑C6 (ESP‑IDF 5.4); rdzeń `components/tekla_core` testowalny na hoście |
+| `android/` | aplikacja natywna (Kotlin + Compose), tryb demo i połączenie z ESP |
+| `ui/` | klient WWW (czysty JS) + `gen/` (modele wspólne) + `assets/ic/` (bitmapy panelu); **nie jest serwowany z ESP**, to baza pod klienta Windows i do testów |
+| `tools/` | generatory modeli, podpis OTA, serwer‑atrapa API (`tools/mock/`), skrypt zrzutów Androida |
+| `analiza/` | środowisko analizy: plik firmware kotła, dekompilacja, ~230 narzędzi, dowody, bitmapy, atlas panelu (opis: `analiza/README.md`) |
+| `archiwum_v1/` | historia: stary produkt v1 i dane sprzętowe PelletCAN (tylko do odczytu) |
 
 ## Zasady (skrót, pełne w `CLAUDE.md`)
-- Domyślnie **tylko odczyt**; zapis dopiero po świadomym włączeniu trybu i próbie na kotle z właścicielem.
-- Żadnych haseł/PIN-ów w repo (repo publiczne).
-- Etap = jeden commit + push; CI ma być oszczędne.
+Domyślnie **tylko odczyt**; zapis do kotła tylko świadomie, z odczytem zwrotnym, nigdy bez właściciela. **Żadnych sekretów w repo** (hasła, PIN-y, SSID, klucze; repo publiczne). Dowody oznaczone MEASURED/STRONG/INFERENCE/OPEN/REJECTED. Minimalne zmiany; commit + push na koniec etapu.
 
-## Status
-Szkielet + specyfikacja API v2 (`docs/ESP_API_V2.md`) z decyzjami wlasciciela (runda 1 i 2) - do akceptacji; makiety `ui/mockups/`. Kodu ESP jeszcze nie ma.
-
-
-**Instrukcja dla kogoś, kto chce złożyć własnego klienta lub moduł niezależnie: `docs/INSTRUKCJA_BUDOWY_NIEZALEZNEJ.md`.**
+## Stan
+Szczegóły w `docs/STATUS.md`. W skrócie: firmware ESP, aplikacja Android i testy kompilują się w CI; aplikacja uruchamia się w emulatorze w trybie demo. **Nic nie było uruchomione na prawdziwym kotle, module ESP ani telefonie.**

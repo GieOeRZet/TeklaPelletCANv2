@@ -1,21 +1,20 @@
 # esp - firmware ESP32-C6 (XIAO) + MCP2515
 
+Cienki most CAN <-> API (REST + WebSocket) z malą wbudowaną stroną serwisową. **UI nie jest serwowane z ESP** (robią to klienci). Kontrakt: `../docs/API_ESP.md`. Stan prac: `../docs/STATUS.md`.
+
 ## Stan (uczciwie)
 | Element | Weryfikacja |
 |---|---|
-| `components/tekla_core` (ramki SDO, tablice modelu GENEROWANE, reguly ikon/stanow, straznik zapisu, live, JSON, base64url, paczka UI TPUI, ECDSA r\|s->DER) | **testy natywne PASS**: `sh components/tekla_core/test/run.sh` |
-| `components/mcp2515`, `main/` (bus, auth, ota, web, net, main) | **kompilacja ESP-IDF 5.4.1 (esp32c6) w GitHub Actions: PASS** (workflow `.github/workflows/ci.yml`, kontener `espressif/idf:v5.4.1`, jak w starym projekcie; run 2, artefakt `tekla-firmware`). **NIEURUCHAMIANE na sprzecie** - zadnej weryfikacji dzialania MCP2515/CAN/Wi-Fi/HTTP |
+| `components/tekla_core` (ramki SDO, tablice modelu GENEROWANE, reguły ikon/stanów, strażnik zapisu, live, JSON, base64url, ECDSA r\|s->DER, walidacja IP, ID z MAC) | **testy natywne PASS**: `sh components/tekla_core/test/run.sh` |
+| `components/mcp2515`, `main/` (bus, auth, ota, web, net, device, service_page, main) | **kompilacja ESP-IDF 5.4.1 (esp32c6) w GitHub Actions: PASS** (kontener `espressif/idf:v5.4.1`). **NIEURUCHAMIANE na sprzęcie**: żadnej weryfikacji MCP2515/CAN/Wi-Fi/mDNS/HTTP/OTA |
+
+## Pliki w `main/`
+`main.cpp` start · `bus.*` kolejka i poller CAN, tożsamość węzła, heartbeat · `web.cpp` REST/WS + strona serwisowa · `service_page.hpp` wbudowana strona (pierwsza konfiguracja, Wi-Fi, IP, nazwa, hasło, klienci, firmware, DEV/BETA) · `auth.*` hasło, sesje, parowanie tokenem (SHA-256), PIN-y poziomów, odblokowanie serwisowe, konto DEV · `net.*` Wi-Fi/AP, zmiana sieci i IP z cofnięciem, awaryjny AP, mDNS · `device.*` ID z MAC, nazwa, host · `ota.*` OTA z pliku i z kanału BETA (podpis ECDSA P-256) · `config.hpp` stałe (piny, węzły, TTL, wersja API).
 
 ## Budowanie
-CI buduje automatycznie przy zmianach w `esp/`, `ui/`, `tools/`, `data/` (artefakt do pobrania z zakladki Actions). Lokalnie (ESP-IDF 5.x):
-```
-cd esp && idf.py set-target esp32c6 && idf.py build
-```
-Wymaga zgodnie z `idf_component.yml`: `espressif/mdns`. Przed budowa: klucz OTA (`python3 tools/ota_sign.py keygen priv.pem pub.pem`, `pub.pem` -> `main/ota_pubkey.pem`) i paczka UI (`python3 tools/pack_ui.py`, wgrywana do partycji `ui_0`: `esptool.py write_flash 0x300000 ui/ui_pack.bin`).
-Piny MCP2515 (XIAO ESP32-C6) i kwarc ze starego projektu: `main/config.hpp` - SCK 19, MISO 20, MOSI 18, CS 17, INT nieuzywany, kwarc 16 MHz (jak PelletCAN/ESPHome).
+CI buduje przy zmianach w `esp/`, `ui/`, `tools/`, `data/`, `android/` (artefakt `tekla-firmware`). Lokalnie (ESP-IDF 5.4.x): `cd esp && idf.py set-target esp32c6 && idf.py build`. Wymaga komponentu `espressif/mdns` (`main/idf_component.yml`). Partycje: `partitions.csv` (nvs, otadata, phy, ota_0, ota_1, store; brak partycji UI). Piny MCP2515: `main/config.hpp` (SCK 19, MISO 20, MOSI 18, CS 17, INT nieużywany, kwarc 16 MHz, SPI 1 MHz).
+**Klucz OTA:** w `main/ota_pubkey.pem` jest placeholder; do czasu wstawienia własnego klucza publicznego (`python3 ../tools/ota_sign.py keygen priv.pem pub.pem`, klucz prywatny poza repo) każda aktualizacja jest odrzucana.
 
-## Zachowanie
-- Domyslnie tryb **tylko odczyt**; zapis tylko po `POST /api/mode` (haslo), poziomie PIN sesji, przez straznik `tekla::plan_write` (40 PID poza listami panelu = `WE_BLOCKED`), z odczytem zwrotnym po zapisie.
-- Podpis OTA: **ECDSA P-256 + SHA-256** (zamiast Ed25519 z sekcji 13.2 specyfikacji: mbedtls w ESP-IDF ma ECDSA); brak/niepoprawny klucz publiczny = kazde OTA odrzucone.
-- Slot FW oznaczany poprawnym po 30 s przy dzialajacych HTTP i CAN (pierwszy odczyt SDO nie jest warunkiem); slot UI wymaga `POST /api/ui/confirm`, po 2 nieudanych startach powrot do poprzedniego.
-- Nie zaimplementowane jeszcze: historia alarmow (`/api/alarms` zwraca pusta liste), harmonogramy (`/api/schedule`), tabela modulow CAN (`/api/network`), `/api/sdo`, synchronizacja czasu, TLS.
+## Zachowanie (skrót)
+Domyślnie tryb **tylko odczyt** (po restarcie zawsze). Zapis do kotła: tryb `full` (hasło) + poziom PIN + strażnik `tekla::plan_write` (PID poza listami panelu zablokowane) + odczyt zwrotny. Operacje na module (Wi-Fi, IP, hasło, klienci, OTA, restart, reset) wymagają odblokowania serwisowego hasłem (5 min). Slot firmware oznaczany poprawnym po 30 s przy działających HTTP i CAN, inaczej rollback. Hasło, PIN-y, Wi-Fi i tokeny klientów są w NVS (przeżywają restart, zanik zasilania i aktualizacje; kasuje je tylko reset fabryczny).
+Nie zaimplementowane: historia alarmów, wykrywanie konfliktu węzła CAN, synchronizacja czasu, TLS.

@@ -13,8 +13,8 @@ Kocioł na pellet z panelem Estyma igneoTouch (oprogramowanie sterownika **FW221
 | `analiza/` | **całe środowisko analizy** (opis: `analiza/README.md`): `FW2213TK_kopia.bin` (firmware sterownika), `firmware/FW2213TK-ghidra/` (dekompilacja), `tools/` (~230 narzędzi: emulacja Cortex‑M, skany, budowa modelu), `analiza_archiwum/FW2213TK-2026-11-22/data/` (dowody: CSV/JSON, `ui_model/` = modele ekranów, `bitmaps/` = **pełny zestaw bitmap panelu**, atlas zrzutów prawdziwych ekranów), raporty kolejnych przejść, `NewEstyma/` (metodyka, plan, backlog, audyty), `rejestry/` (rejestry CAN, przewodnik Ghidry) | dowody, odtwarzalność, szczegóły, gdy model w `data/` nie wystarcza |
 | `archiwum_v1/` | stary produkt v1 + dane sprzętowe PelletCAN (ESPHome, piny, tożsamość węzła) | tylko historia |
 | `tools/` | generatory i testy v2 (pkt 7) | budowa |
-| `esp/` | firmware ESP32‑C6 (ESP‑IDF 5.4) + rdzeń testowalny na hoście (`esp/components/tekla_core`) | moduł |
-| `ui/` | strona WWW (JS bez bibliotek), `ui/gen/*.json` (model wspólny), ikony `ui/assets/ic/` | klient WWW |
+| `esp/` | firmware ESP32‑C6 (ESP‑IDF 5.4): most CAN↔API + mała strona serwisowa, **bez UI**; rdzeń testowalny na hoście (`esp/components/tekla_core`) | moduł |
+| `ui/` | klient WWW (JS bez bibliotek; **nie serwowany z ESP**), `ui/gen/*.json` (model wspólny), ikony `ui/assets/ic/` | klient referencyjny / baza pod Windows |
 | `android/` | aplikacja Kotlin + Compose (CI buduje APK) | klient Android |
 | `docs/API_ESP.md` | **aktualny kontrakt REST/WebSocket modułu ESP** (starszy szkic: `ESP_API_V2.md`) (uwierzytelnianie, tryby, endpointy, formaty) | integracja |
 
@@ -45,15 +45,15 @@ Seeed XIAO ESP32‑C6 + MCP2515 (16 MHz, SPI 1 MHz): SCK=GPIO19, MISO=GPIO20, MO
 ```
 python3 tools/gen_esp_tables.py            # device_model.json -> tabele ESP (esp/components/tekla_core/gen) + ui/gen/model.min.json
 python3 tools/gen_app_model.py             # + data/menu_rows.json + tools/app_spec.py -> ui/gen/app.json i android/.../assets/app.json
-sh esp/components/tekla_core/test/run.sh   # testy rdzenia (natywnie) + paczka UI
-cd tools/mock && npm i && node server.js   # serwer‑atrapa ESP (hasło: demo) ; node e2e.js = test strony (Playwright)
+sh esp/components/tekla_core/test/run.sh   # testy rdzenia (natywnie)
+cd tools/mock && npm i && node server.js   # serwer‑atrapa API (hasło: demo; po co: tools/mock/README.md) ; node e2e.js = test klienta WWW (Playwright)
 cd android && gradle assembleDebug         # APK (JDK 17, Gradle 8.9, SDK 34)
 cd esp && idf.py set-target esp32c6 && idf.py build   # ESP‑IDF v5.4.1
 ```
 CI: `.github/workflows/ci.yml` (testy, kompilacja ESP, APK, zrzuty z emulatora do `docs/zrzuty_android/`). Spójność kopii zasobów Androida z `ui/gen` i `ui/assets/ic` jest sprawdzana w CI.
 
 ## 8. Moduł ESP: API
-Pełny kontrakt: `docs/API_ESP.md`. W skrócie: `POST /api/login` (hasło → token), `/api/state` + `/ws` (wartości na żywo), `/api/params?list=` / `?pids=`, `PUT /api/param/{pid}` (zapis z odczytem zwrotnym), tryb `readonly`/`full` i PIN-y poziomów wymuszane po stronie ESP, `/api/alarms`, `/api/wifi*`, `/api/password`, `/api/restart`, `/api/factory_reset`, `/api/log`, `/api/network`, OTA (`/api/ota/fw`, `/api/ota/ui`, podpis ECDSA P‑256).
+Pełny kontrakt: `docs/API_ESP.md`. W skrócie: wykrywanie (mDNS `_teklapellet._tcp`, `/api/identity`, stały `id`), **pierwsze parowanie hasłem → stały token klienta** (`POST /api/pair`), potem `Authorization: Bearer`; `/api/state` + `/ws` (na żywo), `/api/params?list=|pids=`, `PUT /api/param/{pid}` (zapis z odczytem zwrotnym); tryb `readonly`/`full` i PIN-y poziomów wymuszane w ESP; operacje serwisowe po odblokowaniu hasłem (Wi‑Fi, IP z potwierdzeniem, nazwa, hasło, klienci, OTA, restart, reset); konto DEV i OTA z kanału BETA.
 
 ## 9. Zasady bezpieczeństwa (obowiązkowe)
 1. Kocioł jest prawdziwy. Domyślnie **tylko odczyt**; żadnych testów zapisu na kotle bez właściciela.

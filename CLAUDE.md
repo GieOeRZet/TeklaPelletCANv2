@@ -7,3 +7,4 @@
 5. **Minimalne zmiany**, bez refaktoryzacji przy okazji, weryfikacja po każdej zmianie, raport: WYKONANE / ZMODYFIKOWANE PLIKI / ZACHOWANE / WERYFIKACJA / SKUTKI UBOCZNE / DO SPRAWDZENIA PRZEZ UŻYTKOWNIKA.
 6. Git: commit + push na koniec etapu (CI oszczędnie), PR-ów nie tworzyć bez polecenia. Język dokumentacji: polski.
 7. Grafiki panelu (bitmapy producenta) i plik firmware sterownika `analiza/FW2213TK_kopia.bin` są na odpowiedzialność właściciela; wchodzą do firmware/aplikacji w czasie kompilacji (nie pobierane za każdym razem).
+8. **ESP nie serwuje UI**: moduł to most CAN↔API + mała strona serwisowa; interfejs użytkownika robią klienci (Android, Windows, HA). Kontrakt API: `docs/API_ESP.md` (zmiana kontraktu = aktualizacja dokumentu i serwera-atrapy `tools/mock/`).
