@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TeklaPelletCANv2 — instalator ESP32-C6</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0e12;--card:#151a20;--line:#2a313a;--text:#f4f7fa;--muted:#9aa5b1;--accent:#ff9d24;--ok:#48d597;--danger:#ff5d66}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 50% -10%,#27313c 0,#0b0e12 48%);font:16px system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text);min-height:100vh}
+main{width:min(760px,calc(100% - 28px));margin:40px auto 60px}.brand{display:flex;gap:14px;align-items:center;margin-bottom:24px}.logo{width:52px;height:52px;border-radius:16px;background:linear-gradient(145deg,#ffb84d,#ed6e00);display:grid;place-items:center;color:#111;font-weight:900;font-size:24px;box-shadow:0 10px 35px #ff8c2025}.brand h1{font-size:24px;margin:0}.brand p{margin:3px 0 0;color:var(--muted)}
+.card{background:#12171dcc;border:1px solid var(--line);border-radius:22px;padding:24px;box-shadow:0 18px 60px #0007;backdrop-filter:blur(16px);margin-bottom:16px}
+h2{font-size:18px;margin:0 0 14px}p{line-height:1.5}.warning{border-color:#8b5b22;background:#1c1710}.warning strong{color:#ffbf62}.steps{display:grid;gap:10px}.step{display:flex;gap:12px;align-items:flex-start}.num{min-width:28px;height:28px;border-radius:50%;background:#252c34;display:grid;place-items:center;color:var(--accent);font-weight:800}
+button{border:0;border-radius:14px;padding:14px 18px;font-weight:800;font-size:16px;cursor:pointer}.primary{background:linear-gradient(135deg,#ffb33d,#f27b0b);color:#111;width:100%;box-shadow:0 12px 30px #ff8c2030}.secondary{background:#252c34;color:var(--text)}button:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.meta{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0}.kv{background:#0d1116;border:1px solid #222a33;border-radius:13px;padding:12px}.kv small{display:block;color:var(--muted);margin-bottom:4px}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;word-break:break-all}
+progress{width:100%;height:12px;margin:14px 0;accent-color:var(--accent)}#status{white-space:pre-wrap;color:var(--muted);min-height:24px}.ok{color:var(--ok)!important}.err{color:var(--danger)!important}
+input[type=file]{display:none}.filepick{display:inline-block;background:#252c34;border-radius:12px;padding:10px 14px;cursor:pointer}
+footer{color:#68727e;text-align:center;font-size:13px;margin-top:20px}a{color:#ffb84d}
+@media(max-width:520px){main{margin-top:20px}.card{padding:18px}.meta{grid-template-columns:1fr}.brand h1{font-size:20px}}
+</style>
+</head>
+<body>
+<main>
+<header class="brand"><div class="logo">T</div><div><h1>TeklaPelletCANv2</h1><p>Instalator ESP32-C6 przez USB</p></div></header>
+
+<section class="card">
+<h2>Wgraj firmware od zera</h2>
+<p>Instalator wykryje ESP32-C6, pobierze najnowszy obraz <span class="mono">tekla_pellet_flash.bin</span> i zapisze go od adresu <span class="mono">0x000000</span>.</p>
+<div class="meta">
+<div class="kv"><small>Układ</small><b>ESP32-C6</b></div>
+<div class="kv"><small>Adres startowy</small><b>0x000000</b></div>
+<div class="kv"><small>Tryb</small><b>Pełne wymazanie + flash</b></div>
+<div class="kv"><small>Transport</small><b>USB / Web Serial</b></div>
+</div>
+<button id="install" class="primary">🔌 Połącz i wgraj firmware</button>
+<progress id="progress" value="0" max="100" hidden></progress>
+<div id="status" role="status" aria-live="polite"></div>
+</section>
+
+<section class="card warning">
+<h2>⚠️ Ważne — pierwsze wgranie</h2>
+<p><strong>Ta operacja kasuje całą pamięć flash.</strong> Zostaną usunięte NVS, konfiguracja Wi-Fi, hasła, dane OTA i poprzedni firmware. To jest celowe: używamy obrazu połączonego i zapisujemy go od <span class="mono">0x0</span>.</p>
+<p>Po flashowaniu moduł uruchomi się z konfiguracją fabryczną i będzie wymagał pierwszej konfiguracji.</p>
+</section>
+
+<section class="card">
+<h2>Instrukcja</h2>
+<div class="steps">
+<div class="step"><span class="num">1</span><div>Podłącz XIAO ESP32-C6 przez USB bezpośrednio do komputera.</div></div>
+<div class="step"><span class="num">2</span><div>Jeżeli płytka nie przechodzi automatycznie w bootloader, użyj przycisku <b>BOOT</b> zgodnie z instrukcją płytki.</div></div>
+<div class="step"><span class="num">3</span><div>Kliknij <b>Połącz i wgraj firmware</b> i wybierz port USB płytki.</div></div>
+<div class="step"><span class="num">4</span><div>Nie odłączaj USB do czasu komunikatu o zakończeniu i automatycznego restartu.</div></div>
+</div>
+</section>
+
+<section class="card">
+<h2>Awaryjnie: własny plik .bin</h2>
+<p>Możesz też wskazać lokalny <span class="mono">tekla_pellet_flash.bin</span>. Zostanie potraktowany dokładnie tak samo: pełne kasowanie i zapis od <span class="mono">0x0</span>.</p>
+<label class="filepick"><input id="file" type="file" accept=".bin,application/octet-stream">Wybierz plik BIN</label>
+<span id="filename" class="mono"></span>
+<button id="local" class="secondary" disabled>Wgraj wybrany BIN</button>
+</section>
+
+<footer>TeklaPelletCANv2 · instalator działa w przeglądarce; firmware jest przesyłany bezpośrednio przez USB do ESP.</footer>
+</main>
+<script src="https://unpkg.com/esptool-js@0.7.1/bundle.js"></script>
+<script>
+const RELEASE="https://github.com/GieOeRZet/TeklaPelletCANv2/releases/download/installer-latest/tekla_pellet_flash.bin";
+const $=id=>document.getElementById(id);
+const status=(s,cls="")=>{$("status").textContent=s;$("status").className=cls};
+let selectedFile=null;
+$("file").addEventListener("change",e=>{selectedFile=e.target.files[0]||null;$("filename").textContent=selectedFile?"  "+selectedFile.name:"";$("local").disabled=!selectedFile});
+async function flash(data,label){
+if(!navigator.serial) throw new Error("Ta przeglądarka nie udostępnia Web Serial. Użyj aktualnego Chrome lub Edge na komputerze.");
+if(!window.esptooljs) throw new Error("Nie załadowano esptool-js. Sprawdź połączenie z internetem i odśwież stronę.");
+const port=await navigator.serial.requestPort();
+const transport=new esptooljs.Transport(port,true);
+const terminal={clean(){},writeLine(x){console.log(x)},write(x){console.log(x)}};
+const loader=new esptooljs.ESPLoader({transport,baudrate:921600,terminal,debugLogging:false});
+try{
+status("Łączenie z ESP32-C6…");
+const chip=await loader.main();
+status("Wykryto: "+chip+"\\nPrzygotowanie pamięci…");
+$("progress").hidden=false;$("progress").value=0;
+await loader.writeFlash({fileArray:[{data,address:0x000000}],flashMode:"dio",flashFreq:"40m",flashSize:"4MB",eraseAll:true,compress:true,reportProgress:(i,w,t)=>{$("progress").value=t?Math.round(w/t*100):0;status("Wgrywanie "+label+"… "+$("progress").value+"%")}});
+status("Firmware zapisany poprawnie. Restart ESP…","ok");
+await loader.after("hard_reset");
+await transport.disconnect();
+status("✓ Gotowe. ESP32-C6 uruchamia nowy firmware od 0x0.","ok");
+}catch(e){try{await transport.disconnect()}catch(_){}throw e}
+}
+async function install(){
+$("install").disabled=true;$("local").disabled=true;
+try{status("Pobieranie najnowszego obrazu…");const r=await fetch(RELEASE+"?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("Nie udało się pobrać najnowszego firmware (HTTP "+r.status+").");const data=new Uint8Array(await r.arrayBuffer());if(data.length<1024*1024)throw new Error("Pobrany obraz jest podejrzanie mały.");await flash(data,"najnowszy firmware")}catch(e){status("Błąd: "+(e?.message||e),"err")}finally{$("install").disabled=false;$("local").disabled=!selectedFile}
+}
+$("install").addEventListener("click",install);
+$("local").addEventListener("click",async()=>{$("install").disabled=true;$("local").disabled=true;try{await flash(new Uint8Array(await selectedFile.arrayBuffer()),selectedFile.name)}catch(e){status("Błąd: "+(e?.message||e),"err")}finally{$("install").disabled=false;$("local").disabled=!selectedFile});
+</script>
+</body></html>
