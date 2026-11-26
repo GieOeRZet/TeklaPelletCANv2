@@ -16,7 +16,7 @@ Kocioł na pellet z panelem Estyma igneoTouch (oprogramowanie sterownika **FW221
 | `esp/` | firmware ESP32‑C6 (ESP‑IDF 5.4) + rdzeń testowalny na hoście (`esp/components/tekla_core`) | moduł |
 | `ui/` | strona WWW (JS bez bibliotek), `ui/gen/*.json` (model wspólny), ikony `ui/assets/ic/` | klient WWW |
 | `android/` | aplikacja Kotlin + Compose (CI buduje APK) | klient Android |
-| `docs/ESP_API_V2.md` | **kontrakt REST/WebSocket modułu ESP** (uwierzytelnianie, tryby, endpointy, formaty) | integracja |
+| `docs/API_ESP.md` | **aktualny kontrakt REST/WebSocket modułu ESP** (starszy szkic: `ESP_API_V2.md`) (uwierzytelnianie, tryby, endpointy, formaty) | integracja |
 
 ## 3. Etykiety dowodów (obowiązują w całym projekcie)
 `MEASURED` (zmierzone w emulatorze / na CAN) · `STRONG` (mocna analiza kodu) · `INFERENCE` (wnioskowanie, jawnie oznaczone) · `OPEN` (nierozstrzygnięte) · `REJECTED` (obalone). Zapis w kodzie klienta opieraj tylko na `MEASURED`/`STRONG`, resztę traktuj ostrożnie.
@@ -53,7 +53,7 @@ cd esp && idf.py set-target esp32c6 && idf.py build   # ESP‑IDF v5.4.1
 CI: `.github/workflows/ci.yml` (testy, kompilacja ESP, APK, zrzuty z emulatora do `docs/zrzuty_android/`). Spójność kopii zasobów Androida z `ui/gen` i `ui/assets/ic` jest sprawdzana w CI.
 
 ## 8. Moduł ESP: API
-Pełny kontrakt: `docs/ESP_API_V2.md`. W skrócie: `POST /api/login` (hasło → token), `/api/state` + `/ws` (wartości na żywo), `/api/params?list=` / `?pids=`, `PUT /api/param/{pid}` (zapis z odczytem zwrotnym), tryb `readonly`/`full` i PIN-y poziomów wymuszane po stronie ESP, `/api/alarms`, `/api/wifi*`, `/api/password`, `/api/restart`, `/api/factory_reset`, `/api/log`, `/api/network`, OTA (`/api/ota/fw`, `/api/ota/ui`, podpis ECDSA P‑256).
+Pełny kontrakt: `docs/API_ESP.md`. W skrócie: `POST /api/login` (hasło → token), `/api/state` + `/ws` (wartości na żywo), `/api/params?list=` / `?pids=`, `PUT /api/param/{pid}` (zapis z odczytem zwrotnym), tryb `readonly`/`full` i PIN-y poziomów wymuszane po stronie ESP, `/api/alarms`, `/api/wifi*`, `/api/password`, `/api/restart`, `/api/factory_reset`, `/api/log`, `/api/network`, OTA (`/api/ota/fw`, `/api/ota/ui`, podpis ECDSA P‑256).
 
 ## 9. Zasady bezpieczeństwa (obowiązkowe)
 1. Kocioł jest prawdziwy. Domyślnie **tylko odczyt**; żadnych testów zapisu na kotle bez właściciela.

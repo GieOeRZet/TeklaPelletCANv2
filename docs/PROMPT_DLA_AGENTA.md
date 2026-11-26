@@ -2,7 +2,7 @@
 
 Pracujesz w samodzielnym repozytorium **TeklaPelletCANv2** (monorepo): kocioł na pellet z panelem Estyma igneoTouch (sterownik FW2213TK), CAN/CANopen 125 kbit/s, kocioł = węzeł 4. Wszystko potrzebne do pracy jest w tym repo; nie korzystaj z żadnych innych repozytoriów.
 
-**Zacznij od:** `README.md` → `CLAUDE.md` (zasady) → `docs/INSTRUKCJA_BUDOWY_NIEZALEZNEJ.md` (mapa zasobów, protokół, komendy, luki) → `docs/ESP_API_V2.md` (kontrakt modułu ESP).
+**Zacznij od:** `README.md` → `CLAUDE.md` (zasady) → `docs/INSTRUKCJA_BUDOWY_NIEZALEZNEJ.md` (mapa zasobów, protokół, komendy, luki) → `docs/API_ESP.md` (aktualny kontrakt API modułu ESP).
 
 **Gdzie jest co:**
 - `data/device_model.json` - źródło prawdy o urządzeniu (655 PID-ów, listy nastaw, konfiguracja, alarmy, harmonogramy, stany); `data/menu_rows.json` - menu panelu z poziomami PIN i warunkami widoczności.

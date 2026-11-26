@@ -1,3 +1,5 @@
+> **UWAGA: dokument historyczny (szkic projektowy z 2026-11-25), częściowo nieaktualny** (m.in. strona UI z partycji, sesje; nie ma tu parowania tokenem, tożsamości, zmiany IP, konta DEV). **Aktualny kontrakt: `API_ESP.md`.**
+
 # ESP_API_V2 - specyfikacja (WERSJA ROBOCZA do akceptacji przez wlasciciela)
 
 Status: szkic. Kodu jeszcze nie ma. Wszystkie punkty oznaczone **OPEN** wymagaja decyzji/pomiaru.
