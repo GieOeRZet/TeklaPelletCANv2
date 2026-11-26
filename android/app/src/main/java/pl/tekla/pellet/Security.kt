@@ -49,7 +49,8 @@ object BoilerAccess {
         SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
             .generateSecret(PBEKeySpec(pin.toCharArray(), salt, ITER, 256)).encoded
 
-    fun level(): Int = p().getInt("level", 0)
+    private const val AUTOLOCK_MS = 5 * 60 * 1000L
+    fun level(): Int { val l = p().getInt("level", 0); val t = p().getLong("at", 0L); if (l > 0 && (t == 0L || System.currentTimeMillis() - t > AUTOLOCK_MS)) { lock(); return 0 }; return l }
     fun setPin(level: Int, pin: String): Boolean {
         if (level !in 1..3 || pin.length != 4) return false
         val s = ByteArray(16).also { SecureRandom().nextBytes(it) }
@@ -68,7 +69,7 @@ object BoilerAccess {
                 val s = Base64.decode(s0, Base64.DEFAULT)
                 val h = Base64.decode(h0, Base64.DEFAULT)
                 if (MessageDigest.isEqual(hash(pin, s), h)) {
-                    p().edit().putInt("level", level).apply()
+                    p().edit().putInt("level", level).putLong("at", System.currentTimeMillis()).apply()
                     return level
                 }
             }
@@ -76,5 +77,5 @@ object BoilerAccess {
         p().edit().putInt("level", 0).apply()
         return 0
     }
-    fun lock() { p().edit().putInt("level", 0).apply() }
+    fun lock() { p().edit().putInt("level", 0).remove("at").apply() }
 }
