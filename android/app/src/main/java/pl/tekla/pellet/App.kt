@@ -1,6 +1,9 @@
 package pl.tekla.pellet
 
 import android.widget.Toast
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
+import androidx.compose.ui.platform.LocalContext
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -64,8 +67,7 @@ fun fuelDots(fuel: Double, cap: Double, res: Double): Pair<Int, Boolean> {
 @Composable
 fun TeklaApp() {
     TeklaTheme {
-        var locked by remember { mutableStateOf(AppLock.isSet()) }
-        if (locked) { LockScreen { locked = false }; return@TeklaTheme }
+        if (AppLock.isSet() && !Ctl.appUnlocked) { LockScreen { Ctl.appUnlocked = true }; return@TeklaTheme }
         val src = Ctl.source ?: return@TeklaTheme
         val ctx = Ctl.ctx
         val vals by src.values.collectAsState(); val level by src.level.collectAsState(); val full by src.fullMode.collectAsState(); val conn by src.connected.collectAsState()
@@ -604,25 +606,58 @@ fun NumberDialog(title: String, lo: Double, hi: Double, step: Double, cur: Doubl
 
 @Composable
 fun AppPinCard(ui: Ui) {
-    var set by remember { mutableStateOf(AppLock.isSet()) }; var pin by remember { mutableStateOf("") }
-    Card("PIN aplikacji") {
-        Text("Blokada ekranu aplikacji przy uruchomieniu (osobna od PIN-ów kotła).", color = Mut, fontSize = 13.sp)
-        OutlinedTextField(pin, { pin = it.filter(Char::isDigit).take(8) }, label = { Text("Nowy PIN (4-8 cyfr)") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword), modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+    var set by remember { mutableStateOf(AppLock.isSet()) }
+    var bio by remember { mutableStateOf(AppLock.biometricEnabled()) }
+    var pin by remember { mutableStateOf("") }
+    Card("Zabezpieczenie aplikacji") {
+        Text("Chroni wejście do aplikacji. Jest niezależne od poziomów dostępu kotła.", color = Mut, fontSize = 13.sp)
+        OutlinedTextField(pin, { pin = it.filter(Char::isDigit).take(12) }, label = { Text("Nowy PIN (4–12 cyfr)") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword), modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
         Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Button({ if (pin.length >= 4) { AppLock.set(pin); pin = ""; set = true; ui.toast("PIN ustawiony") } else ui.toast("Min. 4 cyfry") }) { Text(if (set) "Zmień PIN" else "Ustaw PIN") }
-            if (set) OutlinedButton({ AppLock.clear(); set = false; ui.toast("PIN usunięty") }) { Text("Usuń", color = Txt) }
+            Button({ if (pin.length >= 4) { AppLock.set(pin); pin = ""; set = true; Ctl.appUnlocked = true; ui.toast("PIN ustawiony") } else ui.toast("Min. 4 cyfry") }) { Text(if (set) "Zmień PIN" else "Ustaw PIN") }
+            if (set) OutlinedButton({ AppLock.clear(); BoilerAccess.lock(); set = false; bio = false; Ctl.appUnlocked = true; ui.toast("Zabezpieczenie wyłączone") }) { Text("Wyłącz", color = Txt) }
+        }
+        if (set) {
+            Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Biometria", color = Txt)
+                    Text("Odcisk palca / twarz, jeśli telefon obsługuje.", color = Mut, fontSize = 12.sp)
+                }
+                Switch(checked = bio, onCheckedChange = { want ->
+                    val a = Ctl.ctx as? androidx.fragment.app.FragmentActivity
+                    val ok = a != null && BiometricManager.from(a).canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS
+                    if (want && !ok) ui.toast("Biometria nie jest dostępna na tym telefonie.") else { bio = want; AppLock.setBiometric(want) }
+                })
+            }
         }
     }
+}
+
+private fun showBiometric(activity: androidx.fragment.app.FragmentActivity, ok: () -> Unit, fail: (String) -> Unit) {
+    val prompt = BiometricPrompt(activity, object : BiometricPrompt.AuthenticationCallback() {
+        override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) { ok() }
+        override fun onAuthenticationError(code: Int, msg: CharSequence) { fail(msg.toString()) }
+    })
+    val info = BiometricPrompt.PromptInfo.Builder()
+        .setTitle("Odblokuj TeklaPellet")
+        .setSubtitle("Użyj biometrii telefonu")
+        .setNegativeButtonText("Użyj PIN-u")
+        .build()
+    prompt.authenticate(info)
 }
 
 @Composable
 fun LockScreen(onOk: () -> Unit) {
     var pin by remember { mutableStateOf("") }; var err by remember { mutableStateOf("") }
+    val ctx = LocalContext.current
     Column(Modifier.fillMaxSize().background(Bg).padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("TeklaPellet", color = Txt, fontSize = 24.sp, fontWeight = FontWeight.SemiBold); Spacer(Modifier.height(16.dp))
-        OutlinedTextField(pin, { pin = it.filter(Char::isDigit).take(8) }, label = { Text("PIN aplikacji") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword))
+        Text("TeklaPellet", color = Txt, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+        Spacer(Modifier.height(16.dp))
+        OutlinedTextField(pin, { pin = it.filter(Char::isDigit).take(12) }, label = { Text("PIN aplikacji") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword))
         if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
-        Button({ val e = AppLock.check(pin); if (e == null) onOk() else { err = e; pin = "" } }, Modifier.padding(top = 12.dp)) { Text("Odblokuj") }
+        Button({ val e = AppLock.check(pin); if (e == null) onOk() else { err = e; pin = "" } }, Modifier.padding(top = 12.dp)) { Text("Odblokuj PIN-em") }
+        if (AppLock.biometricEnabled() && ctx is androidx.fragment.app.FragmentActivity) {
+            OutlinedButton({ showBiometric(ctx, onOk) { err = it } }, Modifier.padding(top = 8.dp)) { Text("Odblokuj biometrią") }
+        }
     }
 }
 
