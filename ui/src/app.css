@@ -56,20 +56,32 @@ table{width:100%;border-collapse:collapse}td,th{padding:8px 4px;border-bottom:1p
 .log{white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace;color:var(--mut)}.rows .row[data-go]{cursor:pointer}
 .cell{justify-content:flex-start;min-height:0;gap:0}.cell small{height:14px;line-height:14px;min-height:14px}.cell .ib{width:34px;height:34px;display:flex;align-items:center;justify-content:center}.cell .ib img{width:auto;height:auto;max-width:34px;max-height:30px;position:static}.cell.pump .ib img{width:19px;height:19px}.cell .ib .mix{width:18px;height:auto}.bar{align-items:flex-start}
 
-/* Pulpit w stylu panelu */
-#app.home #top h1.clock{color:var(--acc2);font-weight:600;font-size:20px}#top .date{color:var(--mut);font-size:13px;white-space:nowrap}
-.home{display:flex;flex-direction:column;min-height:100%;gap:10px}
-.hmain{flex:1;align-content:center;display:grid;grid-template-columns:minmax(120px,1fr) 1.6fr;grid-template-areas:"boiler center" "boiler out";align-items:center;gap:6px 12px;padding-top:6px}
-.hboiler{grid-area:boiler;text-align:center}.hboiler .boiler{max-width:100%;width:auto;max-height:42vh;margin:0 auto}
-.hcenter{grid-area:center;text-align:center}.hbig{font-size:clamp(64px,22vw,128px);font-weight:200;letter-spacing:-3px;line-height:1;font-variant-numeric:tabular-nums}.hbig small{font-size:.32em;color:var(--acc);letter-spacing:0;margin-left:4px}
-.hst{font-size:clamp(20px,6vw,30px);font-weight:600;color:var(--acc2);margin-top:6px}.hset{color:var(--mut);margin-top:4px}
-.hout{grid-area:out;justify-self:center;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 14px}.hout b{font-size:26px;font-weight:300}.hout small{font-size:13px;color:var(--mut);margin-left:2px}.hout img{width:36px;height:auto}
-.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
-.tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:84px;background:var(--panel);border:1px solid var(--line);border-radius:12px;color:var(--txt);cursor:pointer;padding:8px 2px 4px;font:inherit}
-.tile.empty{border-style:dashed;background:transparent;cursor:default}.tile img{max-width:46px;max-height:40px;width:auto;height:auto}
-.tile .tb{position:absolute;top:5px;left:22%;right:22%;height:4px;border-radius:2px;background:#3a3a42}.tb.g{background:#7ad03a}.tb.y{background:#f2c200}.tb.w{background:#fff}
-.tile .tl{font-size:12px;font-weight:600;color:var(--txt);min-height:14px}.tile .tl.E{color:var(--acc);font-size:20px}.tile .tn{position:absolute;top:14px;right:10px;font-size:13px;font-weight:700;color:var(--acc2)}
-.fuelsvg{width:34px;height:34px}
-@media (max-width:600px){#app.home{grid-template-rows:calc(52px + var(--sat)) 1fr;grid-template-areas:"top" "main"}#app.home #tabs{display:none}
- .hmain{grid-template-columns:1fr;grid-template-areas:"boiler" "center" "out"}.hboiler .boiler{max-height:34vh}.hmain{gap:14px}.tile{height:72px}.tile img{max-width:38px;max-height:34px}}
-@media (min-width:601px) and (max-width:900px){#app.home #tabs{display:none}}
+/* Pulpit: luk + karty */
+#top .tt{display:flex;flex-direction:column;min-width:0}#top .date{color:var(--mut);font-size:12px;white-space:nowrap}
+.home{display:grid;gap:12px;align-content:start}
+.gauge{display:grid;grid-template-columns:minmax(170px,1fr) 1.1fr;align-items:center;gap:12px;position:relative}
+.gauge .arc{width:100%;max-width:240px;justify-self:center;grid-column:1;grid-row:1}
+.gc{grid-column:1;grid-row:1;text-align:center;justify-self:center;align-self:center;pointer-events:none}
+.gv{font-size:clamp(40px,12vw,56px);font-weight:300;letter-spacing:-1.5px;line-height:1;font-variant-numeric:tabular-nums}.gv small{font-size:.38em;color:var(--acc);margin-left:3px;vertical-align:top;letter-spacing:0}
+.gs{color:var(--acc2);font-weight:600;font-size:18px;margin-top:4px}.gm{color:var(--mut);font-size:11px;margin-top:2px;max-width:150px}
+.gk{grid-column:2;grid-row:1}
+.hgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.hcard{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;color:var(--txt);font:inherit;cursor:pointer;display:block;min-width:0}
+.hcard h3{font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.9px;font-weight:600;margin-bottom:6px}
+.hcard .kv{margin-top:6px;gap:6px}.tag{display:inline-block;margin-top:10px;border:1px solid var(--line);background:var(--panel2);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--acc2)}
+.alarm{text-align:left;cursor:pointer;font:inherit;color:var(--txt);border-color:#5a2a2a}.alarm .al{font-size:18px;margin-bottom:8px}.alarm .al b{color:var(--bad)}
+@media (max-width:600px){.gauge{grid-template-columns:1fr 1fr;gap:8px;padding:12px}.gm{max-width:120px}}
+@media (min-width:901px){.home{grid-template-columns:1.4fr 1fr;align-items:start}.gauge{grid-column:1;grid-row:1}.hgrid{grid-column:2;grid-row:1 / span 2}.alarm{grid-column:1}}
+
+#main{min-width:0}.home,.home>*{min-width:0}.gauge>*{min-width:0}
+.gauge{grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr)}.gk div{font-size:13px;gap:6px}.gk b{white-space:nowrap}
+.hcard .kv div{flex-wrap:wrap;font-size:13px}.hcard .kv b{white-space:nowrap}
+.inds{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px}.ind{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--mut)}
+.d{width:10px;height:10px;border-radius:50%;background:#2a2a30;border:1px solid #3a3a42;flex:none}
+.d.on{background:var(--ok);border-color:var(--ok);box-shadow:0 0 8px var(--ok)}.d.y{background:#f2c200;border-color:#f2c200;box-shadow:0 0 8px #f2c200}.d.open{background:#ff4d4d;border-color:#ff4d4d;box-shadow:0 0 8px #ff4d4d}.d.close{background:#4d9bff;border-color:#4d9bff;box-shadow:0 0 8px #4d9bff}
+@media (max-width:600px){.gv{font-size:40px}.gs{font-size:15px}.gm{font-size:10px}.gk div{font-size:12px}.gauge{padding:10px}.hcard{padding:12px}.val{font-size:24px}}
+#top .chip{flex:none}#top .tt{flex:1}
+#app{grid-template-columns:220px minmax(0,1fr)}
+@media (max-width:900px){#app{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:600px){#top .hid{display:none}#top{gap:6px}}
+.hcard>div:not(.inds):not(.val){display:flex;justify-content:space-between;gap:8px;margin-top:6px;color:var(--mut);font-size:13px}.hcard>div b{color:var(--txt);white-space:nowrap}

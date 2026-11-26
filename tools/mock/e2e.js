@@ -17,8 +17,8 @@ let fails = 0; const ok = (c, m) => { if (!c) { console.log('FAIL', m); fails++;
     // palnik
     await p.evaluate(() => { location.hash = 'palnik'; }); await p.waitForTimeout(1500); await p.screenshot({ path: `/tmp/tp_shots/${name}_palnik.png` });
     ok(await p.locator('.bar .cell').count() >= 5, name + ': dolna belka PALNIK ma komórki');
-    if (name === 'phone') { const tb = await p.evaluate(() => { const r = document.querySelector('#tabs').getBoundingClientRect(); return [r.bottom, innerHeight]; }); ok(tb[0] <= tb[1] + 0.5 && tb[0] > 0, name + ': pasek zakładek w obrębie ekranu (poza Pulpitem)'); }
-    await p.evaluate(() => { location.hash = 'home'; }); await p.waitForTimeout(500); ok(await p.locator('.tile').count() === 6, name + ': Pulpit ma 6 kafli'); await p.click('.tile >> nth=2'); await p.waitForTimeout(500); ok((await p.textContent('#top')).includes('Palnik'), name + ': kafel Palnik prowadzi do ekranu palnika'); await p.evaluate(() => { location.hash = 'palnik'; });
+    if (name === 'phone') { const tb = await p.evaluate(() => { const r = document.querySelector('#tabs').getBoundingClientRect(); return [r.bottom, innerHeight]; }); ok(tb[0] <= tb[1] + 0.5 && tb[0] > 0, name + ': pasek zakładek w obrębie ekranu'); }
+    await p.evaluate(() => { location.hash = 'home'; }); await p.waitForTimeout(500); ok(await p.locator('.gauge .arc').count() === 1 && await p.locator('.hcard').count() >= 3, name + ': Pulpit ma łuk i karty'); await p.click('.hcard[data-go=palnik]'); await p.waitForTimeout(500); ok((await p.textContent('#top')).includes('Palnik'), name + ': karta Palnik prowadzi do ekranu palnika'); await p.evaluate(() => { location.hash = 'palnik'; });
     { const bs = await p.evaluate(() => ST.vals['0x2007']); const vis = await p.locator('.bar .cell:visible').count(); ok(bs !== 0 || vis === 0, name + ': przy wyłączonym palniku belka pusta (stan ' + bs + ', widoczne ' + vis + ')'); }
     // nastawy kociola
     await p.evaluate(() => { location.hash = 'set:0x00|KOCIOL|inst1'; }); await p.waitForSelector('.rows .row'); await p.waitForTimeout(500);
