@@ -10,3 +10,4 @@ node_modules/
 sdkconfig
 sdkconfig.old
 managed_components/
+ui/ui_pack.bin

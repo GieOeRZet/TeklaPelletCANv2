@@ -1,0 +1,40 @@
+name: CI
+# Oszczednie: tylko zmiany w kodzie/modelu (paths) albo reczny start. Kompilacja ESP-IDF jak w starym projekcie (kontener espressif/idf).
+on:
+  push:
+    paths: ["esp/**", "ui/**", "tools/**", "data/**", ".github/workflows/ci.yml"]
+  workflow_dispatch:
+jobs:
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tabele wygenerowane sa aktualne
+        run: |
+          python3 tools/gen_esp_tables.py
+          git diff --exit-code -- esp/components/tekla_core/gen ui/gen
+      - name: Testy rdzenia (natywne) + paczka UI
+        run: sh esp/components/tekla_core/test/run.sh
+  idf-build:
+    runs-on: ubuntu-latest
+    container: espressif/idf:v5.4.1
+    steps:
+      - uses: actions/checkout@v4
+      - name: Paczka UI
+        run: python3 tools/pack_ui.py ui/ui_pack.bin
+      - name: Kompilacja ESP-IDF (esp32c6)
+        run: |
+          . $IDF_PATH/export.sh
+          cd esp
+          idf.py set-target esp32c6
+          idf.py build 2>&1 | tee /tmp/build.log
+          ls -la build/*.bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tekla-firmware
+          path: |
+            esp/build/tekla_pellet.bin
+            esp/build/partition_table/partition-table.bin
+            esp/build/bootloader/bootloader.bin
+            ui/ui_pack.bin
+          retention-days: 14
