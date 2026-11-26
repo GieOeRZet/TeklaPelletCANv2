@@ -328,9 +328,9 @@ fun PowerTile(ui: Ui, modifier: Modifier) {
 }
 
 @Composable
-fun TileGrid(ui: Ui, entries: List<String>, rowH: androidx.compose.ui.unit.Dp? = null) {
+fun TileGrid(ui: Ui, entries: List<String>, rowH: androidx.compose.ui.unit.Dp = 112.dp) {
     for (pair in entries.chunked(2)) {
-        Row(if (rowH != null) Modifier.height(rowH) else Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.height(rowH), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             for (id in pair) { val m = Modifier.weight(1f).fillMaxHeight(); when (id) { "fuel" -> FuelTile(ui, m); "power" -> PowerTile(ui, m); else -> SysTile(ui, id, m) } }
             if (pair.size == 1) Spacer(Modifier.weight(1f))
         }
@@ -371,7 +371,7 @@ fun HomeView(ui: Ui) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val tileH = ((maxHeight - 372.dp) / rows - 10.dp).coerceIn(92.dp, 150.dp)
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            GlowCard(Modifier.fillMaxWidth().height(IntrinsicSize.Min), if (run) Warn else null, { ui.go("kociol") }) {
+            GlowCard(Modifier.fillMaxWidth(), if (run) Warn else null, { ui.go("kociol") }) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box(Modifier.weight(0.95f).aspectRatio(1f), contentAlignment = Alignment.Center) {
                         Canvas(Modifier.fillMaxSize().padding(6.dp)) {
