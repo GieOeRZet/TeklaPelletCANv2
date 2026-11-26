@@ -66,7 +66,7 @@ fun AppSettings(ui: Ui) {
             Column(Modifier.weight(1f)) { Text(d.name, color = Txt, fontSize = 15.sp); Text(d.host + " · " + d.id, color = Mut, fontSize = 11.sp) }
             TextButton({ forget = d }) { Text("Usuń", color = Bad) }
         }
-        OutlinedButton({ Ctl.useDemo(); ui.go("home") }, Modifier.fillMaxWidth().padding(top = 8.dp)) { Text("Użyj trybu demo", color = Txt) }
+        if (Ctl.devices.isEmpty()) { OutlinedButton({ Ctl.useDemo(); ui.go("home") }, Modifier.fillMaxWidth().padding(top = 8.dp)) { Text("Uruchom demo", color = Txt) } }
     }
     val fresh = found.values.filter { f -> Ctl.devices.none { it.id == f.id } }
     Card("Wykryte w sieci") {
