@@ -33,7 +33,7 @@ static void urldecode(char* s) { char* o = s; for (; *s; s++) { if (*s == '%' &&
 static const char* werr(WriteErr e, const char** st) {
   switch (e) { case WriteErr::ReadOnlyMode: *st = "409 Conflict"; return "read_only_mode"; case WriteErr::UnknownPid: *st = "404 Not Found"; return "unknown_pid"; case WriteErr::NotWritable: *st = "409 Conflict"; return "not_writable";
     case WriteErr::Blocked: *st = "403 Forbidden"; return "blocked"; case WriteErr::NoEncoding: *st = "409 Conflict"; return "no_encoding"; case WriteErr::OutOfRange: *st = "400 Bad Request"; return "out_of_range";
-    case WriteErr::LevelTooLow: *st = "403 Forbidden"; return "level_too_low"; default: *st = "500 Internal Server Error"; return "error"; }
+    default: *st = "500 Internal Server Error"; return "error"; }
 }
 static double decode_raw(const PidEntry* e, uint32_t raw) { double v = e->type == TT_S16 ? (int16_t)(raw & 0xFFFF) : e->type == TT_U16 ? (raw & 0xFFFF) : e->type == TT_U8 ? (raw & 0xFF) : raw; return e->enc == WE_SCALED ? v * e->scale : v; }
 // ---- WebSocket
@@ -62,18 +62,12 @@ static void ws_broadcast_param(uint16_t pid, double v) { char b[64]; snprintf(b,
 // ---- REST
 static esp_err_t h_login(httpd_req_t* r) { cJSON* j = body_json(r); const cJSON* p = j ? cJSON_GetObjectItem(j, "password") : nullptr; if (!p || !cJSON_IsString(p)) { cJSON_Delete(j); return jerr(r, "400 Bad Request", "bad_request"); }
   char tok[48]; int rc = auth::login(p->valuestring, peer_ip(r), tok); cJSON_Delete(j); if (rc == 2) return jerr(r, "429 Too Many Requests", "locked"); if (rc) return jerr(r, "401 Unauthorized", "bad_password");
-  char b[120]; snprintf(b, sizeof b, "{\"ok\":true,\"token\":\"%s\"}", tok); return jsend(r, "200 OK", b); }
+  char b[140]; snprintf(b, sizeof b, "{\"ok\":true,\"token\":\"%s\",\"write\":true}", tok); return jsend(r, "200 OK", b); }
 static esp_err_t h_setup(httpd_req_t* r) { if (auth::configured()) return jerr(r, "409 Conflict", "already_configured"); cJSON* j = body_json(r); if (!j) return jerr(r, "400 Bad Request", "bad_request");
   auto s = [&](const char* k) { const cJSON* x = cJSON_GetObjectItem(j, k); return x && cJSON_IsString(x) ? x->valuestring : ""; };
-  bool ok = auth::setup(s("password"), s("pin1"), s("pin2"), s("pin3")); if (ok && *s("recovery")) auth::recovery_set(s("recovery")); const char* ss = s("ssid"); if (ok && *ss) { nvs_handle_t h; if (nvs_open("wifi", NVS_READWRITE, &h) == ESP_OK) { nvs_set_str(h, "ssid", ss); nvs_set_str(h, "pass", s("wifi_pass")); nvs_commit(h); nvs_close(h); } }
+  bool ok = auth::setup(s("password")); if (ok && *s("recovery")) auth::recovery_set(s("recovery")); const char* ss = s("ssid"); if (ok && *ss) { nvs_handle_t h; if (nvs_open("wifi", NVS_READWRITE, &h) == ESP_OK) { nvs_set_str(h, "ssid", ss); nvs_set_str(h, "pass", s("wifi_pass")); nvs_commit(h); nvs_close(h); } }
   cJSON_Delete(j); if (ok) { jsend(r, "200 OK", "{\"ok\":true,\"reboot\":true}"); xTaskCreate(restart_later, "rst", 2048, nullptr, 5, nullptr); return ESP_OK; } return jerr(r, "400 Bad Request", "bad_request"); }
 #define NEED_SESSION auth::Session* S = session(r); if (!S) return jerr(r, "401 Unauthorized", "unauthorized")
-static esp_err_t h_mode(httpd_req_t* r) { NEED_SESSION; (void)S; cJSON* j = body_json(r); const cJSON* m = j ? cJSON_GetObjectItem(j, "mode") : nullptr; const cJSON* p = j ? cJSON_GetObjectItem(j, "password") : nullptr;
-  bool ok = m && p && cJSON_IsString(m) && cJSON_IsString(p) && auth::set_mode(!strcmp(m->valuestring, "full") ? Mode::Full : Mode::ReadOnly, p->valuestring); cJSON_Delete(j);
-  if (!ok) return jerr(r, "403 Forbidden", "bad_password"); char b[64]; snprintf(b, sizeof b, "{\"ok\":true,\"mode\":\"%s\"}", auth::mode() == Mode::Full ? "full" : "readonly"); return jsend(r, "200 OK", b); }
-static esp_err_t h_level(httpd_req_t* r) { NEED_SESSION; if (r->method == HTTP_DELETE) { auth::drop_level(S); return jsend(r, "200 OK", "{\"ok\":true,\"level\":0}"); }
-  cJSON* j = body_json(r); const cJSON* p = j ? cJSON_GetObjectItem(j, "pin") : nullptr; int rc = p && cJSON_IsString(p) ? auth::set_level(S, p->valuestring) : 1; cJSON_Delete(j);
-  if (rc == 2) return jerr(r, "423 Locked", "locked"); if (rc) return jerr(r, "403 Forbidden", "bad_pin"); char b[48]; snprintf(b, sizeof b, "{\"ok\":true,\"level\":%d}", S->level); return jsend(r, "200 OK", b); }
 static esp_err_t h_info(httpd_req_t* r) { NEED_SESSION; char b[300]; snprintf(b, sizeof b, "{\"ok\":true,\"id\":\"%s\",\"name\":\"%s\",\"fw\":\"%s\",\"api\":%d,\"node\":%d,\"can\":\"%s\",\"uptime\":%d,\"client\":%s}", device::id(), device::name(), cfg::kVersion, cfg::kApiVersion, cfg::kNodeId, bus::can_ok() ? "ok" : "brak odpowiedzi", (int)(esp_timer_get_time() / 1000000), S->client >= 0 ? "true" : "false"); return jsend(r, "200 OK", b); }
 static esp_err_t h_state(httpd_req_t* r) { NEED_SESSION; (void)S; { char q[24]; if (httpd_req_get_url_query_str(r, q, sizeof q) == ESP_OK && strstr(q, "all=1")) bus::rest_all_sets(20000); } LiveItem it[64]; size_t n = bus::snapshot(it, 64); static char out[1400]; if (!n || !tekla::json_live(it, n, out, sizeof out)) return jsend(r, "200 OK", "{\"ok\":true,\"v\":{}}"); return jsend(r, "200 OK", out); }
 static esp_err_t h_params(httpd_req_t* r) { NEED_SESSION; (void)S; char q[512] = {}, key[96] = {}; httpd_req_get_url_query_str(r, q, sizeof q); if (httpd_query_key_value(q, "pids", key, sizeof key) == ESP_OK) { urldecode(key); httpd_resp_set_type(r, "application/json"); httpd_resp_sendstr_chunk(r, "{\"ok\":true,\"values\":{"); bool first = true; char* sp = nullptr; for (char* t = strtok_r(key, ",", &sp); t; t = strtok_r(nullptr, ",", &sp)) { unsigned pid = 0; if (sscanf(t, "0x%x", &pid) != 1) continue; uint32_t raw; const PidEntry* e = find_pid((uint16_t)pid); char b[48]; if (e && bus::read((uint16_t)pid, &raw)) { snprintf(b, sizeof b, "%s\"0x%04X\":%g", first ? "" : ",", pid, decode_raw(e, raw)); first = false; httpd_resp_sendstr_chunk(r, b); } } httpd_resp_sendstr_chunk(r, "}}"); return httpd_resp_sendstr_chunk(r, nullptr); } if (httpd_query_key_value(q, "list", key, sizeof key) != ESP_OK) return jerr(r, "400 Bad Request", "bad_request"); urldecode(key);
@@ -82,7 +76,7 @@ static esp_err_t h_params(httpd_req_t* r) { NEED_SESSION; (void)S; char q[512] =
   httpd_resp_sendstr_chunk(r, "}}"); return httpd_resp_sendstr_chunk(r, nullptr); }
 static esp_err_t h_param_put(httpd_req_t* r) { NEED_SESSION; unsigned pid = 0; if (sscanf(r->uri, "/api/param/0x%x", &pid) != 1) return jerr(r, "400 Bad Request", "bad_request");
   cJSON* j = body_json(r); const cJSON* v = j ? cJSON_GetObjectItem(j, "value") : nullptr; if (!v || !cJSON_IsNumber(v)) { cJSON_Delete(j); return jerr(r, "400 Bad Request", "bad_request"); } double dv = v->valuedouble; cJSON_Delete(j);
-  WriteResult w = plan_write(auth::mode(), S->level, cfg::kBoilerNode, (uint16_t)pid, dv); if (w.err != WriteErr::Ok) { const char* st; const char* c = werr(w.err, &st); return jerr(r, st, c); }
+  WriteResult w = plan_write(Mode::Full, 0, cfg::kBoilerNode, (uint16_t)pid, dv); if (w.err != WriteErr::Ok) { const char* st; const char* c = werr(w.err, &st); return jerr(r, st, c); }
   const PidEntry* e = find_pid((uint16_t)pid); if (!bus::write((uint16_t)pid, w.raw)) return jerr(r, "502 Bad Gateway", "can_timeout");
   uint32_t back; if (!bus::read((uint16_t)pid, &back) || (e->type == TT_U8 ? (back & 0xFF) != (w.raw & 0xFF) : e->type == TT_U32 ? back != w.raw : (back & 0xFFFF) != (w.raw & 0xFFFF))) return jerr(r, "502 Bad Gateway", "verify_failed");   // odczyt zwrotny po zapisie
   double shown = decode_raw(e, back); char b[64]; snprintf(b, sizeof b, "{\"ok\":true,\"v\":%g}", shown); ws_broadcast_param((uint16_t)pid, shown); return jsend(r, "200 OK", b); }
@@ -145,7 +139,7 @@ bool web::start() {
   httpd_config_t c = HTTPD_DEFAULT_CONFIG(); c.uri_match_fn = httpd_uri_match_wildcard; c.max_uri_handlers = 56; c.stack_size = 8192; c.lru_purge_enable = true; c.max_open_sockets = 10;
   if (httpd_start(&g_srv, &c) != ESP_OK) return false;
   auto reg = [&](const char* u, httpd_method_t m, esp_err_t (*h)(httpd_req_t*), bool ws = false) { httpd_uri_t x{}; x.uri = u; x.method = m; x.handler = h; x.is_websocket = ws; httpd_register_uri_handler(g_srv, &x); };
-  reg("/ws", HTTP_GET, h_ws, true); reg("/api/login", HTTP_POST, h_login); reg("/api/setup", HTTP_POST, h_setup); reg("/api/mode", HTTP_POST, h_mode); reg("/api/level", HTTP_POST, h_level); reg("/api/level", HTTP_DELETE, h_level);
+  reg("/ws", HTTP_GET, h_ws, true); reg("/api/login", HTTP_POST, h_login); reg("/api/setup", HTTP_POST, h_setup);
   reg("/api/info", HTTP_GET, h_info); reg("/api/state", HTTP_GET, h_state); reg("/api/params", HTTP_GET, h_params); reg("/api/param/*", HTTP_PUT, h_param_put); reg("/api/alarms", HTTP_GET, h_alarms);
   reg("/api/log/export", HTTP_GET, h_log_export); reg("/api/wifi", HTTP_GET, h_wifi); reg("/api/wifi", HTTP_POST, h_wifi); reg("/api/wifi/scan", HTTP_GET, h_wifi_scan); reg("/api/password", HTTP_POST, h_password); reg("/api/recover", HTTP_POST, h_recover); reg("/api/recovery", HTTP_POST, h_recovery_set); reg("/api/restart", HTTP_POST, h_restart); reg("/api/factory_reset", HTTP_POST, h_factory); reg("/api/log", HTTP_GET, h_log); reg("/api/network", HTTP_GET, h_network);
   reg("/api/ota/fw", HTTP_POST, h_ota_fw); reg("/api/identity", HTTP_GET, h_identity); reg("/api/pair", HTTP_POST, h_pair); reg("/api/service/unlock", HTTP_POST, h_unlock);
