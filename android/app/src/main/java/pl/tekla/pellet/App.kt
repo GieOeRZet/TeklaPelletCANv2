@@ -272,7 +272,7 @@ fun GlowCard(modifier: Modifier, led: Color?, click: (() -> Unit)?, content: @Co
 
 @Composable
 fun Tile(title: String, modeIcon: Int?, led: Color?, modifier: Modifier, go: () -> Unit, ixs: List<IxData>, value: @Composable () -> Unit) {
-    GlowCard(modifier.heightIn(min = 92.dp), led, go) {
+    GlowCard(modifier.heightIn(min = 100.dp), led, go) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(title.uppercase(), color = Mut, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.4.sp, modifier = Modifier.weight(1f)); if (modeIcon != null) Ic(modeIcon, 17.dp) }
         Spacer(Modifier.height(4.dp)); value(); Spacer(Modifier.weight(1f).heightIn(min = 6.dp)); if (ixs.isNotEmpty()) IxRow(ixs)
     }
@@ -329,7 +329,7 @@ fun PowerTile(ui: Ui, modifier: Modifier) {
 }
 
 @Composable
-fun TileGrid(ui: Ui, entries: List<String>, rowH: androidx.compose.ui.unit.Dp = 112.dp) {
+fun TileGrid(ui: Ui, entries: List<String>, rowH: androidx.compose.ui.unit.Dp = 116.dp) {
     for (pair in entries.chunked(2)) {
         Row(Modifier.height(rowH), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             for (id in pair) { val m = Modifier.weight(1f).fillMaxHeight(); when (id) { "fuel" -> FuelTile(ui, m); "power" -> PowerTile(ui, m); else -> SysTile(ui, id, m) } }
@@ -371,7 +371,7 @@ fun HomeView(ui: Ui) {
     val kix = ui.m.screens.getValue("palnik").bar.map { barIx(ui, it, "palnik") } + ui.m.screens.getValue("kociol").bar.filter { it.k != "anim" }.map { barIx(ui, it, "kociol") }
     val entries = visibleTileIds(ui) + listOf("fuel", "power"); val rows = (entries.size + 1) / 2
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val tileH = ((maxHeight - 372.dp) / rows - 10.dp).coerceIn(92.dp, 150.dp)
+        val tileH = ((maxHeight - 430.dp) / rows - 10.dp).coerceIn(114.dp, 160.dp)
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             GlowCard(Modifier.fillMaxWidth(), if (run) Warn else null, { ui.go("kociol") }) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
