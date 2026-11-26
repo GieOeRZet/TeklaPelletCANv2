@@ -17,20 +17,21 @@ Stan: zgodne z `esp/main/web.cpp` (firmware 0.2, **API wersja 2**). Skompilowane
 ## 3. Pierwsza konfiguracja i parowanie
 1. **Konfiguracja (jednorazowa)**: urządzenie bez konfiguracji tworzy otwarty AP `TeklaPellet-<xxxxxx>`. Połącz się i otwórz `http://192.168.4.1/` (strona serwisowa) albo wywołaj `POST /api/setup` `{password, pin1, pin2, pin3, ssid, wifi_pass}` (hasło ≥ 8 znaków). Zapis w NVS (przeżywa restart, zanik zasilania i aktualizacje firmware); urządzenie restartuje się i łączy z Wi‑Fi. Powtórzenie → 409 `already_configured`.
 2. **Parowanie klienta**: `POST /api/pair` `{password, name}` (`name` 1‑23 znaków, bez `"` i `\`) → `{ok, token, id}`. **Token zapisz w kliencie** (43 znaki, pokazywany tylko raz; w urządzeniu tylko SHA‑256). Maks. 8 klientów (409 `too_many_clients`). Dalej samo `Authorization: Bearer <token>`, hasło niepotrzebne. Zmiana hasła urządzenia **nie** odwołuje tokenów; odwołanie: pkt 8.
-3. **Sesja z hasła** (np. strona serwisowa): `POST /api/login` `{password}` → `{ok, token, mode, level:0}` (12 h).
+3. **Sesja z hasła** (np. strona serwisowa): `POST /api/login` `{password}` → `{ok, token}` (12 h).
 
 ## 4. Informacje i tryby
 - `GET /api/info` → `{ok, id, name, fw, api, node, can, uptime, mode, level, client}` (`client:true` gdy token sparowanego klienta).
-- `POST /api/mode` `{mode:"full"|"readonly", password}` → `{ok, mode}` (włączenie zapisu do kotła wymaga hasła; globalne).
-- `POST /api/level` `{pin}` → `{ok, level}` (poziom 1‑3 wg PIN-u; błędny → 403 `bad_pin`, blokada → 423 `locked`); `DELETE /api/level` → poziom 0.
+- `POST /api/mode` pozostaje kompatybilnościowo, ale **nie steruje już dostępem do zapisu kotła**.
+- Endpointy `/api/level` są wycofane z użycia; klienci nie mają podawać PIN-ów.
 
 ## 5. Dane z kotła
 - `GET /api/state` → `{ok, v:{"0x2001":66.9, ...}}` (ostatnie znane wartości „na żywo”; jednostki wyświetlane, stany wyjść jako 0/1/2). Domyślnie tylko zestaw podstawowy (+ zestawy zamówione przez klientów WebSocket); **`GET /api/state?all=1`** włącza na 20 s odpytywanie wszystkich zestawów (używa integracja Home Assistant).
 - `GET /api/params?list=<klucz>` (np. `0x00|KOCIOL|inst1`; klucze list w `data/device_model.json` → `lists`) lub `GET /api/params?pids=0x2209,0x220A,...` (do ok. 40) → `{ok, values:{"0x2003":65,...}}` (odczyt z kotła przez SDO; brakujące PID-y pomijane).
-- `PUT /api/param/{pid}` `{value}` (np. `/api/param/0x2003`) → `{ok, v}`; wartość po zapisie i **odczycie zwrotnym** (przy niezgodności 502 `verify_failed`). Warunki: tryb `full`, PID z `panel_write`, nie na liście zablokowanych, poziom PIN ≥ wymagany dla wiersza, wartość w zakresie. Wartość w jednostkach wyświetlanych (skala z modelu).
+- `PUT /api/param/{pid}` `{value}` (np. `/api/param/0x2003`) → `{ok, v}`; wartość po zapisie i **odczycie zwrotnym** (przy niezgodności 502 `verify_failed`). Warunki: PID z `panel_write`, nie na liście zablokowanych, znane kodowanie i wartość w zakresie modelu. Wartość w jednostkach wyświetlanych (skala z modelu).
 - `GET /api/alarms` → `{ok, alarms:[{n,code,text,active,acked}]}` (**obecnie pusta lista**: odczyt historii niezaimplementowany).
 - `GET /api/network` → `{ok, nodes:[{node,name,state,age_s}]}` (uproszczone: kocioł i ten moduł).
-- `GET /api/log` → `{ok, lines:[...]}` (ostatnie 12 zdarzeń).
+- `GET /api/log` → `{ok, lines:[...]}` (ostatnie 64 zdarzenia).
+- `GET /api/log/export` → plik tekstowy `teklapellet.log` do zapisania/eksportu.
 
 ## 6. WebSocket `/ws`
 Po otwarciu: klient wysyła `{"t":"auth","token":"<token>"}` → `{"t":"hello"}` (albo `{"t":"err"}`) i od razu pełną migawkę `{"t":"live","v":{...}}`. Wybór zestawu odpytywanych danych: `{"t":"sub","sets":["kociol","palnik","co1","cwu","bufor","solary","magazyn"]}`. Serwer wysyła zmiany co ok. 250 ms: `{"t":"live","v":{"0x2001":66.9,...}}` i `{"t":"param","pid":"0x2003","v":65}` (po zapisie przez dowolnego klienta).
