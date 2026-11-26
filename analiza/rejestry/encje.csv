@@ -1,0 +1,125 @@
+domena,id,nazwa,jednostka,klasa,zrodlo,modul_do_przeniesienia
+sensor,fuel_use_24h,Paliwo zuzycie 24h,kg/dobe,,,paliwo
+sensor,fuel_days,Paliwo prognoza,dni,,,paliwo
+sensor,boiler_temp,Kociol temperatura,°C,temperature,boiler_temp,
+sensor,boiler_set_manual,Kociol zadana reczna,°C,temperature,boiler_set_manual,
+sensor,boiler_set_result,Kociol zadana wynikowa,°C,temperature,boiler_set_result,
+sensor,ch1_temp,CO temperatura,°C,temperature,ch1_temp,
+sensor,ch1_set_manual,CO zadana reczna,°C,temperature,ch1_set_manual,
+sensor,ch1_set_result,CO zadana wynikowa,°C,temperature,ch1_set_result,
+sensor,ch2_temp,CO2 temperatura,°C,temperature,ch2_temp,
+sensor,ch2_set_manual,CO2 zadana reczna,°C,temperature,ch2_set_manual,
+sensor,ch2_set_result,CO2 zadana wynikowa,°C,temperature,ch2_set_result,
+sensor,hw_temp,CWU temperatura,°C,temperature,hw_temp,
+sensor,hw_set_comfort,CWU zadana komfort,°C,temperature,hw_set_comfort,
+sensor,hw_set_eco,CWU zadana ekonomiczna,°C,temperature,hw_set_eco,
+sensor,hw_set_result,CWU zadana wynikowa,°C,temperature,hw_set_result,
+sensor,outside_temp,Temperatura zewnetrzna,°C,temperature,outside_temp,
+text_sensor,palnik_nastawy_p1,Palnik nastawy serwisowe (poziom 1),,,,
+text_sensor,palnik_nastawy_p2,Palnik nastawy serwisowe (poziom 2),,,,
+sensor,burner_flame,Palnik jasnosc plomienia,%,,burner_flame,
+sensor,mixer_co1_state,Mieszacz CO1 stan,,,mixer_co1_state,
+sensor,mixer_ret_state,Mieszacz powrotu stan,,,mixer_ret_state,
+sensor,burner_feed_time,Palnik czas podawania paliwa,s,,burner_feed_time,
+sensor,access_level_sensor,Poziom dostepu,,,,inne
+sensor,burner_kw,Palnik moc,kW,,,palnik
+sensor,burner_fuel_rate,Palnik spalanie,kg/h,,,palnik
+sensor,burner_temp,Temperatura palnika,°C,temperature,burner_temp,
+text_sensor,kociol_konf_p0,Kociol konfiguracja (poziom 0),,,,
+text_sensor,kociol_konf_p1,Kociol konfiguracja (poziom 1),,,,
+text_sensor,kociol_konf_p2,Kociol konfiguracja (poziom 2),,,,
+sensor,ret_temp,Temperatura powrotu,°C,temperature,ret_temp,
+text_sensor,co1_krzywa_p0,CO1 konfiguracja krzywej pogodowej (poziom 0),,,,
+text_sensor,co1_krzywa_p1,CO1 konfiguracja krzywej pogodowej (poziom 1),,,,
+text_sensor,cwu_konf_p0,CWU konfiguracja (poziom 0),,,,
+text_sensor,cwu_konf_p1,CWU konfiguracja (poziom 1),,,,
+text_sensor,palnik_krzywe_p1,Palnik krzywe dmuchawy i spalin (poziom 1),,,,
+text_sensor,alarm_konf_p1,Alarmy ustawienia (poziom 1),,,,
+sensor,k_pwr,Kociol moc palnika,kW,,k_pwr,
+sensor,k_cons,Kociol zuzycie paliwa,kg/h,,k_cons,
+sensor,k_grate_t,Kociol czas do czyszczenia rusztu,min,,k_grate_t,
+sensor,k_exh_pct,Kociol wentylator spalin moc,%,,k_exh_pct,
+sensor,burner_power,Moc palnika,%,,burner_power,
+sensor,burn_ign,Palnik zapalarka,%,,burn_ign,
+sensor,blower_pct,Dmuchawa obroty,%,,blower_pct,
+sensor,co_set_comfort,CO zadana komfort,°C,temperature,co_set_comfort,
+sensor,co_set_eco,CO zadana ekonomiczna,°C,temperature,co_set_eco,
+sensor,tank_cap,Zbiornik pojemnosc,kg,,tank_cap,
+sensor,tank_kg,Zbiornik paliwo,kg,,tank_kg,
+sensor,tank_pct,Zbiornik zapelnienie,%,,,paliwo
+sensor,feed_manual_off,Podawanie reczne czas 0x2267 (do weryfikacji),s,,feed_manual_off,
+sensor,feed_manual_run,Podawanie reczne czas 0x370D (do weryfikacji),s,,feed_manual_run,
+sensor,burner_state_code,Palnik kod stanu,,,,palnik
+binary_sensor,fuel_low,Paliwo rezerwa,,,,paliwo
+binary_sensor,mirror_mode,Tryb mirror,,,,inne
+binary_sensor,can_ok,CAN OK,,connectivity,,inne
+binary_sensor,boiler_on,Kociol wlaczony,,running,boiler_on,
+binary_sensor,alarm_active,Alarm aktywny,,problem,,alarmy
+binary_sensor,ch1_pump,CO pompa,,running,ch1_pump,
+binary_sensor,ch2_pump,CO2 pompa,,running,ch2_pump,
+binary_sensor,hw_pump,CWU pompa,,running,hw_pump,
+binary_sensor,blower_running,Dmuchawa pracuje,,running,,inne
+binary_sensor,feeder_running,Podajnik pracuje,,running,,inne
+binary_sensor,feeder2_running,Podajnik palnika pracuje,,running,,inne
+binary_sensor,in_zakaz,Zakaz rozpalenia,,,in_zakaz,
+binary_sensor,in_regulator,Regulator pokojowy zgoda,,,in_regulator,
+text_sensor,diag_rep,Raport diagnostyczny,,,,diagnostyka
+text_sensor,snap_txt,Zmiany rejestrow (Snap),,,,diagnostyka
+text_sensor,fw_ver,Wersja firmware,,,,system
+text_sensor,sig_txt,Sygnatura konfiguracji,,,,system
+text_sensor,burner_state_text,Palnik stan,,,burner_state,
+text_sensor,boiler_mode_text,Kociol tryb pracy,,,boiler_mode,
+text_sensor,alarm_last_text,Ostatni alarm,,,,alarmy
+text_sensor,alarm_start_text,Alarm poczatek,,,,alarmy
+text_sensor,alarm_end_text,Alarm koniec,,,,alarmy
+text_sensor,alarm_history,Historia alarmow,,,,alarmy
+text_sensor,alarm_raw_text,Alarm rejestr,,,,alarmy
+text_sensor,blower_mode_text,Dmuchawa tryb,,,blower_mode,
+text_sensor,co_mode_text,CO tryb,,,co_mode,
+text_sensor,co2_mode_text,CO2 tryb,,,co2_mode,
+text_sensor,cwu_mode_text,CWU tryb,,,cwu_mode,
+text_sensor,feeder_mode_text,Podajnik tryb,,,feeder_mode,
+text_sensor,cwu_pump_mode_text,Pompa CWU tryb testowy,,,cwu_pump_mode,
+text_sensor,boiler_pump_mode_text,Pompa kotlowa tryb testowy,,,boiler_pump_mode,
+text_sensor,solar_pump_mode_text,Pompa solarna tryb testowy,,,solar_pump_mode,
+text_sensor,grate_mode_text,Ruszt tryb testowy,,,grate_mode,
+text_sensor,exchanger_mode_text,Wymiennik tryb testowy,,,exchanger_mode,
+text_sensor,igniter_mode_text,Zapalarka tryb testowy,,,igniter_mode,
+text_sensor,burner_feeder_mode_text,Podajnik palnika tryb testowy,,,burner_feeder_mode,
+text_sensor,fuel_transporter_mode_text,Magazyn paliwa transporter tryb testowy,,,fuel_transporter_mode,
+text_sensor,fuel_storage_feeder_mode_text,Magazyn paliwa podajnik tryb testowy,,,fuel_storage_feeder_mode,
+sensor,blower_test_pct,Dmuchawa moc testowa,%,,blower_test_pct,
+text_sensor,exh_fan_mode_text,WentWyc tryb testowy,,,exh_fan_mode,
+sensor,exh_fan_pct,WentWyc moc testowa,%,,exh_fan_pct,
+text_sensor,co1_pump_mode_text,Pompa CO1 tryb testowy,,,co1_pump_mode,
+text_sensor,co2_pump_mode_text,Pompa CO2 tryb testowy,,,co2_pump_mode,
+text_sensor,co3_pump_mode_text,Pompa CO3 tryb testowy,,,co3_pump_mode,
+text_sensor,co4_pump_mode_text,Pompa CO4 tryb testowy,,,co4_pump_mode,
+text_sensor,co1_mixer_mode_text,Mieszacz CO1 tryb testowy,,,co1_mixer_mode,
+text_sensor,co2_mixer_mode_text,Mieszacz CO2 tryb testowy,,,co2_mixer_mode,
+text_sensor,co3_mixer_mode_text,Mieszacz CO3 tryb testowy,,,co3_mixer_mode,
+text_sensor,co4_mixer_mode_text,Mieszacz CO4 tryb testowy,,,co4_mixer_mode,
+text_sensor,ret_mixer_mode_text,Mieszacz powrotu tryb testowy,,,ret_mixer_mode,
+text_sensor,conf_txt,Konfiguracja kotla,,,,statystyki
+text_sensor,stat_txt,Statystyki kotla,,,,statystyki
+text_sensor,sch_cwu_txt,CWU harmonogram (rejestry),,,,harmonogramy
+text_sensor,sch_co_txt,CO harmonogram (rejestry),,,,harmonogramy
+text_sensor,sch_boil_txt,Kociol harmonogram (rejestry),,,,harmonogramy
+text_sensor,test_state_txt,Test wyjsc stany,,,,test_wyjsc
+text_sensor,sdo_last,SDO ostatni odczyt,,,,diagnostyka
+select,co_mode_sel,CO tryb ustaw,,,,sterowanie
+select,co2_mode_sel,CO2 tryb ustaw,,,,sterowanie
+select,cwu_mode_sel,CWU tryb ustaw,,,,sterowanie
+switch,restart,Restart,,,,sterowanie
+switch,boiler_power_sw,Kociol wlacz/wylacz,,,,sterowanie
+button,potwierdz_alarm,Potwierdz alarm,,,,przyciski
+button,podajnik_automat,Podajnik: Automat,,,,przyciski
+button,podajnik_wylacz,Podajnik: Wylacz,,,,przyciski
+button,podajnik_podaj_paliwo_30_s,Podajnik: Podaj paliwo (30 s),,,,przyciski
+button,snap_a_punkt_odniesienia,Snap A (punkt odniesienia),,,,diagnostyka
+button,snap_b_pokaz_zmiany,Snap B (pokaz zmiany),,,,diagnostyka
+button,snap_stop,Snap STOP,,,,diagnostyka
+button,raport_diagnostyczny_utworz,Raport diagnostyczny (utworz),,,,przyciski
+button,dmuchawa_automat,Dmuchawa: Automat,,,,przyciski
+button,dmuchawa_wylacz,Dmuchawa: Wylacz,,,,przyciski
+button,dmuchawa_wlacz_czasowo,Dmuchawa: Wlacz (czasowo),,,,przyciski

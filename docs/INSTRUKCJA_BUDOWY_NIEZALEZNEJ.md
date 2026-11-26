@@ -10,11 +10,8 @@ Kocioł na pellet z panelem Estyma igneoTouch (oprogramowanie sterownika **FW221
 |---|---|---|
 | `data/device_model.json` | **źródło prawdy**: 655 PID-ów (nazwa, typ, zakres, skala, tryb, kodowanie zapisu), listy nastaw, konfiguracja, alarmy, moduły, harmonogramy, stany, ekran INFO/SIEĆ/INTERNET | czytają je ESP, WWW, Android |
 | `data/menu_rows.json` | 21 wierszy menu panelu: poziom PIN, warunki widoczności (PID + operator + wartość) | menu zależne od konfiguracji |
-| `zrodla/model_ekranow/` | dane z analizy panelu: `menu_tree.json`, `lists.json`, `list_dialogs.json`, `firmware_row_table.json`, `presenter_widget_map.json`, `real_panel_screens.json`, `home_indicators.json`, `screens_config.json`, `program_pids.json`, `write_frames.json`, `alarm_codes_verified.json`, `outputs_test.json`, `live_sources.json`, `siec_modules.json` itd. (`README.md` tam opisuje zestaw) | dowody i szczegóły, gdy model w `data/` nie wystarcza |
-| `zrodla/bitmapy/` | **pełny zestaw bitmap panelu** (PNG + `manifest.csv`); numer bitmapy = numer w tabelach (np. ikony wyjść, trybów, obrazy kotła) | grafiki (odpowiedzialność za prawa do nich ma właściciel) |
-| `zrodla/atlas_panelu/` | zrzuty prawdziwych ekranów panelu (stany, listy) | wzorzec zachowania/zawartości |
-| `zrodla/dokumenty/` | raporty: metodyka, audyt binarka‑vs‑model, backlog, drzewo menu, widgety wg ekranów, poziomy dostępu | kontekst i luki |
-| `zrodla/narzedzia_analizy/` | skrypty, które zbudowały model z analizy (pochodzenie danych); **działają tylko ze starym repo i plikiem firmware** (pkt 10) | pochodzenie |
+| `analiza/` | **całe środowisko analizy** (opis: `analiza/README.md`): `FW2213TK_kopia.bin` (firmware sterownika), `firmware/FW2213TK-ghidra/` (dekompilacja), `tools/` (~230 narzędzi: emulacja Cortex‑M, skany, budowa modelu), `analiza_archiwum/FW2213TK-2026-11-22/data/` (dowody: CSV/JSON, `ui_model/` = modele ekranów, `bitmaps/` = **pełny zestaw bitmap panelu**, atlas zrzutów prawdziwych ekranów), raporty kolejnych przejść, `NewEstyma/` (metodyka, plan, backlog, audyty), `rejestry/` (rejestry CAN, przewodnik Ghidry) | dowody, odtwarzalność, szczegóły, gdy model w `data/` nie wystarcza |
+| `archiwum_v1/` | stary produkt v1 + dane sprzętowe PelletCAN (ESPHome, piny, tożsamość węzła) | tylko historia |
 | `tools/` | generatory i testy v2 (pkt 7) | budowa |
 | `esp/` | firmware ESP32‑C6 (ESP‑IDF 5.4) + rdzeń testowalny na hoście (`esp/components/tekla_core`) | moduł |
 | `ui/` | strona WWW (JS bez bibliotek), `ui/gen/*.json` (model wspólny), ikony `ui/assets/ic/` | klient WWW |
@@ -34,7 +31,7 @@ Kocioł na pellet z panelem Estyma igneoTouch (oprogramowanie sterownika **FW221
 ## 5. Jak odczytać z modelu najważniejsze rzeczy
 - **Lista parametrów ekranu/nastaw**: `device_model.lists` (lub `ui/gen/model.min.json` w skróconej postaci): etykieta PL, PID, min/max/krok, typ okna (suwak/radio/przełącznik), opcje, minimalny poziom PIN.
 - **Menu i widoczność**: `data/menu_rows.json`; konfiguracja kotła zmienia, co jest widoczne (PID-y: liczba obwodów `0x2105`, CWU `0x2106`, bufor `0x2107`, solary `0x2108`, kaskada `0x350C`, magazyn `0x3525`, czujnik powrotu `0x350A`, ciśnienie `0x350D`, wariant obrazu kotła `0x370A`).
-- **Stany wyjść** (pompy, podajniki, zapalarka, ruszt, mieszacze): młodszy bajt odpowiedzi; mieszacz 1 = zamykanie, 2 = otwieranie; zbiór par PID→bitmapa: `zrodla/model_ekranow/outputs_test.json`, `presenter_widget_map.json`.
+- **Stany wyjść** (pompy, podajniki, zapalarka, ruszt, mieszacze): młodszy bajt odpowiedzi; mieszacz 1 = zamykanie, 2 = otwieranie; zbiór par PID→bitmapa: `analiza/analiza_archiwum/FW2213TK-2026-11-22/data/ui_model/outputs_test.json`, `presenter_widget_map.json`.
 - **Stan palnika, diody, ikona paliwa, pora roku**: `home_indicators.json`, `real_panel_screens.json`, reguły w `rules.hpp`.
 - **Harmonogramy**: 24‑bitowa maska na dzień (bit h = godzina h; 1 = komfort), PID-y per obwód i dzień: `device_model.program.pids_by_circuit`, `program_pids.json`. **Zapis harmonogramów nie był sprawdzony na prawdziwym kotle.**
 - **Alarmy**: `alarm_codes_verified.json` (kody i teksty), rejestry historii `0x4011‑0x404B` (odczyt jeszcze nie zaimplementowany w ESP).
@@ -64,9 +61,8 @@ Pełny kontrakt: `docs/ESP_API_V2.md`. W skrócie: `POST /api/login` (hasło →
 3. Żadnych sekretów w repo (hasła, PIN-y, Wi‑Fi, klucze, tokeny): repo jest publiczne.
 4. Nie zakładaj, że stan zapisanego harmonogramu/trybu jest „sprawdzony” - patrz luki.
 
-## 10. Czego NIE ma w repo (i dlaczego)
-- **Plik firmware sterownika FW2213TK** (kopia właściciela, jest w starym repo `GieOeRZet/TeklaPelletCAN`, a hasz SHA‑256 w `device_model.firmware_sha256`) oraz środowisko emulacji/dekompilacji. Dlatego `zrodla/narzedzia_analizy/` służy jako dokumentacja pochodzenia danych; ponowne wygenerowanie modelu wymaga tego pliku i starego repo. Dane w `data/` i `zrodla/` traktuj jako **zamrożone dowody**.
-- Wyższa rozdzielczość grafik niż w panelu (producent ma tylko te bitmapy).
+## 10. Odtwarzalność: wszystko jest w repo
+Nie potrzeba żadnego innego repozytorium. W `analiza/` są: plik firmware sterownika `FW2213TK_kopia.bin` (SHA‑256 w `device_model.firmware_sha256`; **własność producenta, odpowiedzialność za użycie i udostępnianie ma właściciel**), dekompilacja, narzędzia emulacji i budowy modelu oraz dowody. Przepływ zmiany modelu: popraw/odtwórz dane w `analiza/` (`analiza/tools/build_device_model.py` itd., zależności w `analiza/requirements.txt`) → skopiuj `device_model.json` do `data/` → `python3 tools/gen_esp_tables.py` i `python3 tools/gen_app_model.py`. Sprawdzenie spójności: `python3 analiza/tools/validate_ui_model.py` (oczekiwane PASS) oraz CI (kopie modelu muszą być identyczne). Nie ma w repo grafik w wyższej rozdzielczości niż w panelu (producent ich nie ma).
 
 ## 11. Znane luki (stan 2026‑11‑26)
-Zapis harmonogramów/nastaw/konfiguracji niesprawdzony na kotle · test wyjść (sterowanie) nieznany: nie wiadomo, czy kocioł sam wraca do Auto · okres odpytywania i tempo animacji panelu niezmierzone · widgety ekranu PALNIK/KASKADA bez pozycji · ekran INTERNET częściowo · historia alarmów (odczyt) niezaimplementowana · czas (RTC) nieustawiany · **nic nie było uruchomione na prawdziwym kotle ani na telefonie**. Pełna lista: `zrodla/dokumenty/BACKLOG.md`, `AUDYT_BINARKA_VS_MODEL.md`.
+Zapis harmonogramów/nastaw/konfiguracji niesprawdzony na kotle · test wyjść (sterowanie) nieznany: nie wiadomo, czy kocioł sam wraca do Auto · okres odpytywania i tempo animacji panelu niezmierzone · widgety ekranu PALNIK/KASKADA bez pozycji · ekran INTERNET częściowo · historia alarmów (odczyt) niezaimplementowana · czas (RTC) nieustawiany · **nic nie było uruchomione na prawdziwym kotle ani na telefonie**. Pełna lista: `analiza/NewEstyma/BACKLOG.md`, `AUDYT_BINARKA_VS_MODEL.md`.

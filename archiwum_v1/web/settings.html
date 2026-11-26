@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TeklaPelletCAN – ustawienia</title>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<main>
+  <h1>Tekla<span>PelletCAN</span> · ustawienia</h1>
+  <div class="tabs"><a href="/index.html">Panel kotła</a><a class="on" href="/settings.html">Ustawienia</a></div>
+
+  <div class="card"><h2>Urządzenie</h2><div class="kv" id="status"></div></div>
+
+  <div class="card">
+    <h2>Tryb pracy</h2>
+    <label class="chk"><input id="c_write" type="checkbox"> Zezwalaj na zapis do kotła (nastawy, tryby, harmonogramy, sterowanie)</label>
+    <div class="hint" style="margin:-4px 0 8px 26px">Odznaczone = tylko odczyt: urządzenie niczego nie wysyła do kotła. Po pierwszym wgraniu jest odznaczone – włącz po sprawdzeniu, że odczyty zgadzają się z panelem kotła.</div>
+    <label class="chk"><input id="c_two" type="checkbox"> Dwa obiegi CO (CO1 i CO2)</label>
+    <label class="chk"><input id="c_web" type="checkbox"> Panel WWW bez hasła w sieci lokalnej (hasło tylko dla Home Assistant i aplikacji)</label>
+    <div class="hint" style="margin:-4px 0 8px 26px">Włączone: każdy w Twojej sieci może otworzyć panel i sterować kotłem (nastawy poziomu 1/2 nadal wymagają PIN-u w menu karty). Wyłącz, jeśli sieć współdzielisz z osobami, którym nie ufasz – wtedy przeglądarka zapyta o hasło urządzenia (jednorazowo).</div>
+    <label class="chk"><input id="c_ant" type="checkbox"> Antena zewnętrzna U.FL (XIAO ESP32-C6; gdy podłączona antena na kablu)</label>
+    <div class="hint" style="margin:-4px 0 8px 26px">Jeśli z zewnętrzną anteną urządzenie nie połączy się z siecią w 30 s, samo przełączy się na wewnętrzną (do restartu) i zapisze to w dzienniku. Wtedy sprawdź antenę i kabel.</div>
+    <label class="chk"><input id="c_demo" type="checkbox"> Tryb demo (symulator kotła, bez CAN)</label>
+    <div class="row"><button id="cfgsave">Zapisz i uruchom ponownie</button></div>
+  </div>
+
+  <div class="card">
+    <h2>Wygląd: grafika kotła</h2>
+    <div id="boilers" class="row" style="gap:8px;flex-wrap:nowrap;align-items:flex-end"></div>
+    <div class="hint">Wybierz grafikę najbardziej podobną do Twojego kotła. Zmiana działa od razu na stronie z kartą (bez restartu).</div>
+  </div>
+
+  <div class="card">
+    <h2>Sieć Wi-Fi</h2>
+    <div class="row"><button class="sec" id="scan">Szukaj sieci</button></div>
+    <div id="nets"></div>
+    <label for="ssid">SSID</label><input id="ssid" type="text" autocapitalize="none">
+    <label for="wpw">Hasło sieci</label><input id="wpw" type="password" autocomplete="off">
+    <label class="chk"><input id="static" type="checkbox"> Stały adres IP</label>
+    <div id="staticbox" style="display:none">
+      <label>Adres IP</label><input id="ip" type="text"><label>Maska</label><input id="mask" type="text">
+      <label>Brama</label><input id="gw" type="text"><label>DNS</label><input id="dns" type="text">
+    </div>
+    <div class="row"><button id="wifisave">Połącz z tą siecią</button></div>
+    <div class="hint">Jeśli nowa sieć nie zadziała, urządzenie wróci do poprzedniej i uruchomi własny punkt dostępu „TeklaPelletCAN-XXXX”.</div>
+  </div>
+
+  <div class="card">
+    <h2>Aktualizacja oprogramowania</h2>
+    <div class="row">
+      <select id="upchan" style="flex:1 1 140px;display:none"><option value="stable">Kanał: stabilny</option><option value="beta">Kanał: beta (testowy)</option></select>
+      <button id="upcheck" style="flex:1 1 160px">Sprawdź aktualizacje</button>
+    </div>
+    <div class="hint" id="devhint" style="display:none">Tryb developera: wybrany kanał dotyczy tylko tego urządzenia/przeglądarki.</div>
+    <div class="msg" id="upmsg"></div>
+    <div class="row" style="margin-top:8px"><button id="upgo" class="acc" style="display:none">Pobierz i zainstaluj</button></div>
+    <progress id="otaprog" value="0" max="100" style="display:none;margin-top:8px"></progress>
+    <details style="margin-top:12px">
+      <summary style="cursor:pointer;color:var(--dim)">Wgraj plik ręcznie</summary>
+      <label for="otabin">Plik firmware (teklapelletcan.bin – podpis jest w środku)</label><input id="otabin" type="file" accept=".bin">
+      <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--dim);font-size:13px">Starszy plik z osobnym podpisem (.sig)</summary>
+      <label for="otasigf">Plik podpisu</label><input id="otasigf" type="file" accept=".sig,.txt"><input id="otasig" type="text" placeholder="…lub wklej podpis (128 znaków hex)" style="margin-top:6px"></details>
+      <div class="row" style="margin-top:10px"><button id="otago">Wgraj wskazany plik</button></div>
+      <label for="manifest" style="margin-top:14px">Adres manifestu aktualizacji (zaawansowane)</label>
+      <input id="manifest" type="text" placeholder="https://raw.githubusercontent.com/…/updates/manifest.json">
+    </details>
+    <div class="row" style="margin-top:12px"><button class="sec" id="rollback">Wróć do poprzedniego firmware (np. ESPHome)</button></div>
+    <div class="hint">Przeglądarka pobiera wydanie z internetu i wgrywa je do urządzenia (urządzenie samo nie łączy się z internetem). Plik musi być podpisany kluczem wydawcy – urządzenie odrzuci obcy firmware i zostanie na obecnej wersji.</div>
+  </div>
+
+  <div class="card">
+    <h2>Dziennik i diagnostyka</h2>
+    <div class="row">
+      <button class="sec" id="logrefresh">Odśwież</button>
+      <button class="sec" id="logcopy">Kopiuj</button>
+      <a class="btn sec" href="/api/v1/log?download=1">Pobierz dziennik</a>
+      <a class="btn sec" href="/api/v1/export">Pobierz raport</a>
+      <button class="sec" id="logclear">Wyczyść</button>
+    </div>
+    <pre id="log">…</pre>
+    <div class="hint">Raport zawiera diagnostykę (CAN, SDO, Wi-Fi, pamięć) i dziennik – bez haseł. Można go wysłać lub wkleić w zgłoszeniu.</div>
+  </div>
+
+  <div class="card">
+    <h2>Hasło urządzenia</h2>
+    <label for="np1">Nowe hasło (min. 4 znaki)</label><input id="np1" type="password" autocomplete="new-password">
+    <label for="np2">Powtórz nowe hasło</label><input id="np2" type="password" autocomplete="new-password">
+    <div class="row" style="margin-top:10px"><button id="pwsave">Zmień hasło</button></div>
+    <div class="hint">Sparowani klienci (Home Assistant, ta przeglądarka) zostają połączeni – zmiana dotyczy tylko parowania nowych klientów. Zapomniałeś hasła? Zmienisz je stąd z przeglądarki albo z Home Assistant (usługa <code>teklapelletcan.set_device_password</code>), o ile choć jeden klient jest sparowany. Inaczej: przycisk BOOT 10 s lub ponowne wgranie pliku z nowymi danymi.</div>
+  </div>
+
+  <div class="card"><h2>Sparowani klienci</h2><div id="clients">…</div></div>
+
+  <div class="card">
+    <h2>Serwis</h2>
+    <div class="row"><button class="sec" id="restart">Uruchom ponownie</button><button class="warn" id="reset">Przywróć ustawienia fabryczne</button></div>
+  </div>
+  <div class="msg" id="msg"></div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const msg = (t, c) => { const m = $('msg'); m.className = 'msg ' + c; m.textContent = t; window.scrollTo(0, document.body.scrollHeight); };
+const tok = () => { try { return localStorage.getItem('tpc_token') || ''; } catch (e) { return ''; } };
+async function api(method, path, body, raw) {
+  const h = { 'Content-Type': 'application/json' }; if (tok()) h.Authorization = 'Bearer ' + tok();
+  const r = await fetch(path, { method, headers: h, body: body ? JSON.stringify(body) : undefined });
+  if (r.status === 401) { await pair(); return api(method, path, body, raw); }
+  if (raw) return r.text();
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || j.result || r.status);
+  return j;
+}
+async function pair() {
+  const pw = prompt('Hasło urządzenia:'); if (!pw) throw new Error('anulowano');
+  let id = ''; try { id = localStorage.getItem('tpc_client_id') || ''; } catch (e) {}
+  if (!id) { id = 'web-' + Math.random().toString(16).slice(2); try { localStorage.setItem('tpc_client_id', id); } catch (e) {} }
+  const r = await fetch('/api/v1/pair', { method: 'POST', body: JSON.stringify({ password: pw, client_id: id, name: 'Przeglądarka' }) });
+  const j = await r.json(); if (!r.ok) throw new Error(j.error || r.status);
+  try { localStorage.setItem('tpc_token', j.token); } catch (e) {}
+}
+const kv = (el, o) => { el.innerHTML = ''; for (const [k, v] of Object.entries(o)) { const a = document.createElement('div'), b = document.createElement('div'); a.textContent = k; b.textContent = v; el.append(a, b); } };
+
+async function load() {
+  const [i, w, c] = await Promise.all([fetch('/api/v1/info').then(r => r.json()), fetch('/api/v1/wifi/status').then(r => r.json()).catch(() => ({})), fetch('/api/v1/config').then(r => r.json())]);
+  if (!i.password_set) { location.href = '/portal.html'; return; }
+  kv($('status'), { 'ID': i.id, 'Wersja': i.fw, 'Czas pracy': Math.floor(i.uptime_s / 60) + ' min', 'CAN': i.can_ok ? 'kocioł odpowiada' : 'brak odpowiedzi', 'Zapis': i.writable ? 'włączony' : 'zablokowany (tylko odczyt)',
+    'Wi-Fi': (w.ssid || '-') + (w.ip ? ' · ' + w.ip : ''), 'Sygnał': w.rssi ? w.rssi + ' dBm' : '-', 'Antena': w.antenna || '-', 'Klienci': i.clients, 'Klucz OTA': i.dev_key ? 'testowy (deweloperski)' : 'produkcyjny' });
+  $('c_write').checked = !c.mirror && c.write_enabled; $('c_two').checked = c.two_circuits; $('c_demo').checked = c.demo; $('c_ant').checked = !!c.external_antenna; buildBoilers(c.boiler_image || 13); $('c_web').checked = c.web_open !== false;
+  installedFw = i.fw || '';
+  const isDemo = /demo/i.test(installedFw);
+  if (isDemo) { const c = $('upgo').closest('.card'); if (c) { c.style.display = 'none'; c.insertAdjacentHTML('afterend', '<div class="card"><h2>Aktualizacja oprogramowania</h2><div class="hint">Tryb demo: wirtualne urządzenie nie ma własnego firmware, więc aktualizacje są niedostępne.</div></div>'); } }
+  // Tryb developera: ?dev=1 w adresie (apka Android - inny origin niz lokalny localStorage tej strony) albo
+  // juz zapamietany w tej przegladarce/WebView (portal - ten sam origin co ekran "Poziom kotla", wiec
+  // wystarczy sam localStorage). Zwykli uzytkownicy nigdy nie widza wyboru kanalu - zawsze "stable".
+  const devMode = new URLSearchParams(location.search).get('dev') === '1' || lsGet('tpc_devmode') === '1';
+  if (devMode) { lsSet('tpc_devmode', '1'); $('upchan').style.display = ''; $('devhint').style.display = ''; }
+  $('upchan').value = devMode ? (lsGet('tpc_channel') || 'stable') : 'stable';
+  $('manifest').value = lsGet('tpc_manifest_url');
+  loadLog(); loadClients(); if (!isDemo) doCheck(true);
+}
+async function loadLog() { try { const t = await fetch('/api/v1/log').then(r => r.text()); const p = $('log'); p.textContent = t.split('\n').slice(-120).join('\n') || '(pusty)'; p.scrollTop = p.scrollHeight; } catch (e) { $('log').textContent = 'błąd: ' + e.message; } }
+async function loadClients() {
+  try {
+    const j = await api('GET', '/api/v1/clients'); const box = $('clients'); box.innerHTML = '';
+    j.clients.forEach(c => { const d = document.createElement('div'); d.className = 'row'; d.style.margin = '6px 0';
+      const s = document.createElement('span'); s.textContent = c.name + ' (' + c.id.slice(0, 14) + ')'; const b = document.createElement('button'); b.className = 'sec'; b.textContent = 'Odwołaj';
+      b.style.flex = '0 0 auto'; b.onclick = async () => { await api('DELETE', '/api/v1/clients/' + encodeURIComponent(c.id)); loadClients(); };
+      d.append(s, b); box.appendChild(d); });
+    if (!j.clients.length) box.textContent = 'brak';
+  } catch (e) { $('clients').textContent = 'Wymaga parowania (hasło urządzenia).'; }
+}
+$('static').onchange = () => { $('staticbox').style.display = $('static').checked ? 'block' : 'none'; };
+$('logrefresh').onclick = loadLog;
+$('logcopy').onclick = async () => { try { await navigator.clipboard.writeText($('log').textContent); msg('Skopiowano dziennik do schowka.', 'ok'); } catch (e) { msg('Nie można skopiować – użyj „Pobierz dziennik”.', 'err'); } };
+$('logclear').onclick = async () => { try { await api('DELETE', '/api/v1/log'); loadLog(); } catch (e) { msg('Błąd: ' + e.message, 'err'); } };
+$('cfgsave').onclick = async () => {
+  try { await api('POST', '/api/v1/config', { mirror: !$('c_write').checked, write_enabled: true, two_circuits: $('c_two').checked, external_antenna: $('c_ant').checked, web_open: $('c_web').checked, demo: $('c_demo').checked });
+    await api('POST', '/api/v1/restart', {}); msg('Zapisano. Urządzenie uruchamia się ponownie…', 'ok'); setTimeout(() => location.reload(), 9000); } catch (e) { msg('Błąd: ' + e.message, 'err'); }
+};
+$('scan').onclick = async () => {
+  try { const j = await api('GET', '/api/v1/wifi/scan'); const box = $('nets'); box.innerHTML = '';
+    j.networks.sort((a, b) => b.rssi - a.rssi).forEach(n => { const d = document.createElement('div'); d.className = 'net'; d.innerHTML = '<span></span><small></small>';
+      d.firstChild.textContent = n.ssid; d.lastChild.textContent = n.rssi + ' dBm'; d.onclick = () => { $('ssid').value = n.ssid; }; box.appendChild(d); });
+  } catch (e) { msg('Błąd skanowania: ' + e.message, 'err'); }
+};
+$('wifisave').onclick = async () => {
+  const b = { ssid: $('ssid').value.trim(), wifi_password: $('wpw').value, dhcp: !$('static').checked };
+  if ($('static').checked) Object.assign(b, { ip: $('ip').value, mask: $('mask').value, gateway: $('gw').value, dns: $('dns').value });
+  if (!b.ssid) return msg('Podaj SSID.', 'err');
+  const btn = $('wifisave'); btn.disabled = true;
+  const target = b.dhcp ? '' : 'http://' + b.ip + '/';
+  try { await api('POST', '/api/v1/wifi', b); }
+  catch (e) {
+    // połączenie z urządzeniem mogło zostać zerwane przy przełączaniu sieci – to normalne, sprawdzamy wynik niżej
+    if (!/Failed to fetch|NetworkError|Load failed/i.test(e.message)) { btn.disabled = false; return msg('Błąd: ' + e.message, 'err'); }
+  }
+  msg('Wysłano dane sieci „' + b.ssid + '”. Urządzenie łączy się z nową siecią (do ok. 40 s)…', 'info');
+  let lastErr = 0;
+  for (let i = 0; i < 30; i++) {
+    await new Promise(r => setTimeout(r, 1500));
+    try {
+      const s = await (await fetch('/api/v1/wifi/status', { cache: 'no-store' })).json();
+      if (s.trial === 'ok') {
+        btn.disabled = false;
+        msg('Połączono z siecią „' + s.ssid + '”. Adres urządzenia: ' + s.ip + (s.ip && location.hostname !== s.ip ? ' – otwórz http://' + s.ip + '/ (zmienił się).' : '.'), 'ok');
+        return;
+      }
+      if (s.trial === 'failed') { btn.disabled = false; return msg('Nie udało się połączyć z „' + b.ssid + '” (złe hasło lub brak zasięgu). Urządzenie zostało przy poprzedniej sieci.', 'err'); }
+    } catch (e) { lastErr++; }
+  }
+  btn.disabled = false;
+  msg(lastErr > 20
+    ? 'Brak odpowiedzi – urządzenie najpewniej zmieniło adres (inna sieć). ' + (target ? 'Spróbuj: ' + target : 'Sprawdź nowy adres w routerze lub w Home Assistant.') + ' Jeśli się nie pojawi, po ok. 30 s włączy własną sieć TeklaPelletCAN-XXXX.'
+    : 'Nie potwierdzono wyniku. Odśwież stronę i sprawdź sekcję „Urządzenie” (Wi-Fi).', 'info');
+};
+$('otasigf').onchange = async e => { const f = e.target.files[0]; if (f) $('otasig').value = (await f.text()).trim(); };
+
+// ---- grafika kotła: miniatury, zapis bez restartu ----
+function buildBoilers(cur) {
+  const box = $('boilers'); box.innerHTML = '';
+  for (const n of [11, 12, 13, 14]) {
+    const d = document.createElement('div'); d.className = 'net'; d.style.cssText = 'flex:1 1 0;flex-direction:column;align-items:center;padding:8px 4px;gap:4px;' + (n === cur ? 'border-color:var(--acc)' : '');
+    d.innerHTML = '<div style="height:84px;display:flex;align-items:flex-end;justify-content:center;background:#3a4577;border-radius:6px;width:100%"><img style="max-width:90%;max-height:80px;image-rendering:auto" alt=""></div><small></small>';
+    d.querySelector('img').src = '/img/panel/0' + n + '.png'; d.querySelector('small').textContent = 'Typ ' + n;
+    d.onclick = async () => { try { await api('POST', '/api/v1/config', { boiler_image: n }); buildBoilers(n); msg('Zapisano grafikę kotła: typ ' + n + '.', 'ok'); } catch (e) { msg('Błąd: ' + e.message, 'err'); } };
+    box.appendChild(d);
+  }
+}
+
+// ---- aktualizacje: sprawdzanie, pobieranie i wgrywanie jednym kliknięciem ----
+let U = null, found = null, installedFw = '';
+const lsGet = k => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+function upmsg(t, c) { const m = $('upmsg'); m.className = 'msg ' + c; m.textContent = t; }
+async function doCheck(silent) {
+  U = U || await import('./update.js');
+  lsSet('tpc_channel', $('upchan').value);
+  if ($('manifest').value.trim()) lsSet('tpc_manifest_url', $('manifest').value.trim());
+  if (!silent) upmsg('Sprawdzam…', 'info');
+  try {
+    found = await U.checkUpdate(installedFw, $('upchan').value, $('manifest').value.trim() || U.manifestUrl());
+    const e = found.entry;
+    const when = e.date ? ' · ' + e.date : '';
+    const notes = e.notes ? '\nZmiany: ' + e.notes : '';
+    if (found.newer) { upmsg('Dostępna nowa wersja ' + e.full + ' (zainstalowana: ' + (installedFw || '?') + ')' + when + notes, 'ok'); $('upgo').textContent = 'Pobierz i zainstaluj ' + e.full; }
+    else { upmsg('Masz najnowszą wersję (' + (installedFw || e.full) + ').' + when, 'info'); $('upgo').textContent = 'Zainstaluj ponownie ' + e.full; }
+    $('upgo').style.display = 'inline-block';
+    $('upmsg').style.whiteSpace = 'pre-line';
+  } catch (e) {
+    found = null; $('upgo').style.display = 'none';
+    if (!silent) upmsg('Nie można sprawdzić aktualizacji: ' + e.message + '. Jeśli ta przeglądarka nie ma internetu, wgraj plik ręcznie (poniżej).', 'err');
+  }
+}
+async function afterUpload(r) {
+  if (r.status === 200) { upmsg('Wgrano i zweryfikowano podpis. Urządzenie uruchamia się ponownie…', 'ok'); setTimeout(() => location.reload(), 15000); }
+  else if (r.status === 401) { try { await pair(); upmsg('Sparowano – kliknij ponownie.', 'info'); } catch (e) { upmsg(e.message, 'err'); } }
+  else upmsg('Aktualizacja odrzucona: ' + (r.body.error || r.status) + (r.body.error === 'bad_signature' ? ' (zły podpis – plik nie pochodzi od wydawcy)' : r.body.error === 'bad_image' ? ' (to nie jest pakiet z podpisem od wydawcy ani poprawny obraz dla ESP32-C6)' : ''), 'err');
+}
+$('upchan').onchange = () => doCheck(false);
+$('upcheck').onclick = () => doCheck(false);
+$('upgo').onclick = async () => {
+  if (!found) return;
+  const btn = $('upgo'); btn.disabled = true;
+  try {
+    upmsg('Pobieram ' + found.entry.full + '…', 'info');
+    const prog = $('otaprog'); prog.style.display = 'block'; prog.value = 0;
+    const { blob, sig } = await U.downloadFirmware(found.entry, found.base, f => { prog.value = f * 50; });
+    upmsg('Wgrywam do urządzenia (' + Math.round(blob.size / 1024) + ' KB)…', 'info');
+    await afterUpload(await U.uploadFirmware(blob, sig, lsGet('tpc_token'), f => { prog.value = 50 + f * 50; }));
+  } catch (e) { upmsg('Błąd: ' + e.message, 'err'); }
+  btn.disabled = false;
+};
+$('otago').onclick = async () => {
+  const f = $('otabin').files[0], sig = $('otasig').value.trim();
+  if (!f) return upmsg('Wybierz plik firmware (.bin).', 'err');
+  if (sig && !/^[0-9a-fA-F]{128}$/.test(sig)) return upmsg('Podpis musi mieć 128 znaków hex (plik .sig) albo zostaw puste, gdy podpis jest w pliku.', 'err');
+  U = U || await import('./update.js');
+  $('otaprog').style.display = 'block';
+  try { await afterUpload(await U.uploadFirmware(f, sig, lsGet('tpc_token'), p => { $('otaprog').value = p * 100; })); } catch (e) { upmsg(e.message, 'err'); }
+};
+$('rollback').onclick = async () => {
+  if (!confirm('Uruchomić ponownie z poprzedniego firmware (zapisanego w drugiej partycji)? Ta wersja przestanie działać do ponownego wgrania.')) return;
+  try { await api('POST', '/api/v1/ota/rollback', {}); await api('POST', '/api/v1/restart', {}); msg('Przełączono na poprzedni firmware. Urządzenie uruchamia się ponownie…', 'ok'); }
+  catch (e) { msg(e.message === 'no_valid_image' ? 'Brak poprzedniego firmware w drugiej partycji.' : 'Błąd: ' + e.message, 'err'); }
+};
+$('pwsave').onclick = async () => {
+  const a = $('np1').value, b = $('np2').value;
+  if (a.length < 4) return msg('Hasło musi mieć co najmniej 4 znaki.', 'err');
+  if (a !== b) return msg('Hasła się różnią – wpisz to samo w obu polach.', 'err');
+  try { await api('POST', '/api/v1/password', { password: a, confirm: b }); $('np1').value = ''; $('np2').value = ''; msg('Hasło zmienione.', 'ok'); }
+  catch (e) { msg('Błąd: ' + e.message, 'err'); }
+};
+$('restart').onclick = async () => { try { await api('POST', '/api/v1/restart', {}); msg('Restart…', 'ok'); setTimeout(() => location.reload(), 9000); } catch (e) { msg('Błąd: ' + e.message, 'err'); } };
+$('reset').onclick = async () => { if (!confirm('Skasować hasło, sieć Wi-Fi i wszystkie ustawienia?')) return; try { await api('POST', '/api/v1/factory_reset', { confirm: true }); msg('Przywrócono ustawienia fabryczne. Urządzenie uruchomi punkt dostępu TeklaPelletCAN-XXXX.', 'ok'); } catch (e) { msg('Błąd: ' + e.message, 'err'); } };
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+# =====================================================================
+# Tekla / Estyma Igneo Touch -> Home Assistant: PLIK UZYTKOWNIKA (ustawienia).
+# Wlasciwy kod (logika, encje, CAN, uslugi) pobiera sie sam z GitHuba przy kazdej kompilacji (packages na dole).
+# Ten plik zmieniasz tylko dla swoich ustawien - rdzenia nie edytujesz nigdy.
+# Aktualizacja: w ESPHome kliknij "Install" - pobierze najnowsza wersje rdzenia.
+# Hasla i klucz biora sie z secrets.yaml (wzor: secrets.example.yaml).
+# Historia zmian: CHANGELOG-firmware.md w repo.
+# =====================================================================
+substitutions:
+  # ===================================================================
+  # 1. WI-FI I ADRES IP
+  # ===================================================================
+  wifi_ssid: !secret wifi_ssid_iot
+  wifi_password: !secret wifi_pass
+  ap_pass: "11223344"        # haslo awaryjnej sieci "Tekla-Estyma Fallback" - jawne tutaj; WPA2 wymaga min. 8 znakow
+  # Staly adres IP: wpisz swoje wartosci ponizej; blok "wifi: manual_ip" na dole pliku je uzywa.
+  # DHCP: usun albo zakomentuj ten blok "wifi:" (cztery linie na dole pliku).
+  device_ip: 192.168.10.250
+  device_gateway: 192.168.10.1
+  device_subnet: 255.255.254.0
+
+  # ===================================================================
+  # 2. KLUCZ API I HASLO OTA
+  # ===================================================================
+  api_key: !secret esp_api_key_tekla_CAN
+  ota_password: !secret ota_pass
+
+  # ===================================================================
+  # 3. UKLAD CO
+  # ===================================================================
+  # true = CO1 i CO2 (nazwy "CO1 ...", "CO2 ..."); false = jeden obieg "CO ...". Bez cudzyslowow.
+  dwa_obiegi_co: false
+
+  # ===================================================================
+  # 4. NAZWA URZADZENIA
+  # ===================================================================
+  name: tekla-estyma
+  friendly_name: "Tekla"
+
+  # ===================================================================
+  # 5. UKLAD CAN (zmieniaj tylko przy problemach z lacznoscia)
+  # ===================================================================
+  # Predkosc magistrali i kwarc na plytce (nadruk na srebrnym elemencie: 16.000 = 16MHZ, 8.000 = 8MHZ).
+  # Jesli CAN dalej FAILED przy wlaczonym kotle, sprobuj kolejno 250KBPS, 500KBPS, 100KBPS, 50KBPS.
+  can_bitrate: 125KBPS
+  can_clock: 16MHZ
+  # Antena zewnetrzna U.FL na XIAO ESP32-C6: "true" dopiero PO podpieciu anteny (bez niej Wi-Fi zniknie).
+  external_antenna: "false"
+
+  # Piny SPI i modul CAN (domyslnie: XIAO ESP32-C6 + Seeed CAN Bus Breakout z MCP2515). Inny ESP/modul: wpisz swoje piny.
+  # Inny ESP lub inny modul CAN (MCP2515): zmien te wartosci w PelletCAN.yaml (nie edytuj rdzenia).
+  # Zapis jak w ESPHome: GPIO17, albo nazwa pinu plytki (np. D7) - wg dokumentacji Twojej plytki.
+  # Pamietaj tez o sekcji "esp32: board:" w PelletCAN.yaml (inna plytka = inny board).
+  pin_spi_clk: GPIO19     # SCK  (XIAO ESP32-C6: D8)
+  pin_spi_mosi: GPIO18    # MOSI (XIAO ESP32-C6: D10)
+  pin_spi_miso: GPIO20    # MISO (XIAO ESP32-C6: D9)
+  pin_can_cs: GPIO17      # CS   (XIAO ESP32-C6: D7) - wejscie CS modulu MCP2515
+  can_spi_rate: 1MHz      # predkosc SPI do MCP2515; przy zaklocieniach na dluzszych kabelkach sprobuj 500kHz lub 250kHz
+  # Przelacznik antenowy - tylko XIAO ESP32-C6 (uzywany gdy external_antenna: "true"); na innych plytkach zostaw bez zmian.
+  pin_rf_switch: GPIO3    # niski = antena wewnetrzna aktywna
+  pin_rf_antenna: GPIO14  # wysoki = antena zewnetrzna U.FL
+  # Wejscie INT modulu MCP2515 nie jest uzywane (odbior przez odpytywanie SPI), nie trzeba go podlaczac.
+
+  # ===================================================================
+  # 6. POZIOMY DOSTEPU (PIN)
+  # ===================================================================
+  # PIN-y instalatora = domyslne PIN-y z softu panelu Igneo Touch.
+  pin_installer1: "0900"   # klucz 1
+  pin_installer2: "0999"   # klucz 2 (wymagany do Testu wyjsc)
+  pin_autolock_min: "5"    # blokada poziomu po tylu minutach bezczynnosci (0 = bez blokady)
+
+  # ===================================================================
+  # 7. ZAPIS DO KOTLA ("true" = wolno zapisywac, "false" = tylko odczyt)
+  # ===================================================================
+  # TRYB MIRROR: "true" = karta to tylko lustro Igneo Touch (bez edycji); z zapisow dziala TYLKO wlacz/wylacz kociol i potwierdzenie alarmu.
+  #              "false" = pelne sterowanie z karty, zgodnie z flagami ponizej.
+  mirror: "false"
+  write_enabled: "true"      # ogolna akcja sdo_write (reczne testy z Narzedzi deweloperskich)
+  power_write: "true"        # wlacz/wylacz kociol
+  mode_write: "true"         # tryb CO/CWU (Off/Eko/Harmonogram/Komfort)
+  schedule_write: "true"     # zapis harmonogramow z karty
+  setpoint_write: "true"     # temperatury zadane CO/CWU, tryb zadawania i reczna zadana kotla
+  feeder_write: "true"       # podajnik (Automat/Wylaczony/Wlaczony)
+  blower_write: "true"       # dmuchawa (Automat/Wylaczona/Wlaczona)
+  alarm_confirm: "true"      # przycisk "Potwierdz alarm"
+  # Test wyjsc z karty (poziom 2): "false" = ekran tylko do podgladu. Wlaczone wyjscie samo wraca na Automat po test_revert_s sekundach (0 = nie wraca).
+  output_test_write: "true"
+  test_revert_s: "120"
+  # Po wlaczeniu dmuchawy / podajnika przyciskiem "ON" wracaja same do Automatu po tylu sekundach (0 = nie wracaja).
+  blower_on_seconds: "20"
+  feeder_on_seconds: "30"
+
+  # ===================================================================
+  # 8. OBLICZENIA I SKALOWANIE
+  # ===================================================================
+  temp_div: "10"           # skalowanie temperatur (raw / temp_div)
+  burner_eff_kw: "0.90"    # sprawnosc kotla do mocy [kW] (potwierdzone z panelem)
+  burner_eff_fuel: "0.85"  # empiryczny wspolczynnik do spalania [kg/h] (dopasowanie do panelu)
+
+  # ===================================================================
+  # 9. DIAGNOSTYKA
+  # ===================================================================
+  can_debug: "false"         # loguje WSZYSTKIE ramki CAN (tylko do diagnozy)
+  sniff: "false"             # podsluch SDO innych wezlow (szukanie rejestrow); "true" = log zapisow panelu
+  diag_log: "false"          # dodatkowe wpisy diagnostyczne (NMT, IDENT, PDO, SKAN SIECI); "false" = czysty log
+  can_auto_restart: "false"  # automatyczny restart, gdy CAN nie wystartuje
+  can_node_id: "90"          # numer wezla CAN ESP (dziesietnie; 86 i 87 sa zajete przez urzadzenia kotla)
+  can_identity: "true"       # odpowiedzi SDO 0x1000/0x1008/0x100A/0x1018 (nazwa PelletCAN + wersja softu w zakladce Siec panelu)
+  can_heartbeat: "true"      # boot-up + heartbeat NMT wezla (panel dzieki temu widzi urzadzenie na liscie Siec)
+  can_product: "1"          # kod produktu (dziesietnie), wg ktorego panel dobiera nazwe w zakladce Siec; CAN IO BIG = 65538
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+
+esp32:
+  board: seeed_xiao_esp32c6
+  framework:
+    type: esp-idf
+
+logger:
+  level: DEBUG
+  logs:
+    canbus: INFO  # wycisza "received can message" (sam ID, bez danych, zalewa log)
+
+web_server:
+
+captive_portal:
+
+api:
+  reboot_timeout: 0s
+  encryption:
+    key: ${api_key}
+  # Uslugi (akcje) dla Home Assistant sa w rdzeniu i dolaczaja sie automatycznie.
+
+packages:
+  # Rdzen firmware z GitHuba (odswiezany co godzine przy kompilacji).
+  tekla:
+    url: https://github.com/GieOeRZet/PelletCAN
+    ref: main
+    files: [esphome/PelletCAN_packages.yaml]
+    refresh: 0s   # zawsze swiezy rdzen z GitHuba przy kazdej kompilacji (bez cache)
+
+wifi:
+  # Staly adres IP z substitutions device_ip / device_gateway / device_subnet.
+  # Chcesz DHCP? Usun albo zakomentuj caly ten blok "wifi:".
+  manual_ip:
+    static_ip: ${device_ip}
+    gateway: ${device_gateway}
+    subnet: ${device_subnet}

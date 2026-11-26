@@ -2,14 +2,15 @@
 
 Nowy, **niezależny** projekt: dodatkowy sterownik/moduł **ESP32-C6 (Seeed XIAO) + MCP2515** podłączony do magistrali CAN kotła na pellet z panelem Estyma igneoTouch (firmware sterownika FW2213TK), z pełnym odczytem i (opcjonalnie) zapisem, oraz klienci: strona WWW, karta i integracja Home Assistant, aplikacja Android (natywna, Kotlin/Compose).
 
-Dane o urządzeniu (menu, PID-y, kodowanie zapisu, alarmy, moduły) pochodzą z odtworzenia panelu w emulatorze (projekt `GieOeRZet/TeklaPelletCAN`, katalog `NewEstyma/` i `analiza_archiwum/`). Tu zostaje gotowy model: `data/device_model.json`.
+Repozytorium jest **samodzielnym monorepo**: zawiera zarówno produkt (ESP, WWW, Android), jak i całą analizę panelu (emulacja, dekompilacja, narzędzia, dowody) w `analiza/`. Dane o urządzeniu (menu, PID-y, kodowanie zapisu, alarmy, moduły) pochodzą z odtworzenia panelu w emulatorze; gotowy model produktowy to `data/device_model.json`.
 
 ## Struktura
 | Katalog | Zawartość |
 |---|---|
 | `docs/` | specyfikacje (API v2, pamięć/OTA, bezpieczeństwo, interfejs), decyzje |
 | `data/` | `device_model.json` (źródło prawdy dla ESP i klientów), `menu_rows.json` |
-| `zrodla/` | zamrożone dowody z analizy panelu: modele ekranów, pełne bitmapy, atlas, dokumenty, narzędzia pochodzenia |
+| `analiza/` | **kompletne środowisko analizy**: plik firmware sterownika, wynik dekompilacji (Ghidra), ~230 narzędzi (emulacja Cortex‑M, skany, budowa modelu), dowody i raporty, bitmapy i atlas panelu, dokumentacja procesu. Opis: `analiza/README.md` |
+| `archiwum_v1/` | historyczne: stary produkt v1 (firmware, WWW, Android, integracja HA) i dane sprzętowe PelletCAN (ESPHome); tylko do odczytu |
 | `esp/` | firmware ESP32-C6 (ESP-IDF; rdzeń testowalny na hoście) |
 | `ui/` | wspólny opis ekranów (JSON) + renderer JS (WWW i karta HA) |
 | `ha/` | integracja HA + karta Lovelace |

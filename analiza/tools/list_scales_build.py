@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+"""PASS 70: sklada wyniki list_scale.py (n_<node>.json) w ui_model/list_scales.json. Uzycie: list_scales_build.py WYNIKI_DIR"""
+import sys as _s,pathlib as _p; _s.path.insert(0,str(_p.Path(__file__).resolve().parent)); import paths as _paths
+import json, collections, sys, os
+SRC = sys.argv[1]
+INV = {n['node']: {w['this']: w for w in n['widgets']} for n in json.load(open(_paths.DATA/'widgets_inv_pass65_L3.json'))}
+for _n in json.load(open(_paths.DATA/'widgets_inv_pass70_cascade_fuelstore_L3.json')): INV[_n['node']] = {w['this']: w for w in _n['widgets']}
+M = {'0_settings': '0x00', '1_settings': '0x0A', '2_settings': '0x01', '3_settings': '0x02', '4_settings': '0x03', '5_settings': '0x04', '6_settings': '0x05', '7_settings': '0x06', '8_settings': '0x07', '9_settings': '0x08', '10_settings': '0x09', '11_screen': '0x10', '16_screen': '0x11'}
+out = dict(evidence='MEASURED (PASS 70, tools/list_scale.py, emulator, poziom 3, CO2-4: PID bazowy + (k-1)): dla kazdego wiersza wstrzykniete surowe wartosci PID (min, min+1, srodek, domyslna, max), odczytany tekst wyswietlany w widgecie wartosci (jedyny widget, ktorego tekst sie zmienil)', lists={})
+stat = collections.Counter()
+def ctrl(c):
+    ch = c['changed']; return dict(pid=c['pid'], values=c['values'], stored=c['stored'], slot=(ch[0]['slot'] if ch else None), widgets=[dict(role=x['role'], ax=x['ax'], ay=x['ay'], w=x['w'], h=x['h'], per_value=x['per_value']) for x in ch])
+for node, key in M.items():
+    p = os.path.join(SRC, 'n_%s.json' % node)
+    if not os.path.exists(p): continue
+    d = json.load(open(p)); rows = []; W = INV[node]
+    sp = os.path.join(SRC, 's_%s.json' % node); SW = json.load(open(sp)) if os.path.exists(sp) else {}
+    for k, e in sorted(d.items(), key=lambda x: int(x[0])):
+        slot = (W[e['value_widget']]['ay'] - 59) // 50 if e.get('value_widget') in W else None
+        r = dict(idx=int(k), name_en=e['name_en'], pid=e['pid'], kind=e['kind'], raw_min=e['raw_min'], raw_max=e['raw_max']); s = e.get('samples', [])
+        if slot is not None and slot < int(k):
+            r['slot'] = slot; r['display'] = 'zaleznosc: zmiana PID zmienia widget wartosci WCZESNIEJSZEGO wiersza (slot %d), nie wlasna wartosc wiersza' % slot; stat['zaleznosc'] += 1
+            if k in SW: r['control'] = ctrl(SW[k])
+            rows.append(r); continue
+        if slot is not None: r['slot'] = slot; r['slot_shift'] = slot - int(k)
+        if not s: r['display'] = 'nie zmierzone (wiersz bez PID lub przelacznik)'; stat['brak'] += 1
+        elif all('text' not in x for x in s): r['display'] = 'widget wartosci niejednoznaczny'; r['bound_candidates'] = e.get('bound_candidates'); stat['niejednoznaczne'] += 1
+        else:
+            tx = [(x['raw'], x['text'].strip()) for x in s]; nums = []
+            for raw, t in tx:
+                try: nums.append((raw, float(t)))
+                except Exception: nums = None; break
+            if nums:
+                ratios = {round(v / raw, 4) for raw, v in nums if raw}
+                dec = max((len(t.split('.')[1]) if '.' in t else 0) for _, t in tx)
+                r.update(display='number', scale=(sorted(ratios)[0] if len(ratios) == 1 else None), ratios=sorted(ratios), decimals=dec, leading_space=any(x['text'].startswith(' ') for x in s), samples=[dict(raw=a, text=b) for a, b in tx]); stat['liczba'] += 1
+            else: r.update(display='text', samples=[dict(raw=a, text=b) for a, b in tx]); stat['tekst'] += 1
+        if k in SW:
+            c = SW[k]; ch = c['changed']; r['control'] = ctrl(c)
+            if c['kind'] == 'enum':
+                tx = [x for x in ch if x['role'] == 'text']
+                if tx: r['enum_widget_tid_UNRELIABLE'] = {v: tx[0]['per_value'][v].get('tid') for v in tx[0]['per_value']}
+        rows.append(r)
+    out['lists'][key] = dict(node=node, rows=rows)
+out['summary'] = dict(stat)
+out = {'schema_version': '1.0', **out}
+ep = os.path.join(SRC, 'e_11.json')
+if os.path.exists(ep):
+    out['enum_dialog_probe'] = dict(evidence='MEASURED czesciowo (PASS 70, tools/list_enum_dialog.py): stukniecie wiersza enum -> ID tekstow czytanych przez firmware przy rysowaniu dialogu minus linia bazowa', rows=json.load(open(ep)),
+        note='szum: w wyniku sa tez teksty przewijanej listy; opcje dialogu do wyluskania recznie (IN17: 184 = tytul "Konfiguracja IN17", opcje m.in. 480 "czujnik rezerwy paliwa", 481 "czujnik temp. spalin"). Odczyt id +0x26 widgetu wartosci wiersza jest NIEWIARYGODNY (wartosc 0 zawsze daje id 175) - nie uzywac.')
+out['open'] = ['etykiety wartosci wyliczen (enum): dialog radio da sie zmierzyc (list_enum_dialog.py), wynik czesciowy (IN17, Energy meter type); pozostale wiersze enum do uruchomienia z filtrem szumu',
+    'wiersze number 0x11 Statystyki z duzymi zakresami (u32): wyswietlana wartosc nasyca sie / formatuje inaczej - skala niejednoznaczna', 'krok i zakres w dialogu (+/-) niezmierzone dla wszystkich wierszy: tylko skala wyswietlania',
+    'przelaczniki: stan = polozenie galki (rect x 7 -> 36 dla 0 -> 1), nie bitmapa', 'kaskada 0x08 i magazyn 0x09 (wymaga 0x350C/0x3525) niezmierzone - zadanie ChatGPT etap 3 B']
+json.dump(out, open(_paths.UI_MODEL/'list_scales.json', 'w'), ensure_ascii=False, indent=1); print(dict(stat))

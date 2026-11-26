@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<style>
+  :root { color-scheme: dark; --primary-text-color:#e6e6e6; --secondary-text-color:#9aa0a6; --card-background-color:#1c1c1e; --ha-card-background:#1c1c1e; --primary-color:#03a9f4; --divider-color:#333; --error-color:#ff6b6b; }
+  html, body { margin:0; background:#111; font-family: Roboto, "Segoe UI", sans-serif; }
+  #root { max-width: 520px; margin: 0 auto; padding: 8px; }
+  #ed { max-width: 520px; margin: 8px auto; background: #1c1c1e; padding: 8px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="ed"></div>
+<div id="rootm" style="max-width:420px;margin:16px auto"></div>
+<div id="edm" style="max-width:420px;margin:8px auto;background:#1c1c1e;padding:8px"></div>
+<script type="module">
+import './../ha-icon.js';
+await import('./../teklapelletclassic-card.js');
+await customElements.whenDefined('teklapelletclassic-card');
+
+// Most testowy: te same stany co device_demo/sim_server (fetch /api/v1/states z demo_server), opakowane w
+// minimalny obiekt hass taki, jaki Home Assistant daje każdej karcie (states/devices/entities/services/callService).
+const DOMAIN = 'teklapelletcan';
+async function buildHass(base, devId, idHex, title, suffix) {
+  const j = await (await fetch(base + '/api/v1/states')).json();
+  const states = {};
+  const entities = {};
+  for (const s of j.states) {
+    const dot = s.entity_id.indexOf('.'), dom = s.entity_id.slice(0, dot), obj = s.entity_id.slice(dot + 1);
+    const eid = dom + '.' + obj + (suffix || '');
+    // atrybut tpc_id tak jak dodaje go nasza integracja HA (custom_components/teklapelletcan/entity.py)
+    const attrs = Object.assign({}, s.attributes, s.id ? { tpc_id: s.id } : {});
+    states[eid] = Object.assign({}, s, { entity_id: eid, attributes: attrs });
+    entities[eid] = { entity_id: eid, device_id: devId };
+  }
+  return { states, entities, title };
+}
+window.__buildHass = buildHass;
+const params = new URLSearchParams(location.search);
+const mode = params.get('mode') || 'one';
+const base = params.get('base') || 'http://127.0.0.1:8098';
+
+const card = document.createElement('teklapelletclassic-card');
+const editor = document.createElement('teklapelletclassic-card-editor');
+document.getElementById('root').appendChild(card);
+document.getElementById('ed').appendChild(editor);
+window.__cfgEvents = [];
+editor.addEventListener('config-changed', e => { window.__cfgEvents.push(e.detail.config); card.setConfig(e.detail.config); card.hass = window.__hass; editor.setConfig(e.detail.config); });
+
+async function setup() {
+  let devices = {}, states = {}, entities = {};
+  if (mode === 'none') {
+    devices = {}; states = {}; entities = {};
+  } else {
+    const d1 = await buildHass(base, 'dev1', 'AABBCCDDEEFF', 'Tekla', '');
+    devices.dev1 = { id: 'dev1', name: 'Tekla', identifiers: [[DOMAIN, 'AABBCCDDEEFF']] };
+    Object.assign(states, d1.states); Object.assign(entities, d1.entities);
+    if (mode === 'two') {
+      const d2 = await buildHass(base, 'dev2', '112233445566', 'Tekla 2', '_2');
+      devices.dev2 = { id: 'dev2', name: 'Tekla 2', identifiers: [[DOMAIN, '112233445566']] };
+      Object.assign(states, d2.states); Object.assign(entities, d2.entities);
+    }
+  }
+  const services = { [DOMAIN]: Object.fromEntries(['unlock', 'set_setpoint', 'set_boiler_mode', 'set_param', 'set_schedule', 'set_output', 'set_output_pct', 'test_refresh', 'test_reset', 'alarm_refresh', 'param_refresh', 'schedule_refresh'].map(a => ['tekla_' + a, {}])) };
+  const calls = window.__calls = [];
+  // Wywolania przekazywane na prawdziwy silnik demo_server (/__demo -> /api/v1/call), dokladnie jak robi to
+  // nasza integracja HA (client.call) – wiec karta modern/teklapelletcan jest testowana na realnym silniku.
+  const forward = (domain, service, data) => {
+    const x = new XMLHttpRequest(); x.open('POST', base + '/api/v1/call', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({ domain, service, data: data || {} }));
+    return JSON.parse(x.responseText || '{}');
+  };
+  const hass = {
+    states, devices, entities, services, language: 'pl', locale: { language: 'pl' },
+    callService(domain, service, data) {
+      calls.push([domain, service, data]);
+      const r = forward(domain, service, data);
+      if (r && r.ok === false) return Promise.reject(new Error(r.result || r.error || 'blad'));
+      return Promise.resolve();
+    },
+    callWS() { return Promise.resolve({}); },
+  };
+  window.__hass = hass;
+  card.setConfig(Object.assign({ type: 'custom:teklapelletclassic-card' }, params.get('cfg') ? JSON.parse(params.get('cfg')) : {}));
+  card.hass = hass;
+  editor.setConfig(card._tcfg || {});
+  editor.hass = hass;
+  // Symuluje normalne odswiezanie z HA (coordinator co ~2 s): NOWY obiekt hass (inna referencja, ta sama trasc)
+  // przypisywany do .hass. Karta nie moze przy tym gubic biezacego ekranu (regresja: setConfig wywolywany co tyk).
+  window.__pushHassTick = () => { card.hass = Object.assign({}, window.__hass, { states: Object.assign({}, window.__hass.states), entities: Object.assign({}, window.__hass.entities), devices: Object.assign({}, window.__hass.devices) }); };
+  window.__cardScreen = () => card._scr;
+  // Pelne odswiezenie stanow z demo_server (jak coordinator po wywolaniu uslugi) – dla testow zapisu.
+  window.__refreshFromDevice = async () => {
+    const d1 = await buildHass(base, 'dev1', 'AABBCCDDEEFF', 'Tekla', '');
+    Object.assign(window.__hass.states, d1.states);
+    if (mode === 'two') { const d2 = await buildHass(base, 'dev2', '112233445566', 'Tekla 2', '_2'); Object.assign(window.__hass.states, d2.states); }
+    window.__pushHassTick();
+  };
+  window.__ready = true;
+}
+setup();
+
+// ---- karta modern: osobny kontener, uzywa tego samego window.__hass (budowanego powyzej) ----
+customElements.whenDefined('teklapelletclassic-card').then(async () => {
+  await import('./../teklapelletmodern-card.js');
+  await customElements.whenDefined('teklapelletmodern-card');
+  const mc = document.createElement('teklapelletmodern-card');
+  const me = document.createElement('teklapelletmodern-card-editor');
+  document.getElementById('rootm').appendChild(mc);
+  document.getElementById('edm').appendChild(me);
+  window.__cfgEventsM = [];
+  me.addEventListener('config-changed', e => { window.__cfgEventsM.push(e.detail.config); mc.setConfig(e.detail.config); mc.hass = window.__hass; me.setConfig(e.detail.config); });
+  window.__modernReady = async () => {
+    for (let i = 0; i < 100 && !window.__ready; i++) await new Promise(r => setTimeout(r, 50));
+    mc.setConfig(Object.assign({ type: 'custom:teklapelletmodern-card' }, params.get('mcfg') ? JSON.parse(params.get('mcfg')) : {}));
+    mc.hass = window.__hass;
+    me.setConfig(mc._cfg || {});
+    me.hass = window.__hass;
+    window.__mcard = mc;
+  };
+});
+</script>
+</body>
+</html>

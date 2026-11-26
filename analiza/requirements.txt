@@ -1,0 +1,6 @@
+# Narzedzia analizy (emulacja Cortex-M, dekompilacja, obrazy). Wersje, na ktorych dzialaly (Python 3.13):
+unicorn==2.1.4
+capstone==5.0.9
+numpy>=2.0
+Pillow>=11
+cryptography>=44

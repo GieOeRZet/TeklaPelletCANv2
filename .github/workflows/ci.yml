@@ -2,7 +2,7 @@ name: CI
 # Oszczednie: tylko zmiany w kodzie/modelu (paths) albo reczny start. Kompilacja ESP-IDF jak w starym projekcie (kontener espressif/idf).
 on:
   push:
-    paths: ["esp/**", "ui/**", "tools/**", "data/**", "android/**", ".github/workflows/ci.yml"]
+    paths: ["esp/**", "ui/**", "tools/**", "data/**", "android/**", "analiza/analiza_archiwum/FW2213TK-2026-11-22/data/ui_model/device_model.json", ".github/workflows/ci.yml"]
   workflow_dispatch:
 concurrency:
   group: ci-${{ github.ref }}
@@ -12,6 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Model produktowy zgodny ze zrodlem w analiza/
+        run: |
+          cmp data/device_model.json analiza/analiza_archiwum/FW2213TK-2026-11-22/data/ui_model/device_model.json
+          pip install pillow >/dev/null 2>&1; python3 analiza/tools/validate_ui_model.py
       - name: Tabele wygenerowane sa aktualne
         run: |
           python3 tools/gen_esp_tables.py

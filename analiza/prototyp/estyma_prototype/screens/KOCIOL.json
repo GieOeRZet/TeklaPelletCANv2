@@ -1,0 +1,67 @@
+{
+ "name": "KOCIOL",
+ "size": [
+  480,
+  272
+ ],
+ "dynamic": [
+  {
+   "widget": "0x200169b4",
+   "rect": [
+    180,
+    65,
+    157,
+    104
+   ],
+   "font": 5,
+   "align": 1,
+   "color": "#ffffff",
+   "template": "0.0",
+   "sample": "0.0",
+   "bind": [
+    {
+     "pid": "0x2001",
+     "id": "boiler_temp",
+     "scale": 0.099819,
+     "evidence": "FACT-DYNAMIC (wstrzykniecie w emulatorze)"
+    }
+   ]
+  },
+  {
+   "widget": "0x200169ec",
+   "rect": [
+    358,
+    53,
+    36,
+    44
+   ],
+   "font": 3,
+   "align": 1,
+   "color": "#ffffff",
+   "template": "7",
+   "sample": "7",
+   "bind": [
+    {
+     "pid": "0x2002",
+     "id": "boiler_mode",
+     "scale": 21.666667,
+     "evidence": "FACT-DYNAMIC (wstrzykniecie w emulatorze)"
+    },
+    {
+     "pid": "0x2064",
+     "id": "co_mode",
+     "scale": 20.0,
+     "evidence": "FACT-DYNAMIC (wstrzykniecie w emulatorze)"
+    },
+    {
+     "pid": "0x2065",
+     "id": "co2_mode",
+     "scale": 20.0,
+     "evidence": "FACT-DYNAMIC (wstrzykniecie w emulatorze)"
+    }
+   ]
+  }
+ ],
+ "source": "emulator render z danych (STRONG); bindingi PID: data_binding.py gdzie dostepne",
+ "bindings_source": "tools/bind_screen.py"
+}

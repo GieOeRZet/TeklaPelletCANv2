@@ -1,0 +1,102 @@
+#!/usr/bin/env python3
+"""E3: automat pokrycia. Dla pary (poziom PIN, konfiguracja) buduje punkt kontrolny (ui_prepare_cfg), potem dla kazdego widocznego wiersza MENU
+wchodzi w ekran i (stukniecie 400,245) w nastawy, wyciaga tablice widgetow (ctor_trace) + extras, renderuje z danych i porownuje ze zrzutem emulatora.
+Uzycie: ESTYMA_IDLE_FAST=1 python3 -I tools/coverage_gen.py LEVEL CONFIG OUTROOT      (CONFIG jak w menu_tree.visible_in: DEFAULT|FULL|2105=N|0x2106=0|350C=1|3525=1|350C=1,3525=1)
+Wynik: OUTROOT/L<level>_<slug>/result.json (+ PNG ref/render dla komorek > 8%). Mapowanie konfiguracji -> PID: INFERENCE, weryfikowane liczba wierszy MENU vs visible_in (pole rows_match)."""
+import json, os, pickle, re, subprocess, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import paths
+import ui_session as U, ctor_trace as C, ui_extras as X, ui_render as R
+from PIL import Image
+import numpy as np
+level, config, outroot = int(sys.argv[1]), sys.argv[2], sys.argv[3]
+BASE = {0x2105: 4, 0x2106: 1, 0x2107: 1, 0x2108: 1}
+def cfg_pids(c):
+    p = dict(BASE)
+    if c == "DEFAULT": p.update({0x2105: 1, 0x2106: 0, 0x2107: 0, 0x2108: 0})
+    elif c == "FULL": pass
+    else:
+        for part in c.split(","):
+            k, v = part.split("="); k = int(k, 16); v = int(v)
+            p[k] = v
+            if k == 0x350C: p[0x351A] = 2
+    return p
+if False: pass
+pids = cfg_pids(config); slug = re.sub(r"[^0-9A-Za-z]+", "_", config).strip("_")
+out = os.path.join(outroot, "L%d_%s%s" % (level, slug, "_live" if os.environ.get("COV_LIVE") else "")); os.makedirs(out, exist_ok=True)
+fw = str(paths.FIRMWARE)
+_m = json.load(open(paths.UI_MODEL / "menu_tree.json"))
+if not any("%s|L%d" % (config, level) in r["visible_in"] for r in _m["menu_rows"]): print("BRAK wierszy w komorce", level, config); sys.exit(0)
+if not os.path.exists(os.path.join(out, "rows.pkl")):
+    subprocess.run([sys.executable, "-I", os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui_prepare_cfg.py"), fw, out, str(level)] + ["0x%X=%d" % kv for kv in pids.items()], check=True, stdout=subprocess.DEVNULL)
+menu = json.load(open(paths.UI_MODEL / "menu_tree.json")); nodes = {n["id"]: n for n in menu["nodes"]}
+exp = sorted([r for r in menu["menu_rows"] if "%s|L%d" % (config, level) in r["visible_in"]], key=lambda r: r["row"])
+rows = pickle.load(open(os.path.join(out, "rows.pkl"), "rb"))
+n_true = len(exp)      # rows_actual: ListNav.build bywa niepelny (zszywanie urywa sie przy 13 wierszach) - ogon menu obslugiwany przewinieciem do konca
+res = dict(level=level, config=config, pids={hex(k): v for k, v in pids.items()}, rows_actual=len(rows), rows_stitched=len(rows), rows_expected=len(exp), rows_match=len(rows) == len(exp), cells=[])
+def metrics(ws, ex, ref):
+    a = R.render(ws, ex); dd = np.abs(np.asarray(a).astype(int) - np.asarray(ref.convert("RGB")).astype(int)).sum(axis=2)
+    return a, round(float(dd.mean() / 3), 2), round(float((dd > 40).mean() * 100), 1)
+def tap_incremental(s, nav, i, dy=0):
+    """stuknij wiersz i menu (cy = 29 + 50 i) przewijajac po 60 px i sumujac przesuniecia miedzy kolejnymi zrzutami (bez zszytego obrazu - ten bywa niepelny)"""
+    cy = 29 + 50 * i + dy; off = 0; prev = s.shot()
+    for _ in range(40):
+        y = nav.BODY0 + cy - off
+        if 70 <= y <= 250: s.tap(240, y, settle=800); return True
+        if not s.drag_until_change(240, 235, 240, 175, attempts=4, ticks=240, pause_end=160): return False
+        cur = s.shot(); err, d = nav._shift(prev, cur)
+        if d == 0: return False
+        off += d; prev = cur
+    return False
+for i, er in enumerate(exp):
+    tgt = er.get("target")
+    if not tgt or nodes.get(tgt, {}).get("kind") != "screen" or tgt == "PROGRAM": continue
+    s = U.UiSession.from_checkpoint(fw, os.path.join(out, "menu.state"), None); s.wait(120)
+    nav = U.ListNav(s); nav.tall = Image.open(os.path.join(out, "menu_tall.png")); nav.rows = rows; t = C.Tracer(s); t.log.clear()
+    ok = nav.tap_row_from_top(i) if i < len(rows) else False      # najpierw zszyty obraz (szybko), jesli widok sie nie zmienil - przewijanie przyrostowe
+    if ok:
+        s.wait(300)
+        if hex(s.b.rd(s.b.rd(0x20024818))) == "0x808f66c":       # nadal MENU: stukniecie nie weszlo
+            ok = False
+    if not ok:
+        s = U.UiSession.from_checkpoint(fw, os.path.join(out, "menu.state"), None); s.wait(120)
+        nav = U.ListNav(s); nav.tall = Image.open(os.path.join(out, "menu_tall.png")); nav.rows = rows; t = C.Tracer(s); t.log.clear()
+        ok = tap_incremental(s, nav, i)
+    if ok:
+        s.wait(300)
+        if hex(s.b.rd(s.b.rd(0x20024818))) == "0x808f66c": ok = False
+    EXPECT = {"KONFIGURACJA": "0x808f944"}      # widok oczekiwany po wejsciu (korekta bledu przewijania przyrostowego o +-1 wiersz)
+    if tgt in EXPECT and hex(s.b.rd(s.b.rd(0x20024818))) != EXPECT[tgt]:
+        for dy in (-50, 50):
+            s = U.UiSession.from_checkpoint(fw, os.path.join(out, "menu.state"), None); s.wait(120)
+            nav = U.ListNav(s); nav.tall = Image.open(os.path.join(out, "menu_tall.png")); nav.rows = rows; t = C.Tracer(s); t.log.clear()
+            if tap_incremental(s, nav, i, dy) and hex(s.b.rd(s.b.rd(0x20024818))) == EXPECT[tgt]: ok = True; break
+    if not ok:      # ogon menu: przewin do konca (dragi 200->80 do braku zmiany) i stuknij od dolu (ostatni wiersz y=227, pitch 50)
+        s = U.UiSession.from_checkpoint(fw, os.path.join(out, "menu.state"), None); s.wait(120)
+        nav = U.ListNav(s); nav.tall = Image.open(os.path.join(out, "menu_tall.png")); nav.rows = rows; t = C.Tracer(s); t.log.clear()
+        for _ in range(40):
+            if not s.drag_until_change(240, 200, 240, 80, attempts=6, ticks=240, pause_end=160): break
+        s.wait(900); y = 227 - 50 * (len(exp) - 1 - i)
+        if 60 <= y <= 250:
+            s.tap(240, y, settle=800); s.wait(300); ok = hex(s.b.rd(s.b.rd(0x20024818))) != "0x808f66c"
+        else: ok = False
+    if not ok: res["cells"].append(dict(row=er["row"], index=i, node=tgt, kind="screen", status="TAP_FAILED")); continue
+    s.wait(700)
+    cell = {}
+    if os.environ.get("COV_LIVE"):      # stan 'online': symulator modulow CAN karmi panel (LiveSim) - zrodla live aktywne
+        import live_sim as LS
+        LS.LiveSim(s).run(500); s.wait(300)
+    for kind, tap in (("screen", None), ("settings", (400, 245))):
+        try:
+            if kind == "settings" and cell.get("view") == "0x808f944": break      # ekran jest juz lista nastaw (brak kafla nastaw)
+            if tap: s.tap(tap[0], tap[1], settle=800); s.wait(500)
+            ws = C.widget_table(s, t); ex = X.extract(s, ws); ref = s.shot(); a, mae, pct = metrics(ws, ex, ref)
+            cell = dict(row=er["row"], index=i, node=tgt, title=er["title_pl"], kind=kind, mae=mae, pct_diff=pct, view=hex(s.b.rd(s.b.rd(0x20024818))), widgets=len(ws))
+            if pct > 8:
+                base = os.path.join(out, "%s_%s_%d" % (tgt, kind, er["row"])); ref.save(base + "_ref.png"); a.save(base + "_render.png")
+        except Exception as e: cell = dict(row=er["row"], index=i, node=tgt, kind=kind, error=repr(e)[:120])
+        if cell.get("kind"): res["cells"].append(cell)
+        print(level, config, cell, flush=True)
+    json.dump(res, open(os.path.join(out, "result.json"), "w"), ensure_ascii=False, indent=1)
+json.dump(res, open(os.path.join(out, "result.json"), "w"), ensure_ascii=False, indent=1)
+print("DONE", out, "rows_match", res["rows_match"], len(res["cells"]), "komorek")
