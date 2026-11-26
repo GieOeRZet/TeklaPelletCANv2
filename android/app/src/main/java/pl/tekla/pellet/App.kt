@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import kotlin.math.max
 import kotlin.math.min
@@ -59,6 +60,8 @@ fun fuelDots(fuel: Double, cap: Double, res: Double): Pair<Int, Boolean> {
 @Composable
 fun TeklaApp() {
     TeklaTheme {
+        var locked by remember { mutableStateOf(AppLock.isSet()) }
+        if (locked) { LockScreen { locked = false }; return@TeklaTheme }
         val src = Ctl.source ?: return@TeklaTheme
         val ctx = Ctl.ctx
         val vals by src.values.collectAsState(); val level by src.level.collectAsState(); val full by src.fullMode.collectAsState(); val conn by src.connected.collectAsState()
@@ -93,7 +96,7 @@ fun TeklaApp() {
 @Composable
 fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
     val title = when {
-        screen == "home" -> "Pulpit"; screen == "more" -> "Więcej"; screen == "appset" -> "Ustawienia aplikacji"
+        screen == "home" -> "Pulpit"; screen == "more" -> "Więcej"; screen == "module" -> "Moduł ESP"; screen == "log" -> "Dziennik"; screen == "appset" -> "Ustawienia aplikacji"
         screen.startsWith("set:") -> "Nastawy"; screen.startsWith("sched:") -> "Harmonogram"
         else -> ui.m.screens[screen]?.title ?: ui.m.menu.firstOrNull { ui.m.routeOf(it) == screen }?.title ?: screen
     }
@@ -143,6 +146,8 @@ fun Body(ui: Ui, screen: String) {
         screen == "info" -> InfoView(ui)
         screen == "stats" -> ListView(ui, "0x11|STATYSTYKI|inst1", readOnly = true)
         screen == "network" -> NetworkView(ui)
+        screen == "module" -> ModuleView(ui)
+        screen == "log" -> LogView(ui)
         screen == "outtest" -> OutTestView(ui)
         screen.startsWith("set:") -> ListView(ui, screen.removePrefix("set:"))
         screen.startsWith("sched:") -> SchedView(ui, screen.removePrefix("sched:"))
@@ -357,6 +362,7 @@ fun MoreView(ui: Ui) {
     val items = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { m -> ui.m.routeOf(m)?.let { it to m } }.filter { it.first !in listOf("kociol", "palnik", "cwu") }
     Card("Więcej") {
         for ((r, m) in items) Row(Modifier.fillMaxWidth().clickable { ui.go(r) }.padding(vertical = 11.dp, horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) { Ic(m.icon, 22.dp); Spacer(Modifier.width(10.dp)); Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
+        Row(Modifier.fillMaxWidth().clickable { ui.go("module") }.padding(vertical = 11.dp, horizontal = 4.dp)) { Text("Moduł ESP (Wi-Fi, hasło, aktualizacja)", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
         Row(Modifier.fillMaxWidth().clickable { ui.go("appset") }.padding(vertical = 11.dp, horizontal = 4.dp)) { Text("Ustawienia aplikacji (demo / ESP)", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
     }
 }
@@ -369,6 +375,7 @@ fun AppSettings(ui: Ui) {
         Spacer(Modifier.height(10.dp))
         OutlinedButton({ Ctl.useDemo(); ui.go("home") }, Modifier.fillMaxWidth()) { Text("Użyj trybu demo", color = Txt) }
     }
+    AppPinCard(ui)
     Card("Połącz z urządzeniem ESP") {
         OutlinedTextField(host, { host = it }, label = { Text("Adres (np. teklapellet.local lub 192.168.1.50)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
@@ -416,4 +423,64 @@ fun NumberDialog(title: String, lo: Double, hi: Double, step: Double, cur: Doubl
         Row(Modifier.fillMaxWidth()) { Text(f1(lo, if (step < 1.0) 1 else 0), color = Mut, fontSize = 12.sp, modifier = Modifier.weight(1f)); Text(f1(hi, if (step < 1.0) 1 else 0), color = Mut, fontSize = 12.sp) }
         if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
         confirmButton = { TextButton({ save(lo + Math.round((v - lo) / step) * step) }) { Text("Zapisz") } }, dismissButton = { TextButton(close) { Text("Anuluj") } })
+}
+
+@Composable
+fun AppPinCard(ui: Ui) {
+    var set by remember { mutableStateOf(AppLock.isSet()) }; var pin by remember { mutableStateOf("") }
+    Card("PIN aplikacji") {
+        Text("Blokada ekranu aplikacji przy uruchomieniu (osobna od PIN-ów kotła).", color = Mut, fontSize = 13.sp)
+        OutlinedTextField(pin, { pin = it.filter(Char::isDigit).take(8) }, label = { Text("Nowy PIN (4-8 cyfr)") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword), modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+        Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Button({ if (pin.length >= 4) { AppLock.set(pin); pin = ""; set = true; ui.toast("PIN ustawiony") } else ui.toast("Min. 4 cyfry") }) { Text(if (set) "Zmień PIN" else "Ustaw PIN") }
+            if (set) OutlinedButton({ AppLock.clear(); set = false; ui.toast("PIN usunięty") }) { Text("Usuń", color = Txt) }
+        }
+    }
+}
+
+@Composable
+fun LockScreen(onOk: () -> Unit) {
+    var pin by remember { mutableStateOf("") }; var err by remember { mutableStateOf("") }
+    Column(Modifier.fillMaxSize().background(Bg).padding(32.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("TeklaPellet", color = Txt, fontSize = 24.sp, fontWeight = FontWeight.SemiBold); Spacer(Modifier.height(16.dp))
+        OutlinedTextField(pin, { pin = it.filter(Char::isDigit).take(8) }, label = { Text("PIN aplikacji") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword))
+        if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+        Button({ val e = AppLock.check(pin); if (e == null) onOk() else { err = e; pin = "" } }, Modifier.padding(top = 12.dp)) { Text("Odblokuj") }
+    }
+}
+
+@Composable
+fun LogView(ui: Ui) {
+    var l by remember { mutableStateOf<List<String>?>(null) }; LaunchedEffect(Unit) { l = ui.src.log() }
+    Card("Dziennik") { if (l == null) Text("…", color = Mut) else if (l!!.isEmpty()) Text("Brak wpisów", color = Mut); for (x in l ?: emptyList()) Text(x, color = Mut, fontSize = 12.sp, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace) }
+}
+
+@Composable
+fun ModuleView(ui: Ui) {
+    val scope = rememberCoroutineScope(); var wifi by remember { mutableStateOf("…") }; var nets by remember { mutableStateOf<List<Pair<String, Int>>?>(null) }
+    var ask by remember { mutableStateOf<String?>(null) }; var ssid by remember { mutableStateOf("") }; var txt by remember { mutableStateOf("") }; var err by remember { mutableStateOf("") }
+    var otaKind by remember { mutableStateOf("fw") }
+    val picker = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) scope.launch { val data = withContext(kotlinx.coroutines.Dispatchers.IO) { Ctl.ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() } }; if (data == null) ui.toast("Nie można odczytać pliku") else { val e = ui.src.ota(otaKind, data); ui.toast(e ?: "Wgrano" ) } }
+    }
+    LaunchedEffect(Unit) { wifi = ui.src.wifiStatus() }
+    Card("Moduł ESP") {
+        RowItem("Wi-Fi", wifi) { scope.launch { nets = ui.src.wifiScan(); ask = "scan" } }
+        RowItem("Hasło urządzenia", "zmień ›") { txt = ""; err = ""; ask = "pw" }
+        RowItem("Aktualizacja: firmware", "wgraj ›") { otaKind = "fw"; picker.launch("*/*") }
+        RowItem("Aktualizacja: paczka UI", "wgraj ›") { otaKind = "ui"; picker.launch("*/*") }
+        RowItem("Dziennik", "›") { ui.go("log") }
+        RowItem("Sieć CAN (moduły)", "›") { ui.go("network") }
+        RowItem("Restart modułu", "›") { txt = ""; err = ""; ask = "restart" }
+        RowItem("Reset fabryczny", "›") { txt = ""; err = ""; ask = "factory" }
+        Text("Zapis (Wi-Fi, hasło, aktualizacje) wymaga trybu „pełna kontrola”; podpisy plików sprawdza urządzenie.", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
+    }
+    when (ask) {
+        "scan" -> AlertDialog(onDismissRequest = { ask = null }, title = { Text("Wi-Fi") }, text = { Column { for ((n, r) in nets ?: emptyList()) Row(Modifier.fillMaxWidth().clickable { ssid = n; txt = ""; err = ""; ask = "wifipw" }.padding(vertical = 10.dp)) { Text(n, modifier = Modifier.weight(1f)); Text("$r dBm", color = Mut) }; if (nets.isNullOrEmpty()) Text("Brak sieci") } }, confirmButton = {}, dismissButton = { TextButton({ ask = null }) { Text("Zamknij") } })
+        "wifipw", "pw", "restart", "factory" -> {
+            val title = when (ask) { "wifipw" -> "Hasło sieci $ssid"; "pw" -> "Nowe hasło (min. 8 znaków)"; "restart" -> "Restart - podaj hasło urządzenia"; else -> "Reset fabryczny kasuje hasło, sieć i ustawienia modułu. Podaj hasło" }
+            AlertDialog(onDismissRequest = { ask = null }, title = { Text(title) }, text = { Column { OutlinedTextField(txt, { txt = it }, singleLine = true, visualTransformation = PasswordVisualTransformation()); if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
+                confirmButton = { TextButton({ scope.launch { val a = ask; val e = when (a) { "wifipw" -> ui.src.wifiSave(ssid, txt); "pw" -> ui.src.changePassword(txt); "restart" -> ui.src.restart(txt); else -> ui.src.factoryReset(txt) }; if (e == null) { ui.toast("Wykonano"); ask = null } else err = e } }) { Text("OK") } }, dismissButton = { TextButton({ ask = null }) { Text("Anuluj") } })
+        }
+    }
 }

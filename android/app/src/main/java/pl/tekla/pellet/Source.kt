@@ -27,6 +27,14 @@ interface DataSource {
     suspend fun setFullMode(full: Boolean, password: String): String?
     suspend fun alarms(): List<AlarmRow>
     suspend fun network(): List<NodeRow>
+    suspend fun wifiStatus(): String
+    suspend fun wifiScan(): List<Pair<String, Int>>
+    suspend fun wifiSave(ssid: String, pass: String): String?
+    suspend fun changePassword(newPw: String): String?
+    suspend fun restart(password: String): String?
+    suspend fun factoryReset(password: String): String?
+    suspend fun log(): List<String>
+    suspend fun ota(kind: String, data: ByteArray): String?          // kind: "fw" | "ui"
     fun close()
 }
 
@@ -70,6 +78,14 @@ class DemoSource(private val model: AppModel, private val scope: CoroutineScope)
     override suspend fun setFullMode(full: Boolean, password: String): String? { fullMode.value = full; return null }
     override suspend fun alarms() = listOf(AlarmRow(1, 12, "Przykładowy alarm (dane demo)", "potwierdzony"))
     override suspend fun network() = listOf(NodeRow(4, "Kocioł", "pracuje"), NodeRow(95, "TeklaPellet (ten moduł)", "pracuje"))
+    override suspend fun wifiStatus() = "DomowaSiec (demo) ●"
+    override suspend fun wifiScan() = listOf("DomowaSiec" to -52, "Goscinna" to -70)
+    override suspend fun wifiSave(ssid: String, pass: String): String? = null
+    override suspend fun changePassword(newPw: String): String? = null
+    override suspend fun restart(password: String): String? = null
+    override suspend fun factoryReset(password: String): String? = null
+    override suspend fun log() = listOf("start aplikacji (demo)", "dane przykładowe")
+    override suspend fun ota(kind: String, data: ByteArray): String? = "Aktualizacja niedostępna w trybie demo"
     override fun close() { job?.cancel() }
 }
 
@@ -133,4 +149,17 @@ class RemoteSource(private val host: String, private val scope: CoroutineScope) 
     }
     override suspend fun network(): List<NodeRow> = (call("GET", "/api/network").optJSONArray("nodes")?.objs() ?: emptyList()).map { NodeRow(it.optInt("node"), it.optString("name"), it.optString("state")) }
     override fun close() { job?.cancel() }
+    override suspend fun wifiStatus(): String { val j = call("GET", "/api/wifi"); return if (j.optBoolean("ok")) j.optString("ssid", "--") + if (j.optBoolean("connected")) " ●" else " ○" else err(j) }
+    override suspend fun wifiScan(): List<Pair<String, Int>> = (call("GET", "/api/wifi/scan").optJSONArray("networks")?.objs() ?: emptyList()).map { it.optString("ssid") to it.optInt("rssi") }
+    override suspend fun wifiSave(ssid: String, pass: String): String? { val j = call("POST", "/api/wifi", JSONObject().put("ssid", ssid).put("pass", pass)); return if (j.optBoolean("ok")) null else err(j) }
+    override suspend fun changePassword(newPw: String): String? { val j = call("POST", "/api/password", JSONObject().put("new", newPw)); return if (j.optBoolean("ok")) null else err(j) }
+    override suspend fun restart(password: String): String? { val j = call("POST", "/api/restart", JSONObject().put("password", password)); return if (j.optBoolean("ok")) null else err(j) }
+    override suspend fun factoryReset(password: String): String? { val j = call("POST", "/api/factory_reset", JSONObject().put("password", password)); return if (j.optBoolean("ok")) null else err(j) }
+    override suspend fun log(): List<String> = call("GET", "/api/log").optJSONArray("lines")?.strs() ?: emptyList()
+    override suspend fun ota(kind: String, data: ByteArray): String? = withContext(Dispatchers.IO) {
+        try {
+            val req = Request.Builder().url("$base/api/ota/$kind").post(data.toRequestBody("application/octet-stream".toMediaType())).apply { token?.let { header("Authorization", "Bearer $it") } }.build()
+            http.newBuilder().readTimeout(120, TimeUnit.SECONDS).build().newCall(req).execute().use { r -> val j = try { JSONObject(r.body?.string() ?: "{}") } catch (e: Exception) { JSONObject() }; if (j.optBoolean("ok")) null else (ERR[j.optString("code")] ?: "Błąd: " + j.optString("code")) }
+        } catch (e: Exception) { e.message ?: "brak połączenia" }
+    }
 }
