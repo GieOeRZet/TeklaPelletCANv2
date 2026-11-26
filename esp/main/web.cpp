@@ -20,7 +20,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
-//#include <cstring>
+#include <cstring>
 #include <cstdlib>
 using namespace tekla;
 static const char* TAG = "web"; static httpd_handle_t g_srv; static void restart_later(void*);
