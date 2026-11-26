@@ -20,7 +20,7 @@ Stan: zgodne z `esp/main/web.cpp` (firmware 0.2, **API wersja 2**). Skompilowane
 3. **Sesja z hasła** (np. strona serwisowa): `POST /api/login` `{password}` → `{ok, token}` (12 h).
 
 ## 4. Informacje i tryby
-- `GET /api/info` → `{ok, id, name, fw, api, node, can, uptime, mode, level, client}` (`client:true` gdy token sparowanego klienta).
+- `GET /api/info` → `{ok, id, name, fw, api, node, can, uptime, client}` (`client:true` gdy token sparowanego klienta).
 - `POST /api/mode` pozostaje kompatybilnościowo, ale **nie steruje już dostępem do zapisu kotła**.
 - Endpointy `/api/level` są wycofane z użycia; klienci nie mają podawać PIN-ów.
 
