@@ -83,7 +83,7 @@ class DemoSource(private val model: AppModel, private val scope: CoroutineScope)
 
     override suspend fun read(pids: List<String>): Map<String, Double> = pids.mapNotNull { p -> store[fmtPid(p)]?.let { fmtPid(p) to it } }.toMap()
     override suspend fun write(pid: String, v: Double): String? { store[fmtPid(pid)] = v; publish(); return null }
-    override suspend fun alarms() = listOf(AlarmRow(1, 12, "Przykładowy alarm (dane demo)", "potwierdzony"))
+    // PIN-y kotła są logiką aplikacji Android; ESP pozostaje Full. Te metody zmieniają wyłącznie lokalny poziom UI.\n    override suspend fun unlock(pin: String): String? = androidPinUnlock(pin, level)\n    override suspend fun setFullMode(full: Boolean, password: String): String? { fullMode.value = full; return null }\n    override suspend fun alarms() = listOf(AlarmRow(1, 12, "Przykładowy alarm (dane demo)", "potwierdzony"))
     override suspend fun network() = listOf(NodeRow(4, "Kocioł", "pracuje"), NodeRow(95, "TeklaPellet (ten moduł)", "pracuje"))
     override suspend fun wifiStatus() = "DomowaSiec (demo) ●"
     override suspend fun wifiScan() = listOf("DomowaSiec" to -52, "Goscinna" to -70)
