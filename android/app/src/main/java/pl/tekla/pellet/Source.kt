@@ -132,6 +132,7 @@ class RemoteSource(host: String, private val scope: CoroutineScope, private var 
     override val level = MutableStateFlow(0)
     override val fullMode = MutableStateFlow(true)
     private var job: Job? = null
+    private var timeSynced = false
     private var svcPw: String? = null
     override val serviceUnlocked: Boolean get() = svcPw != null
     private fun base() = (if (host.startsWith("http")) host else "http://$host").trimEnd('/')
@@ -152,7 +153,7 @@ class RemoteSource(host: String, private val scope: CoroutineScope, private var 
             var lastSave = 0L; var downSince = 0L
             while (isActive) {
                 val ok = poll()
-                if (ok) downSince = 0 else {
+                if (ok) { downSince = 0; if (!timeSynced) { timeSynced = syncPhoneTime() } } else { timeSynced = false
                     if (downSince == 0L) downSince = System.currentTimeMillis()
                     if (deviceId.isNotEmpty() && System.currentTimeMillis() - downSince > 8000) Discovery.hostFor(deviceId)?.let { if (it != host) { host = it; Ctl.deviceMoved(deviceId, it) } }   // adres moze sie zmienic (DHCP): znajdz po id
                 }
@@ -162,6 +163,19 @@ class RemoteSource(host: String, private val scope: CoroutineScope, private var 
         }
     }
     private var authNotified = false
+    private suspend fun syncPhoneTime(): Boolean {
+        val phone = System.currentTimeMillis() / 1000L
+        val j = call("GET", "/api/time")
+        val boiler = j.optLong("boiler_timestamp", 0L)
+        if (boiler > 0L && kotlin.math.abs(phone - boiler) <= 2L) return true
+        val p = call("POST", "/api/time", JSONObject().put("epoch", phone))
+        if (!p.optBoolean("ok")) { Ctl.notify("Nie udało się zsynchronizować zegara kotła: " + err(p)); return false }
+        val rb = p.optLong("boiler_timestamp", 0L)
+        if (rb != phone) { Ctl.notify("Kocioł nie potwierdził synchronizacji zegara."); return false }
+        Ctl.notify("Zegar kotła zsynchronizowany z telefonem.")
+        return true
+    }
+
     private suspend fun poll(): Boolean {
         val j = call("GET", "/api/state")
         if (!j.optBoolean("ok")) { connected.value = false; if (j.optString("code") == "unauthorized" && !authNotified) { authNotified = true; Ctl.notify("Moduł odwołał to połączenie - sparuj go ponownie w Ustawieniach.") }; return false }
