@@ -47,7 +47,7 @@ class Ui(val src: DataSource, val v: Map<String, Double>, val level: Int, val fu
 
 fun f1(x: Double?, d: Int = 1): String = if (x == null || x.isNaN()) "--" else if (d == 0) Math.round(x).toString() else String.format(java.util.Locale.US, "%.${d}f", x)
 val PROGICON = listOf(133, 135, 122, 128, 120)
-val TABS = listOf(Triple("home", "Pulpit", "⌂"), Triple("kociol", "Kocioł", "83"), Triple("palnik", "Palnik", "85"), Triple("cwu", "Woda", "88"), Triple("more", "Więcej", "≡"))
+val TABS = listOf(Triple("home", "Pulpit", "⌂"), Triple("co1", "Ogrzewanie", "▥"), Triple("sched:co1", "Harmonogram", "▦"), Triple("alarms", "Alarmy", "♪"), Triple("more", "Menu", "≡"))
 
 fun fuelDots(fuel: Double, cap: Double, res: Double): Pair<Int, Boolean> {
     if (cap <= 0) return 0 to false
@@ -78,13 +78,13 @@ fun TeklaApp() {
                 containerColor = Bg,
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
-                    if (screen == "home") HomeTiles(ui) else NavigationBar(containerColor = Color(0xFF101014)) {
+                    NavigationBar(containerColor = Color(0xFF101014)) {
                         for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) } }, label = { Text(t, fontSize = 10.sp) },
                             colors = NavigationBarItemDefaults.colors(selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2, unselectedIconColor = Mut, unselectedTextColor = Mut))
                     }
                 },
             ) { pad ->
-                Column(Modifier.padding(pad).fillMaxSize().then(if (screen == "home") Modifier else Modifier.verticalScroll(rememberScrollState())).padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     key(screen) { Body(ui, screen) }
                 }
             }
@@ -103,12 +103,10 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
     Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (screen == "home") {
-            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(java.text.SimpleDateFormat("HH:mm", java.util.Locale("pl")).format(now), color = Acc2, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                Text(java.text.SimpleDateFormat("EEE, d MMM", java.util.Locale("pl")).format(now), color = Mut, fontSize = 13.sp, maxLines = 1)
-            }
-        } else Text(title, color = Txt, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f), maxLines = 1)
+        Column(Modifier.weight(1f)) {
+            Text(title, color = Txt, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            if (screen == "home") Text(java.text.SimpleDateFormat("EEEE, d MMMM · HH:mm", java.util.Locale("pl")).format(now), color = Mut, fontSize = 12.sp, maxLines = 1)
+        }
         Chip(if (demo) "demo" else if (conn) "na żywo" else "offline", if (demo) Warn else if (conn) Okc else Bad) { ui.go("appset") }
         Chip(if (ui.full) "pełna" else "odczyt", if (ui.full) Warn else Okc) { ui.open(Dlg.Mode) }
         Chip("PIN ${ui.level}", Mut) { ui.open(Dlg.Pin) }
@@ -197,50 +195,88 @@ fun BarView(ui: Ui, cells: List<Cell>) {
 }
 
 @Composable
-fun HomeView(ui: Ui) {
-    // Pulpit jak w panelu: obraz kotła, duża temperatura, stan, zadana, temperatura zewnętrzna; dolna belka kafli w HomeTiles.
-    val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0
-    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
-        BoilerImage(ui)
-        BigValue(f1(t), "°C")
-        Text(ui.m.statusTables["burner"]?.getOrNull(bs) ?: "?", color = Acc2, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
-        Text("zadana ${f1(set, 0)}°C", color = Mut, fontSize = 14.sp, modifier = Modifier.padding(top = 4.dp))
-        Row(Modifier.padding(top = 14.dp).background(Panel, RoundedCornerShape(14.dp)).border(1.dp, Line, RoundedCornerShape(14.dp)).padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(f1(ui.n("0x215F")) + " °C", color = Txt, fontSize = 24.sp, fontWeight = FontWeight.Light)
-            Ic(if (ui.n("0x3729")?.toInt() == 1) 180 else 181, 30.dp)
-        }
+fun Dot(on: Boolean, c: Color = Okc) {
+    Box(Modifier.size(10.dp).background(if (on) c else Color(0xFF2A2A30), RoundedCornerShape(5.dp)).border(1.dp, if (on) c else Color(0xFF3A3A42), RoundedCornerShape(5.dp)))
+}
+
+/** Wskaźnik: etykieta + dioda (świeci wg stanu wyjścia, przygaszona gdy wyłączone). Mieszacz: 1 = zamykanie (niebieska), 2 = otwieranie (czerwona). */
+@Composable
+fun Ind(ui: Ui, label: String, pid: String, kind: String = "on") {
+    val v = ui.n(pid)?.toInt() ?: 0
+    val c = when (kind) { "mix" -> if (v == 1) Color(0xFF4D9BFF) else Color(0xFFFF4D4D); "burn" -> Color(0xFFF2C200); else -> Okc }
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) { Dot(v != 0, c); Text(label, color = Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+}
+
+@Composable
+fun KvRow(l: String, v: String) {
+    Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) { Text(l, color = Mut, fontSize = 13.sp, modifier = Modifier.weight(1f)); Text(v, color = Txt, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1) }
+}
+
+@Composable
+fun HomeCard(title: String, big: String, unit: String, modifier: Modifier, go: String, ui: Ui, content: @Composable ColumnScope.() -> Unit) {
+    Column(modifier.background(Panel, RoundedCornerShape(16.dp)).border(1.dp, Line, RoundedCornerShape(16.dp)).clickable { ui.go(go) }.padding(12.dp)) {
+        Text(title.uppercase(), color = Mut, fontSize = 11.sp, letterSpacing = 0.9.sp, fontWeight = FontWeight.SemiBold)
+        Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.padding(top = 4.dp)) { Text(big, color = Txt, fontSize = 24.sp, fontWeight = FontWeight.Light); if (unit.isNotEmpty()) Text(unit, color = Mut, fontSize = 12.sp, modifier = Modifier.padding(start = 3.dp, bottom = 3.dp)) }
+        content()
     }
 }
 
 @Composable
-fun HomeTiles(ui: Ui) {
-    val bs = ui.n("0x2007")?.toInt() ?: 0; val on = ui.n("0x2005") != 0.0
-    val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0
-    val (dots, empty) = fuelDots(fuel, cap, res)
-    val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
+fun HomeView(ui: Ui) {
+    // Pulpit: łuk z temperaturą kotła + wartości obok, karty CO / CWU / Palnik / Kocioł ze wskaźnikami (dioda), ostatni alarm.
+    val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0; val on = ui.n("0x2005") != 0.0
     val nco = ui.n("0x2105")?.toInt() ?: 0; val cwu = (ui.n("0x2106") ?: 0.0) != 0.0
-    @Composable fun RowScope.Tile(go: String?, bar: Color, content: @Composable BoxScope.() -> Unit) {
-        Box(Modifier.weight(1f).height(76.dp).background(if (go == null && bar == Color.Unspecified) Color.Transparent else Panel, RoundedCornerShape(12.dp)).border(1.dp, Line, RoundedCornerShape(12.dp)).then(if (go != null) Modifier.clickable { ui.go(go) } else Modifier), contentAlignment = Alignment.Center) {
-            if (bar != Color.Unspecified) Box(Modifier.align(Alignment.TopCenter).padding(top = 5.dp).size(width = 30.dp, height = 4.dp).background(bar, RoundedCornerShape(2.dp)))
-            content()
-        }
-    }
-    val off = Color(0xFF3A3A42)
-    Row(Modifier.fillMaxWidth().background(Bg).navigationBarsPadding().padding(horizontal = 8.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Tile("more", off) { Ic(77, 38.dp) }
-        Tile(null, off) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(top = 10.dp)) {
-                Text(if (empty) "E" else "${f1(fuel, 0)} kg", color = if (empty) Acc else Txt, fontSize = if (empty) 18.sp else 11.sp, fontWeight = FontWeight.SemiBold)
-                Canvas(Modifier.size(24.dp)) {
-                    val sc = size.width / 28f
-                    for (r in 0 until 6) for (c in 0 until 4) { val idx = (5 - r) * 4 + c; val ctr = Offset((5 + c * 6) * sc, (5 + r * 5) * sc); if (idx < dots) drawCircle(Acc2, 1.9f * sc, ctr) else drawCircle(Mut, 1.9f * sc, ctr, style = Stroke(0.5f * sc)) }
+    val frac = (((t ?: 20.0) - 20.0) / 70.0).coerceIn(0.0, 1.0).toFloat()
+    var alarms by remember { mutableStateOf<List<AlarmRow>>(emptyList()) }; LaunchedEffect(Unit) { alarms = ui.src.alarms() }
+    fun mode(p: String) = ui.m.programModes.firstOrNull { it.v == (ui.n(p)?.toInt() ?: -1) }?.label ?: "--"
+    Card(null) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(Modifier.weight(0.95f).aspectRatio(1f), contentAlignment = Alignment.Center) {
+                Canvas(Modifier.fillMaxSize().padding(6.dp)) {
+                    val sw = size.width * 0.065f; val d = size.minDimension - sw
+                    drawArc(Line, 135f, 270f, false, Offset(sw / 2, sw / 2), Size(d, d), style = Stroke(sw, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                    drawArc(androidx.compose.ui.graphics.Brush.sweepGradient(listOf(Warn, Acc, Warn)), 135f, 270f * frac.coerceAtLeast(0.01f), false, Offset(sw / 2, sw / 2), Size(d, d), style = Stroke(sw, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Row(verticalAlignment = Alignment.Top) { Text(f1(t), color = Txt, fontSize = 38.sp, fontWeight = FontWeight.Light); Text("°C", color = Acc, fontSize = 14.sp, modifier = Modifier.padding(start = 2.dp, top = 4.dp)) }
+                    Text(ui.m.statusTables["burner"]?.getOrNull(bs) ?: "?", color = Acc2, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Text("zadana ${f1(set, 0)} °C · " + if (on) "włączony" else "wyłączony", color = Mut, fontSize = 10.sp, textAlign = TextAlign.Center)
                 }
             }
+            Column(Modifier.weight(1.05f)) {
+                KvRow("Powrót", f1(ui.n("0x4000")) + " °C"); KvRow("Temp. palnika", f1(ui.n("0x226C")) + " °C"); KvRow("Temp. zewnętrzna", f1(ui.n("0x215F")) + " °C"); KvRow("Moc palnika", f1(ui.n("0x4005"), 0) + " %")
+                KvRow("Paliwo", f1(ui.n("0x3601"), 0) + " / " + f1(ui.n("0x3600"), 0) + " kg")
+            }
         }
-        Tile("palnik", if (bs in 1..8) Color(0xFFF2C200) else off) { Ic(85, 34.dp) }
-        if (nco >= 1) Tile("co1", if ((ui.n("0x2064") ?: 0.0) > 0) Color.White else off) { Ic(86, 34.dp); Text("$nco", color = Acc2, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 8.dp)) } else Tile(null, Color.Unspecified) {}
-        if (cwu) Tile("cwu", if ((ui.n("0x2014") ?: 0.0) > 0) Color.White else off) { Ic(88, 34.dp) } else Tile(null, Color.Unspecified) {}
-        Tile("kociol", if (on) Color(0xFF7AD03A) else off) { Ic(prog, 36.dp) }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (nco >= 1) HomeCard("Ogrzewanie 1", f1(ui.n("0x4001")), "°C", Modifier.weight(1f), "co1", ui) {
+            KvRow("zadana", f1(ui.n("0x22F5"), 1) + " °C"); KvRow("tryb", mode("0x2064"))
+            Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) { Ind(ui, "Pompa", "0x2299"); Ind(ui, "Mieszacz", "0x22B9", "mix") }
+        }
+        if (cwu) HomeCard("Ciepła woda", f1(ui.n("0x2110")), "°C", Modifier.weight(1f), "cwu", ui) {
+            KvRow("zadana", f1(ui.n("0x201A"), 1) + " °C"); KvRow("tryb", mode("0x2014"))
+            Row(Modifier.padding(top = 10.dp)) { Ind(ui, "Pompa", "0x2278") }
+        }
+    }
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        HomeCard("Palnik", ui.m.statusTables["burner"]?.getOrNull(bs) ?: "?", "", Modifier.weight(1f), "palnik", ui) {
+            KvRow("jasność płomienia", f1(ui.n("0x2250"), 0) + " %")
+            Column(Modifier.padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { Ind(ui, "Dmuchawa", "0x2254", "burn"); Ind(ui, "Podajnik", "0x2252", "burn") }
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { Ind(ui, "Zapalarka", "0x2253", "burn"); Ind(ui, "Ruszt", "0x2276") }
+            }
+        }
+        HomeCard("Kocioł", f1(ui.n("0x4000")), "°C powrót", Modifier.weight(1f), "kociol", ui) {
+            KvRow("ciśnienie", f1(ui.n("0x3333"), 0) + " mbar"); KvRow("energia", f1(ui.n("0x3628"), 0) + " kWh")
+            Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) { Ind(ui, "Pompa", "0x2277"); Ind(ui, "Mieszacz", "0x216F", "mix") }
+        }
+    }
+    Column(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(16.dp)).border(1.dp, Color(0xFF5A2A2A), RoundedCornerShape(16.dp)).clickable { ui.go("alarms") }.padding(14.dp)) {
+        Text("OSTATNI ALARM", color = Mut, fontSize = 11.sp, letterSpacing = 0.9.sp, fontWeight = FontWeight.SemiBold)
+        val a = alarms.firstOrNull()
+        if (a == null) Text("Brak alarmów", color = Txt, fontSize = 18.sp, modifier = Modifier.padding(top = 6.dp))
+        else { Row(Modifier.padding(top = 6.dp)) { Text("kod ${a.code}", color = Bad, fontSize = 18.sp, fontWeight = FontWeight.Bold); Text(" · ${a.text}", color = Txt, fontSize = 18.sp) }; KvRow("w historii ${alarms.size} zdarzeń", if (a.state == "AKTYWNY") "AKTYWNY" else "nie aktywny") }
     }
 }
 
