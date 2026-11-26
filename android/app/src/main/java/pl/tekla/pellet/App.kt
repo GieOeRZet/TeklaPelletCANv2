@@ -79,7 +79,7 @@ fun TeklaApp() {
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
                     NavigationBar(containerColor = Color(0xFF101014)) {
-                        for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) }, label = { Text(t, fontSize = 10.sp) },
+                        for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) } }, label = { Text(t, fontSize = 10.sp) },
                             colors = NavigationBarItemDefaults.colors(selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2, unselectedIconColor = Mut, unselectedTextColor = Mut))
                     }
                 },
@@ -170,18 +170,20 @@ fun BarView(ui: Ui, cells: List<Cell>) {
         for (c in cells) {
             val s = ui.n(c.p)?.toInt() ?: 0
             if (s == 0) continue    // stan 0 = ikona niewidoczna (jak w panelu)
-            Column(Modifier.widthIn(min = 42.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                when (c.k) {
-                    "pump" -> Ic(ui.m.pumpFrames[frame % ui.m.pumpFrames.size], 19.dp)
-                    "mixer" -> { Ic(if (s == 1) 106 else 107, 20.dp); Text("mieszacz", color = Acc2, fontSize = 10.sp) }
-                    "grate" -> { Ic(59, 27.dp); Text(if (s == 1) "◀◀◀" else "▶▶▶", color = Acc2, fontSize = 10.sp) }
-                    else -> {
-                        var n = ""
-                        if (c.n != null) { val x = ui.n(c.n) ?: 0.0; n = if (c.hm) { val mi = Math.round(x).toInt(); "${mi / 60}:${(mi % 60).toString().padStart(2, '0')}" } else if (c.nd) f1(x, 1) else if (x != 0.0) Math.round(x).toString() else "" }
-                        Text(n, color = Acc2, fontSize = 11.sp, minLines = 1)
-                        Ic(c.fr[frame % c.fr.size], 30.dp)
-                    }
+            // stały układ komórki: linia opisu (14 dp) + kwadrat ikony (32 dp) wyśrodkowany => ikony zawsze na tej samej wysokości
+            var label = ""; var icon = 0; var isz = 30
+            when (c.k) {
+                "pump" -> { icon = ui.m.pumpFrames[frame % ui.m.pumpFrames.size]; isz = 20 }
+                "mixer" -> { icon = if (s == 1) 106 else 107; isz = 22; label = "mieszacz" }
+                "grate" -> { icon = 59; isz = 28; label = if (s == 1) "◀◀◀" else "▶▶▶" }
+                else -> {
+                    if (c.n != null) { val x = ui.n(c.n) ?: 0.0; label = if (c.hm) { val mi = Math.round(x).toInt(); "${mi / 60}:${(mi % 60).toString().padStart(2, '0')}" } else if (c.nd) f1(x, 1) else if (x != 0.0) Math.round(x).toString() else "" }
+                    icon = c.fr[frame % c.fr.size]
                 }
+            }
+            Column(Modifier.width(44.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Box(Modifier.height(14.dp), contentAlignment = Alignment.Center) { Text(label, color = Acc2, fontSize = 10.sp, maxLines = 1, softWrap = false) }
+                Box(Modifier.size(32.dp), contentAlignment = Alignment.Center) { Ic(icon, isz.dp) }
             }
         }
     }

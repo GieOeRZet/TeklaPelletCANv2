@@ -42,11 +42,11 @@ function subscribe() { if (ST.ws && ST.ws.readyState === 1) ST.ws.send(JSON.stri
 const bar = cells => cells && cells.length ? `<div class="bar" aria-label="Wyjścia">${cells.map(cellHtml).join('')}</div>` : '';
 function cellHtml(c) {
   const s = num(c.p) || 0, hid = s ? '' : 'hidden';
-  if (c.k === 'pump') return `<div class="cell pump" ${hid}><img data-fr="${ST.app.pump_frames.join(',')}" src="${IC(ST.app.pump_frames[0])}" alt="pompa"></div>`;
-  if (c.k === 'mixer') return `<div class="cell" ${hid}><img class="mix" src="${IC(s === 1 ? 106 : 107)}" alt="${s === 1 ? 'zamykanie' : 'otwieranie'}"><small>mieszacz</small></div>`;
-  if (c.k === 'grate') return `<div class="cell" ${hid}><img src="${IC(59)}" alt="ruszt"><small>${s === 1 ? '◀◀◀' : '▶▶▶'}</small></div>`;
+  if (c.k === 'pump') return `<div class="cell pump" ${hid}><small></small><span class="ib"><img data-fr="${ST.app.pump_frames.join(',')}" src="${IC(ST.app.pump_frames[0])}" alt="pompa"></span></div>`;
+  if (c.k === 'mixer') return `<div class="cell" ${hid}><small>mieszacz</small><span class="ib"><img class="mix" src="${IC(s === 1 ? 106 : 107)}" alt="${s === 1 ? 'zamykanie' : 'otwieranie'}"></span></div>`;
+  if (c.k === 'grate') return `<div class="cell" ${hid}><small>${s === 1 ? '◀◀◀' : '▶▶▶'}</small><span class="ib"><img src="${IC(59)}" alt="ruszt"></span></div>`;
   let n = ''; if (c.n) { const v = num(c.n); if (c.hm) { const m = Math.round(v || 0); n = Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); } else if (c.nd) n = f1(v, 1); else n = v ? String(Math.round(v)) : ''; }
-  return `<div class="cell" ${hid}><small>${esc(n)}</small><img data-fr="${c.fr.join(',')}" src="${IC(c.fr[0])}" alt=""></div>`;
+  return `<div class="cell" ${hid}><small>${esc(n)}</small><span class="ib"><img data-fr="${c.fr.join(',')}" src="${IC(c.fr[0])}" alt=""></span></div>`;
 }
 const boilerImg = () => `<img class="boiler" src="${IC(ST.app.boiler_images[String(num('0x370A') || 2)] || 12)}" alt="kocioł">`;
 function homeView() {
