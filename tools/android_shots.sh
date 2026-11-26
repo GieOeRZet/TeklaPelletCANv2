@@ -10,4 +10,10 @@ for s in home kociol palnik co1 co2 cwu config sched:co1 more module alarms stat
   sleep 6
   adb exec-out screencap -p > "docs/zrzuty_android/$(echo $s | tr ':' '_').png"
 done
+for s in palnik kociol home; do
+  adb shell am force-stop pl.tekla.pellet
+  adb shell am start -n pl.tekla.pellet/.MainActivity --es screen "$s" --ei tick 25 >/dev/null
+  sleep 6
+  adb exec-out screencap -p > "docs/zrzuty_android/${s}_run.png"
+done
 adb logcat -d -s AndroidRuntime:E > docs/zrzuty_android/crash.log || true

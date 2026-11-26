@@ -49,7 +49,7 @@ class DemoSource(private val model: AppModel, private val scope: CoroutineScope)
     override val connected = MutableStateFlow(true)
     override val level = MutableStateFlow(0)
     override val fullMode = MutableStateFlow(true)
-    private var tick = 0
+    private var tick = Ctl.startTick
     private var job: Job? = null
 
     init {

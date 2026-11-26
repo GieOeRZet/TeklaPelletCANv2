@@ -19,6 +19,7 @@ object Ctl {
     lateinit var model: AppModel
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     var startScreen: String? = null
+    var startTick = 0   // do zrzutow w CI: --ei tick 24 = palnik w fazie pracy
     var source by mutableStateOf<DataSource?>(null)
     val icons = HashMap<Int, ImageBitmap?>()
     fun init(c: Context) {
@@ -37,6 +38,7 @@ object Ctl {
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Ctl.startTick = intent?.getIntExtra("tick", 0) ?: 0
         Ctl.init(this)
         Ctl.startScreen = intent?.getStringExtra("screen")   // do zrzutow w CI: am start --es screen kociol
         setContent { TeklaApp() }
