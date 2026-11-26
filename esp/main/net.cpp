@@ -22,6 +22,8 @@ static void on_event(void*, esp_event_base_t b, int32_t id, void*) {
   else if (b == IP_EVENT && id == IP_EVENT_STA_GOT_IP) { g_up = true; g_retry = 0; g_down_since = 0; g_up_since = esp_timer_get_time(); }
 }
 bool connected() { return g_up; }
+int64_t down_s() { return g_up || !g_down_since ? 0 : (esp_timer_get_time() - g_down_since) / 1000000; }
+int64_t up_s() { return g_up && g_up_since ? (esp_timer_get_time() - g_up_since) / 1000000 : 0; }
 // ---- zapis/odczyt ustawien IP (NVS "ip")
 static IpCfg ip_load() { IpCfg c; nvs_handle_t h; if (nvs_open("ip", NVS_READONLY, &h) == ESP_OK) { uint8_t d = 1; nvs_get_u8(h, "dhcp", &d); c.dhcp = d != 0; nvs_get_u32(h, "ip", &c.ip); nvs_get_u32(h, "mask", &c.mask); nvs_get_u32(h, "gw", &c.gw); nvs_get_u32(h, "dns1", &c.dns1); nvs_get_u32(h, "dns2", &c.dns2); nvs_close(h); } return c; }
 static void ip_save(const IpCfg& c) { nvs_handle_t h; if (nvs_open("ip", NVS_READWRITE, &h) != ESP_OK) return; nvs_set_u8(h, "dhcp", c.dhcp); nvs_set_u32(h, "ip", c.ip); nvs_set_u32(h, "mask", c.mask); nvs_set_u32(h, "gw", c.gw); nvs_set_u32(h, "dns1", c.dns1); nvs_set_u32(h, "dns2", c.dns2); nvs_commit(h); nvs_close(h); }
@@ -48,6 +50,7 @@ void ip_confirm() { if (g_ip_pending) g_ip_confirmed = true; }
 // ---- Wi-Fi: zmiana sieci z cofnieciem
 static bool wifi_load(char* ssid, size_t sn, char* pass, size_t pn) { nvs_handle_t h; bool ok = false; if (nvs_open("wifi", NVS_READONLY, &h) == ESP_OK) { ok = nvs_get_str(h, "ssid", ssid, &sn) == ESP_OK && nvs_get_str(h, "pass", pass, &pn) == ESP_OK; nvs_close(h); } return ok; }
 static void wifi_store(const char* ssid, const char* pass) { nvs_handle_t h; if (nvs_open("wifi", NVS_READWRITE, &h) == ESP_OK) { nvs_set_str(h, "ssid", ssid); nvs_set_str(h, "pass", pass); nvs_commit(h); nvs_close(h); } }
+bool wifi_save(const char* ssid, const char* pass) { if (!ssid || !*ssid || strlen(ssid) > 32 || !pass || strlen(pass) > 64) return false; wifi_store(ssid, pass); char a[33] = {}, b[65] = {}; return wifi_load(a, sizeof a, b, sizeof b) && !strcmp(a, ssid); }
 static void sta_config(const char* ssid, const char* pass) { wifi_config_t c{}; strlcpy((char*)c.sta.ssid, ssid, sizeof c.sta.ssid); strlcpy((char*)c.sta.password, pass, sizeof c.sta.password); esp_wifi_set_config(WIFI_IF_STA, &c); }
 static void wifi_task(void*) {
   vTaskDelay(pdMS_TO_TICKS(800)); char os[33] = {}, op[65] = {}; bool had = wifi_load(os, sizeof os, op, sizeof op);

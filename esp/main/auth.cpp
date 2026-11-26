@@ -26,6 +26,7 @@ static int verify_rl(const char* key, const char* pw, uint32_t ip) {       // sp
   nvs_handle_t h; if (nvs_open("auth", NVS_READONLY, &h) != ESP_OK) return 1; bool ok = check(h, key, pw); nvs_close(h);
   if (!ok) { f->n++; f->t = now; return 1; } f->n = 0; return 0;
 }
+int verify_limited(const char* pw, uint32_t key) { return verify_rl("pw", pw, key); }
 int login(const char* pw, uint32_t ip, char* tok) {
   int rc = verify_rl("pw", pw, ip); if (rc) return rc; int64_t now = esp_timer_get_time();
   Session* s = nullptr; for (auto& x : S) if (!x.used) { s = &x; break; } if (!s) { s = &S[0]; for (auto& x : S) if (x.last_us < s->last_us) s = &x; }
