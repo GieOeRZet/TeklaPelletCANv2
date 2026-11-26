@@ -11,8 +11,15 @@ const LEVEL = {}; for (const rows of Object.values(model.lists)) for (const r of
 const sessions = new Map(); const fails = new Map();
 const S = { mode: 'readonly' };
 const settings = {}; for (const rows of Object.values(model.lists)) for (const r of rows) if (r.pid) settings[r.pid.toLowerCase()] = r.default ?? 0;
+const APP = JSON.parse(fs.readFileSync(path.join(ROOT, 'ui', 'gen', 'app.json'), 'utf8'));
+for (const [k, v] of Object.entries(APP.demo.config)) settings[k.toLowerCase()] = v;
+for (const c of APP.schedules.circuits) for (const pid of Object.values(c.pids)) settings[pid.toLowerCase()] = APP.schedules.default_mask;
 let tick = 0;
-function live() {                                  // symulacja: cykl pracy palnika co ~60 s
+function live() {
+  const cfg = {}; for (const k of Object.keys(APP.demo.config)) cfg[k] = settings[k.toLowerCase()];
+  return Object.assign(live0(), cfg);
+}
+function live0() {                                  // symulacja: cykl pracy palnika co ~60 s
   tick++; const ph = Math.floor(tick / 8) % 8, bs = [0, 1, 2, 5, 5, 6, 7, 0][ph], run = bs >= 1 && bs <= 8;
   const w = (a, b) => a + Math.sin(tick / 6) * b;
   return { '0x2001': +w(62, 3).toFixed(1), '0x2004': 60, '0x2005': 1, '0x2002': 0, '0x2007': bs, '0x4000': +w(41, 1).toFixed(1), '0x350A': 1, '0x350D': 1, '0x3333': 1500, '0x3628': 12345,
@@ -39,6 +46,7 @@ const srv = http.createServer(async (req, res) => {
   const u = new URL(req.url, 'http://x'); const p = u.pathname;
   if (!p.startsWith('/api/')) {
     if (p === '/' || p === '/index.html') return serve(res, path.join(ROOT, 'ui', 'src', 'index.html'));
+    if (p === '/gen/app.json') return serve(res, path.join(ROOT, 'ui', 'gen', 'app.json'));
     if (p === '/model.min.json') return serve(res, path.join(ROOT, 'ui', 'gen', 'model.min.json'));
     if (p.startsWith('/assets/')) return serve(res, path.join(ROOT, 'ui', p));
     return serve(res, path.join(ROOT, 'ui', 'src', path.basename(p)));
@@ -53,6 +61,13 @@ const srv = http.createServer(async (req, res) => {
   if (!ses) return json(res, 401, { ok: false, code: 'unauthorized' });
   if (p === '/api/info') return json(res, 200, { ok: true, fw: 'mock-0.1', ui: '0.1', model: dm.firmware_sha256, node: 95, can: 'mock', uptime: Math.floor(process.uptime()), mode: S.mode, level: ses.level });
   if (p === '/api/state') return json(res, 200, { ok: true, v: live() });
+  if (p === '/api/params' && u.searchParams.get('pids')) { const values = {}; for (const k of u.searchParams.get('pids').split(',')) values[k] = settings[k.toLowerCase()] ?? live()[k] ?? 0; return json(res, 200, { ok: true, values }); }
+  if (p === '/api/network') return json(res, 200, { ok: true, nodes: [{ node: 4, name: 'Kocioł', state: 'pracuje', age_s: 1 }, { node: 95, name: 'TeklaPellet (ten moduł)', state: 'pracuje', age_s: 0 }] });
+  if (p === '/api/wifi/scan') return json(res, 200, { ok: true, networks: [{ ssid: 'DomowaSiec', rssi: -52 }, { ssid: 'Goscinna', rssi: -70 }] });
+  if (p === '/api/wifi' && req.method === 'GET') return json(res, 200, { ok: true, ssid: 'DomowaSiec', connected: true });
+  if (p === '/api/wifi' && req.method === 'POST') return json(res, 200, { ok: true });
+  if (p === '/api/log') return json(res, 200, { ok: true, lines: ['start modułu', 'CAN: kocioł odpowiada (węzeł 4)', 'Wi-Fi: połączono'] });
+  if ((p === '/api/restart' || p === '/api/factory_reset' || p === '/api/password') && req.method === 'POST') { const b = await body(req); if (p !== '/api/password' && b.password !== 'demo') return json(res, 403, { ok: false, code: 'bad_password' }); return json(res, 200, { ok: true }); }
   if (p === '/api/params') { const rows = model.lists[u.searchParams.get('list')] || []; const values = {}; for (const r of rows) if (r.pid) values[r.pid] = settings[r.pid.toLowerCase()]; return json(res, 200, { ok: true, values }); }
   if (p === '/api/alarms') return json(res, 200, { ok: true, alarms: [{ n: 1, code: 12, text: 'Przykładowy alarm (atrapa)', active: false, acked: true }] });
   if (p === '/api/mode' && req.method === 'POST') { const b = await body(req); if (b.password !== 'demo') return json(res, 403, { ok: false, code: 'bad_password' }); S.mode = b.mode === 'full' ? 'full' : 'readonly'; return json(res, 200, { ok: true, mode: S.mode }); }
