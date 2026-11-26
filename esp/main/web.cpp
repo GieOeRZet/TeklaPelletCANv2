@@ -1,4 +1,5 @@
 // Serwer HTTP + WebSocket (esp_http_server). REST wg docs/ESP_API_V2.md sekcja 8; /ws sekcja 9. NIEKOMPILOWANE w srodowisku agenta - do weryfikacji na sprzecie.
+#include <inttypes.h>
 #include "web.hpp"
 #include "auth.hpp"
 #include "bus.hpp"
@@ -19,7 +20,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
-#include <cstring>
+//#include <cstring>
 #include <cstdlib>
 using namespace tekla;
 static const char* TAG = "web"; static httpd_handle_t g_srv; static void restart_later(void*);
@@ -92,12 +93,12 @@ static esp_err_t h_time(httpd_req_t* r) {
     if (d < 1700000000.0 || d > 4102444800.0) return jerr(r, "422 Unprocessable Entity", "range");
     uint32_t epoch = (uint32_t)d, confirmed = 0;
     if (!bus::sync_time(epoch, &confirmed)) return jerr(r, "502 Bad Gateway", "can_timeout");
-    char b[160]; snprintf(b, sizeof b, "{\"ok\":true,\"epoch\":%u,\"boiler_timestamp\":%u,\"synced\":%s}", epoch, confirmed, confirmed == epoch ? "true" : "false");
+    char b[160]; snprintf(b, sizeof b, "{\"ok\":true,\"epoch\":%" PRIu32 ",\"boiler_timestamp\":%" PRIu32 ",\"synced\":%s}", epoch, confirmed, confirmed == epoch ? "true" : "false");
     logx("synchronizacja czasu z telefonu");
     return jsend(r, "200 OK", b);
   }
   uint32_t ts = 0; bool ok = bus::read(0x2165, &ts);
-  char b[160]; snprintf(b, sizeof b, "{\"ok\":true,\"boiler_timestamp\":%u,\"available\":%s}", ts, ok ? "true" : "false");
+  char b[160]; snprintf(b, sizeof b, "{\"ok\":true,\"boiler_timestamp\":%" PRIu32 ",\"available\":%s}", ts, ok ? "true" : "false");
   return jsend(r, "200 OK", b);
 }
 
