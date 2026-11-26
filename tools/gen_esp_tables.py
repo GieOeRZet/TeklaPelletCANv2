@@ -35,6 +35,13 @@ for k, rowsl in (m["lists"]["items"].items() if isinstance(m["lists"], dict) els
     for r in rowsl:
         if r.get("pid") and r.get("level_min") is not None: lv[int(r["pid"], 16)] = min(lv.get(int(r["pid"], 16), 9), int(r["level_min"]))
 open(os.path.join(GEN, "model_levels.inc"), "w", encoding="utf-8").write("// GENEROWANE: {pid, level_min} z list NASTAW; PID bez wpisu = poziom 3\n" + "\n".join("  {0x%04X, %d}," % (p_, l) for p_, l in sorted(lv.items())) + "\n")
+# listy NASTAW: klucz listy -> PIDy wierszy (odczyt wartosci listy przez ESP)
+LA, LT = [], []
+for i, (k, rowsl) in enumerate(m["lists"]["items"].items()):
+    ps = [int(r["pid"], 16) for r in rowsl if r.get("pid")]
+    LA.append("static const uint16_t kListPids%d[] = {%s};" % (i, ", ".join("0x%04X" % x for x in ps)))
+    LT.append('  {"%s", kListPids%d, %d},' % (k, i, len(ps)))
+open(os.path.join(GEN, "model_lists.inc"), "w", encoding="utf-8").write("// GENEROWANE: listy NASTAW (klucz listy -> PIDy wierszy); wymaga struct ListDef przed include\n" + "\n".join(LA) + "\nstatic const ListDef kLists[] = {\n" + "\n".join(LT) + "\n};\nstatic const size_t kListCount = sizeof(kLists) / sizeof(kLists[0]);\n")
 # ---- dane dla strony
 rs = m.get("real_panel_screens", {})
 bb = rs.get("bottom_bar_static_2026_11_25", {})

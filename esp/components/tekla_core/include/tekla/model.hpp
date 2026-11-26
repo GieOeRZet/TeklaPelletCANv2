@@ -14,6 +14,8 @@ static const PidEntry kPids[] = {
 static const LevelEntry kLevels[] = {
 #include "../../gen/model_levels.inc"
 };
+struct ListDef { const char* key; const uint16_t* pids; uint16_t n; };
+#include "../../gen/model_lists.inc"
 static const size_t kPidCount = sizeof(kPids) / sizeof(kPids[0]);
 static const size_t kLevelCount = sizeof(kLevels) / sizeof(kLevels[0]);
 inline const PidEntry* find_pid(uint16_t pid) {          // tablica posortowana rosnaco (generator)
