@@ -16,6 +16,7 @@
 #include "lwip/sockets.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_system.h"
 #include <cstring>
 #include <cstdlib>
 using namespace tekla;
@@ -73,7 +74,7 @@ static esp_err_t h_level(httpd_req_t* r) { NEED_SESSION; if (r->method == HTTP_D
   if (rc == 2) return jerr(r, "423 Locked", "locked"); if (rc) return jerr(r, "403 Forbidden", "bad_pin"); char b[48]; snprintf(b, sizeof b, "{\"ok\":true,\"level\":%d}", S->level); return jsend(r, "200 OK", b); }
 static esp_err_t h_info(httpd_req_t* r) { NEED_SESSION; char b[256]; snprintf(b, sizeof b, "{\"ok\":true,\"fw\":\"0.1\",\"ui\":\"0.1\",\"node\":%d,\"can\":\"%s\",\"uptime\":%d,\"mode\":\"%s\",\"level\":%d}", cfg::kNodeId, bus::can_ok() ? "ok" : "brak odpowiedzi", (int)(esp_timer_get_time() / 1000000), auth::mode() == Mode::Full ? "full" : "readonly", S->level); return jsend(r, "200 OK", b); }
 static esp_err_t h_state(httpd_req_t* r) { NEED_SESSION; (void)S; LiveItem it[64]; size_t n = bus::snapshot(it, 64); static char out[1400]; if (!n || !tekla::json_live(it, n, out, sizeof out)) return jsend(r, "200 OK", "{\"ok\":true,\"v\":{}}"); return jsend(r, "200 OK", out); }
-static esp_err_t h_params(httpd_req_t* r) { NEED_SESSION; (void)S; char q[160] = {}, key[96] = {}; httpd_req_get_url_query_str(r, q, sizeof q); if (httpd_query_key_value(q, "list", key, sizeof key) != ESP_OK) return jerr(r, "400 Bad Request", "bad_request"); urldecode(key);
+static esp_err_t h_params(httpd_req_t* r) { NEED_SESSION; (void)S; char q[512] = {}, key[96] = {}; httpd_req_get_url_query_str(r, q, sizeof q); if (httpd_query_key_value(q, "pids", key, sizeof key) == ESP_OK) { urldecode(key); httpd_resp_set_type(r, "application/json"); httpd_resp_sendstr_chunk(r, "{\"ok\":true,\"values\":{"); bool first = true; char* sp = nullptr; for (char* t = strtok_r(key, ",", &sp); t; t = strtok_r(nullptr, ",", &sp)) { unsigned pid = 0; if (sscanf(t, "0x%x", &pid) != 1) continue; uint32_t raw; const PidEntry* e = find_pid((uint16_t)pid); char b[48]; if (e && bus::read((uint16_t)pid, &raw)) { snprintf(b, sizeof b, "%s\"0x%04X\":%g", first ? "" : ",", pid, decode_raw(e, raw)); first = false; httpd_resp_sendstr_chunk(r, b); } } httpd_resp_sendstr_chunk(r, "}}"); return httpd_resp_sendstr_chunk(r, nullptr); } if (httpd_query_key_value(q, "list", key, sizeof key) != ESP_OK) return jerr(r, "400 Bad Request", "bad_request"); urldecode(key);
   const ListDef* L = nullptr; for (size_t i = 0; i < kListCount; i++) if (!strcmp(kLists[i].key, key)) L = &kLists[i]; if (!L) return jerr(r, "404 Not Found", "unknown_list");
   httpd_resp_set_type(r, "application/json"); httpd_resp_sendstr_chunk(r, "{\"ok\":true,\"values\":{"); for (uint16_t i = 0; i < L->n; i++) { uint32_t raw; const PidEntry* e = find_pid(L->pids[i]); char b[48] = ""; if (e && bus::read(L->pids[i], &raw)) snprintf(b, sizeof b, "%s\"0x%04X\":%g", i ? "," : "", L->pids[i], decode_raw(e, raw)); if (*b) httpd_resp_sendstr_chunk(r, b); }
   httpd_resp_sendstr_chunk(r, "}}"); return httpd_resp_sendstr_chunk(r, nullptr); }
@@ -84,6 +85,21 @@ static esp_err_t h_param_put(httpd_req_t* r) { NEED_SESSION; unsigned pid = 0; i
   uint32_t back; if (!bus::read((uint16_t)pid, &back) || (e->type == TT_U8 ? (back & 0xFF) != (w.raw & 0xFF) : e->type == TT_U32 ? back != w.raw : (back & 0xFFFF) != (w.raw & 0xFFFF))) return jerr(r, "502 Bad Gateway", "verify_failed");   // odczyt zwrotny po zapisie
   double shown = decode_raw(e, back); char b[64]; snprintf(b, sizeof b, "{\"ok\":true,\"v\":%g}", shown); ws_broadcast_param((uint16_t)pid, shown); return jsend(r, "200 OK", b); }
 static esp_err_t h_alarms(httpd_req_t* r) { NEED_SESSION; (void)S; return jsend(r, "200 OK", "{\"ok\":true,\"alarms\":[]}"); }          // TODO: historia alarmow (rejestry 0x4011-0x404B)
+// ---- modul: Wi-Fi, haslo, restart, reset, dziennik, siec
+static char g_log[12][72]; static int g_logn;
+static void logx(const char* m) { snprintf(g_log[g_logn++ % 12], sizeof g_log[0], "%ds %s", (int)(esp_timer_get_time() / 1000000), m); }
+static bool full_or_err(httpd_req_t* r) { if (auth::mode() == Mode::Full) return true; jerr(r, "409 Conflict", "read_only_mode"); return false; }
+static esp_err_t h_wifi(httpd_req_t* r) { NEED_SESSION; (void)S;
+  if (r->method == HTTP_POST) { if (!full_or_err(r)) return ESP_OK; cJSON* j = body_json(r); const cJSON* a = j ? cJSON_GetObjectItem(j, "ssid") : nullptr; const cJSON* b = j ? cJSON_GetObjectItem(j, "pass") : nullptr; bool ok = a && b && cJSON_IsString(a) && cJSON_IsString(b) && net::save(a->valuestring, b->valuestring); cJSON_Delete(j); if (ok) logx("Wi-Fi: zapisano siec (po restarcie)"); return ok ? jsend(r, "200 OK", "{\"ok\":true,\"reboot\":true}") : jerr(r, "400 Bad Request", "bad_request"); }
+  char ss[40]; net::current_ssid(ss, sizeof ss); char b[120]; snprintf(b, sizeof b, "{\"ok\":true,\"ssid\":\"%s\",\"connected\":%s}", ss, net::connected() ? "true" : "false"); return jsend(r, "200 OK", b); }
+static esp_err_t h_wifi_scan(httpd_req_t* r) { NEED_SESSION; (void)S; static char out[700]; net::scan_json(out, sizeof out); return jsend(r, "200 OK", out); }
+static esp_err_t h_password(httpd_req_t* r) { NEED_SESSION; (void)S; if (!full_or_err(r)) return ESP_OK; cJSON* j = body_json(r); const cJSON* n = j ? cJSON_GetObjectItem(j, "new") : nullptr; bool ok = n && cJSON_IsString(n) && auth::set_password(n->valuestring); cJSON_Delete(j); if (ok) logx("haslo zmienione"); return ok ? jsend(r, "200 OK", "{\"ok\":true}") : jerr(r, "400 Bad Request", "bad_request"); }
+static bool pw_in_body(httpd_req_t* r) { cJSON* j = body_json(r); const cJSON* p = j ? cJSON_GetObjectItem(j, "password") : nullptr; bool ok = p && cJSON_IsString(p) && auth::verify_password(p->valuestring); cJSON_Delete(j); return ok; }
+static void restart_later(void*) { vTaskDelay(pdMS_TO_TICKS(800)); esp_restart(); }
+static esp_err_t h_restart(httpd_req_t* r) { NEED_SESSION; (void)S; if (!pw_in_body(r)) return jerr(r, "403 Forbidden", "bad_password"); logx("restart"); jsend(r, "200 OK", "{\"ok\":true}"); xTaskCreate(restart_later, "rst", 2048, nullptr, 5, nullptr); return ESP_OK; }
+static esp_err_t h_factory(httpd_req_t* r) { NEED_SESSION; (void)S; if (!pw_in_body(r)) return jerr(r, "403 Forbidden", "bad_password"); auth::factory_reset(); jsend(r, "200 OK", "{\"ok\":true}"); xTaskCreate(restart_later, "rst", 2048, nullptr, 5, nullptr); return ESP_OK; }
+static esp_err_t h_log(httpd_req_t* r) { NEED_SESSION; (void)S; static char out[1000]; size_t k = snprintf(out, sizeof out, "{\"ok\":true,\"lines\":["); int n = g_logn < 12 ? g_logn : 12; for (int i = 0; i < n; i++) k += snprintf(out + k, sizeof out - k, "%s\"%s\"", i ? "," : "", g_log[(g_logn - n + i) % 12]); snprintf(out + k, sizeof out - k, "]}"); return jsend(r, "200 OK", out); }
+static esp_err_t h_network(httpd_req_t* r) { NEED_SESSION; (void)S; char b[260]; snprintf(b, sizeof b, "{\"ok\":true,\"nodes\":[{\"node\":%d,\"name\":\"Kocioł\",\"state\":\"%s\",\"age_s\":%d},{\"node\":%d,\"name\":\"TeklaPellet (ten moduł)\",\"state\":\"pracuje\"}]}", cfg::kBoilerNode, bus::can_ok() ? "pracuje" : "brak odpowiedzi", (int)(bus::last_reply_age_ms() / 1000), cfg::kNodeId); return jsend(r, "200 OK", b); }
 static esp_err_t h_ui_confirm(httpd_req_t* r) { NEED_SESSION; (void)S; ota::confirm_ui(); return jsend(r, "200 OK", "{\"ok\":true}"); }
 static esp_err_t h_ota_fw(httpd_req_t* r) { NEED_SESSION; (void)S; if (auth::mode() != Mode::Full) return jerr(r, "409 Conflict", "read_only_mode"); return ota::handle_fw(r); }
 static esp_err_t h_ota_ui(httpd_req_t* r) { NEED_SESSION; (void)S; if (auth::mode() != Mode::Full) return jerr(r, "409 Conflict", "read_only_mode"); return ota::handle_ui(r); }
@@ -96,11 +112,12 @@ static esp_err_t h_static(httpd_req_t* r) {
   httpd_resp_set_type(r, f.mime); if (f.gzip) httpd_resp_set_hdr(r, "Content-Encoding", "gzip"); httpd_resp_set_hdr(r, "Cache-Control", strncmp(path, "assets/", 7) ? "no-cache" : "max-age=86400"); return httpd_resp_send(r, (const char*)f.data, f.size);
 }
 bool web::start() {
-  httpd_config_t c = HTTPD_DEFAULT_CONFIG(); c.uri_match_fn = httpd_uri_match_wildcard; c.max_uri_handlers = 24; c.stack_size = 8192; c.lru_purge_enable = true; c.max_open_sockets = 10;
+  httpd_config_t c = HTTPD_DEFAULT_CONFIG(); c.uri_match_fn = httpd_uri_match_wildcard; c.max_uri_handlers = 32; c.stack_size = 8192; c.lru_purge_enable = true; c.max_open_sockets = 10;
   if (httpd_start(&g_srv, &c) != ESP_OK) return false;
   auto reg = [&](const char* u, httpd_method_t m, esp_err_t (*h)(httpd_req_t*), bool ws = false) { httpd_uri_t x{}; x.uri = u; x.method = m; x.handler = h; x.is_websocket = ws; httpd_register_uri_handler(g_srv, &x); };
   reg("/ws", HTTP_GET, h_ws, true); reg("/api/login", HTTP_POST, h_login); reg("/api/setup", HTTP_POST, h_setup); reg("/api/mode", HTTP_POST, h_mode); reg("/api/level", HTTP_POST, h_level); reg("/api/level", HTTP_DELETE, h_level);
   reg("/api/info", HTTP_GET, h_info); reg("/api/state", HTTP_GET, h_state); reg("/api/params", HTTP_GET, h_params); reg("/api/param/*", HTTP_PUT, h_param_put); reg("/api/alarms", HTTP_GET, h_alarms);
+  reg("/api/wifi", HTTP_GET, h_wifi); reg("/api/wifi", HTTP_POST, h_wifi); reg("/api/wifi/scan", HTTP_GET, h_wifi_scan); reg("/api/password", HTTP_POST, h_password); reg("/api/restart", HTTP_POST, h_restart); reg("/api/factory_reset", HTTP_POST, h_factory); reg("/api/log", HTTP_GET, h_log); reg("/api/network", HTTP_GET, h_network);
   reg("/api/ui/confirm", HTTP_POST, h_ui_confirm); reg("/api/ota/fw", HTTP_POST, h_ota_fw); reg("/api/ota/ui", HTTP_POST, h_ota_ui); reg("/*", HTTP_GET, h_static);
   xTaskCreate(ws_task, "ws", 4096, nullptr, 4, nullptr); ESP_LOGI(TAG, "serwer HTTP/WS uruchomiony"); return true;
 }

@@ -44,4 +44,7 @@ int set_level(Session* s, const char* pin) {
 void drop_level(Session* s) { s->level = 0; }
 tekla::Mode mode() { return g_mode; }
 bool set_mode(tekla::Mode m, const char* pw) { nvs_handle_t h; if (nvs_open("auth", NVS_READONLY, &h) != ESP_OK) return false; bool ok = check(h, "pw", pw); nvs_close(h); if (ok) g_mode = m; return ok; }
+bool verify_password(const char* pw) { nvs_handle_t h; if (nvs_open("auth", NVS_READONLY, &h) != ESP_OK) return false; bool ok = check(h, "pw", pw); nvs_close(h); return ok; }
+bool set_password(const char* pw) { if (strlen(pw) < 8) return false; nvs_handle_t h; if (nvs_open("auth", NVS_READWRITE, &h) != ESP_OK) return false; bool ok = store(h, "pw", pw) && nvs_commit(h) == ESP_OK; nvs_close(h); for (auto& s : S) s.used = false; return ok; }
+void factory_reset() { nvs_handle_t h; if (nvs_open("auth", NVS_READWRITE, &h) == ESP_OK) { nvs_erase_all(h); nvs_commit(h); nvs_close(h); } if (nvs_open("wifi", NVS_READWRITE, &h) == ESP_OK) { nvs_erase_all(h); nvs_commit(h); nvs_close(h); } }
 }  // namespace auth

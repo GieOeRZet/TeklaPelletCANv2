@@ -26,4 +26,13 @@ void start() {
   else { wifi_config_t c{}; snprintf((char*)c.ap.ssid, sizeof c.ap.ssid, "TeklaPellet-%02X%02X", mac[4], mac[5]); c.ap.ssid_len = strlen((char*)c.ap.ssid); c.ap.max_connection = 2; c.ap.authmode = WIFI_AUTH_OPEN; esp_wifi_set_mode(WIFI_MODE_AP); esp_wifi_set_config(WIFI_IF_AP, &c); }   // AP otwarty tylko do pierwszej konfiguracji
   esp_wifi_start(); mdns_init(); mdns_hostname_set(host); mdns_instance_name_set(host); mdns_service_add(nullptr, "_teklapellet", "_tcp", 80, nullptr, 0);
 }
+size_t scan_json(char* out, size_t cap) {   // blokujacy skan (kilka sekund); {"ok":true,"networks":[{"ssid":..,"rssi":..}]}
+  wifi_mode_t m; esp_wifi_get_mode(&m); if (m == WIFI_MODE_AP) esp_wifi_set_mode(WIFI_MODE_APSTA);
+  wifi_scan_config_t sc{}; size_t k = snprintf(out, cap, "{\"ok\":true,\"networks\":[");
+  if (esp_wifi_scan_start(&sc, true) == ESP_OK) { uint16_t n = 12; wifi_ap_record_t r[12]; esp_wifi_scan_get_ap_records(&n, r);
+    for (uint16_t i = 0; i < n && k + 80 < cap; i++) { char s[40]; size_t o = 0; for (const char* p = (const char*)r[i].ssid; *p && o < sizeof s - 1; p++) if (*p != '"' && *p != '\\' && (unsigned char)*p >= 32) s[o++] = *p; s[o] = 0; k += snprintf(out + k, cap - k, "%s{\"ssid\":\"%s\",\"rssi\":%d}", i ? "," : "", s, r[i].rssi); } }
+  k += snprintf(out + k, cap - k, "]}"); return k;
+}
+bool save(const char* ssid, const char* pass) { if (!*ssid || strlen(ssid) > 32 || strlen(pass) > 64) return false; nvs_handle_t h; if (nvs_open("wifi", NVS_READWRITE, &h) != ESP_OK) return false; bool ok = nvs_set_str(h, "ssid", ssid) == ESP_OK && nvs_set_str(h, "pass", pass) == ESP_OK && nvs_commit(h) == ESP_OK; nvs_close(h); return ok; }   // wchodzi w zycie po restarcie
+void current_ssid(char* out, size_t cap) { out[0] = 0; nvs_handle_t h; if (nvs_open("wifi", NVS_READONLY, &h) == ESP_OK) { size_t n = cap; if (nvs_get_str(h, "ssid", out, &n) != ESP_OK) out[0] = 0; nvs_close(h); } }
 }  // namespace net

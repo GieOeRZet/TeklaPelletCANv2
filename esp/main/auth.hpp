@@ -9,5 +9,7 @@ int login(const char* password, uint32_t ip, char* token_out);        // 0 ok, 1
 Session* find(const char* token);                                     // odswieza aktywnosc; wygasza token po TTL i poziom po bezczynnosci
 int set_level(Session* s, const char* pin);                           // 0 ok (poziom wg dopasowanego PIN), 1 bledny PIN, 2 zablokowane
 void drop_level(Session* s);
+bool verify_password(const char* pw); bool set_password(const char* pw);   // set_password: min. 8 znakow
+void factory_reset();                                                  // kasuje haslo, PIN-y i Wi-Fi z NVS
 tekla::Mode mode(); bool set_mode(tekla::Mode m, const char* password);   // tryb globalny urzadzenia, po restarcie zawsze tylko-odczyt
 }
