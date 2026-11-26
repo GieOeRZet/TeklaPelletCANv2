@@ -1,0 +1,1525 @@
+{
+"note":"Generowane przez tools/gen_ha_catalog.py; nazwy wg list panelu (PL).",
+"pids":[
+{
+"pid":"0x2001",
+"name":"Temperatura kotła",
+"unit":"°C",
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2002",
+"name":"Boiler program",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2003",
+"name":"Temperatura zadana",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"KOCIOL"
+},
+{
+"pid":"0x2004",
+"name":"Boiler set result temp[C]",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2005",
+"name":"Boiler on/off",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2007",
+"name":"Stan palnika",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2010",
+"name":"Temperatura komfortowa",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"CWU"
+},
+{
+"pid":"0x2012",
+"name":"Temperatura ekonomiczna",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"CWU"
+},
+{
+"pid":"0x2014",
+"name":"Hot water 1 program",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x201A",
+"name":"Hot water 1 result temperature",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x201C",
+"name":"Temp. maksymalna",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"CWU"
+},
+{
+"pid":"0x2032",
+"name":"Temperatura komfortowa",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x2048",
+"name":"Temperatura ekonomiczna",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x2064",
+"name":"CH program",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2065",
+"name":"CH program",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2105",
+"name":"Ilość obwodów grzewczych",
+"unit":null,
+"level_min":1,
+"live":true,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x2106",
+"name":"Ciepła woda użytkowa",
+"unit":null,
+"level_min":1,
+"live":true,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x2107",
+"name":"Bufor",
+"unit":null,
+"level_min":1,
+"live":true,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x2108",
+"name":"Solary",
+"unit":null,
+"level_min":1,
+"live":true,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x2109",
+"name":"Solar temperature 1 [C]",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2110",
+"name":"Temperatura CWU",
+"unit":"°C",
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2111",
+"name":"Hot water 1 needed temp. [C]",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2112",
+"name":"Bufor góra",
+"unit":"°C",
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2113",
+"name":"Bufor dół",
+"unit":"°C",
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2114",
+"name":"Temp. minimalna (góra)",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"BUFOR"
+},
+{
+"pid":"0x2115",
+"name":"Temp. maksymalna (dół)",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"BUFOR"
+},
+{
+"pid":"0x2116",
+"name":"Przepływ",
+"unit":"l/min",
+"level_min":0,
+"live":false,
+"list":"SOLARY"
+},
+{
+"pid":"0x2123",
+"name":"Moduł Lambda",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x2142",
+"name":"Tryb pracy",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x2146",
+"name":"Temperatura CO zadana ręcznie",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x214E",
+"name":"Tlen dla mocy 30%",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x2152",
+"name":"Tlen dla mocy 100%",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x2153",
+"name":"Bezwładność palnika",
+"unit":"min",
+"level_min":2,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x215F",
+"name":"Temperatura zewnętrzna",
+"unit":"°C",
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x216A",
+"name":"Exchanger cleaning request",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x216C",
+"name":"Minimalna temp. powrotu",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"KOCIOL"
+},
+{
+"pid":"0x216E",
+"name":"Czas mieszacza",
+"unit":"s",
+"level_min":1,
+"live":false,
+"list":"KOCIOL"
+},
+{
+"pid":"0x216F",
+"name":"CH mixer state",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2207",
+"name":"Minimalna temp. pomp",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"KOCIOL"
+},
+{
+"pid":"0x2208",
+"name":"Histereza załączenia",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"KOCIOL"
+},
+{
+"pid":"0x2210",
+"name":"Zagrzej teraz",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"CWU"
+},
+{
+"pid":"0x2212",
+"name":"Histereza",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"CWU"
+},
+{
+"pid":"0x2214",
+"name":"Źródło",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"CWU"
+},
+{
+"pid":"0x2216",
+"name":"Zwiększenie temperatury źródła",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"CWU"
+},
+{
+"pid":"0x2218",
+"name":"Delta załączenia pompy",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"CWU"
+},
+{
+"pid":"0x2250",
+"name":"Burner brightness",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2251",
+"name":"Burner storage feeder",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2252",
+"name":"Burner burner feeder",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2253",
+"name":"Burner igniter",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2254",
+"name":"Moc dmuchawy modulacja",
+"unit":"%",
+"level_min":1,
+"live":true,
+"list":"PALNIK"
+},
+{
+"pid":"0x2256",
+"name":"Wstępna dawka paliwa",
+"unit":"s",
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x2257",
+"name":"Podawanie max",
+"unit":"s",
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x2258",
+"name":"Liczba czyszczeń rusztu",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x225A",
+"name":"Szybkość modulacji mocy",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x226A",
+"name":"Próg foto",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x226B",
+"name":"Czas wygaszania",
+"unit":"min",
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x226C",
+"name":"Burner feeder temperature [dC]",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x226D",
+"name":"Burner storage feeding time [dS]",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2270",
+"name":"Moc min",
+"unit":"%",
+"level_min":0,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x2271",
+"name":"Moc max",
+"unit":"%",
+"level_min":0,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x2272",
+"name":"Ilość paliwa test",
+"unit":"kg/h",
+"level_min":0,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x2273",
+"name":"Korekta powietrza",
+"unit":"%",
+"level_min":0,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x2276",
+"name":"Grate move indicator",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2277",
+"name":"Boiler pump state",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2278",
+"name":"Hot water pump state",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x2281",
+"name":"Minimalna temp. pomp",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"BUFOR"
+},
+{
+"pid":"0x2282",
+"name":"Automatyczna temp. góra",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"BUFOR"
+},
+{
+"pid":"0x2289",
+"name":"Moc dmuchawy rozpalanie",
+"unit":"%",
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x2290",
+"name":"Czas rozżarzania",
+"unit":"min",
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x2291",
+"name":"Histereza wyłączenia",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"KOCIOL"
+},
+{
+"pid":"0x2292",
+"name":"Wartość opałowa",
+"unit":"kWh/kg",
+"level_min":0,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x2297",
+"name":"Antylegionella",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"CWU"
+},
+{
+"pid":"0x2299",
+"name":"CH pump state",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x22A1",
+"name":"Czujnik pokojowy",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22A5",
+"name":"Czujnik CO",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22B1",
+"name":"Zwiększenie temperatury źródła",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22B5",
+"name":"Czas mieszacza",
+"unit":"s",
+"level_min":1,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22B9",
+"name":"CH mixer state",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x22BD",
+"name":"Histereza",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22C1",
+"name":"Kalibracja czujnika pok.",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22C5",
+"name":"Temperatura CO dla -20°C",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22C9",
+"name":"Temperatura CO dla  0°C",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22CD",
+"name":"Temperatura CO dla 10°C",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22D1",
+"name":"Źródło",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22D5",
+"name":"Temp. maksymalna",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22D9",
+"name":"Wsp. korekcji t. CO",
+"unit":"°C/°C",
+"level_min":1,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22E5",
+"name":"Obniżenie temperatury CO",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22E9",
+"name":"MIN temperatura CO pomp",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22F1",
+"name":"Stała pompa",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x22F9",
+"name":"Obniżenie Tco dla ochrony powrotu",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x2315",
+"name":"Automatyczny tryb lato",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x2321",
+"name":"Nazwa",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x2999",
+"name":"Odstęp czyszczenia",
+"unit":"h",
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x299A",
+"name":"Rozżarzanie paliwo",
+"unit":"%",
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x299B",
+"name":"Zwiększenie temperatury źródła",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"BUFOR"
+},
+{
+"pid":"0x299C",
+"name":"Burner blower RPM",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x299D",
+"name":"0x299D",
+"unit":null,
+"level_min":2,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x299E",
+"name":"Pompa kotłowa",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3003",
+"name":"Czas ruchu rusztu",
+"unit":"s",
+"level_min":2,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x300C",
+"name":"Moc dmuchawy wygaszanie",
+"unit":"%",
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x300D",
+"name":"Priorytet CWU",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"CWU"
+},
+{
+"pid":"0x3011",
+"name":"Stopniowa redukcja mocy",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"BUFOR"
+},
+{
+"pid":"0x3116",
+"name":"Delta załączenia",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"SOLARY"
+},
+{
+"pid":"0x3117",
+"name":"Delta wyłączenia",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"SOLARY"
+},
+{
+"pid":"0x3118",
+"name":"Ciepło właściwe",
+"unit":"kJ/(kg*K)",
+"level_min":1,
+"live":false,
+"list":"SOLARY"
+},
+{
+"pid":"0x3119",
+"name":"Temperatura maksymalna wody",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"SOLARY"
+},
+{
+"pid":"0x311A",
+"name":"Max temp kolektora (alarmowa)",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"SOLARY"
+},
+{
+"pid":"0x311B",
+"name":"Min temp kolektora (alarmowa)",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"SOLARY"
+},
+{
+"pid":"0x311C",
+"name":"Solar pump state",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x3120",
+"name":"Solar status",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x3129",
+"name":"Ciśnienie min.",
+"unit":"bar",
+"level_min":1,
+"live":false,
+"list":"KOCIOL"
+},
+{
+"pid":"0x312A",
+"name":"Ciśnienie max.",
+"unit":"bar",
+"level_min":1,
+"live":false,
+"list":"KOCIOL"
+},
+{
+"pid":"0x3170",
+"name":"Delta załączenia pompy",
+"unit":"°C",
+"level_min":1,
+"live":false,
+"list":"BUFOR"
+},
+{
+"pid":"0x3333",
+"name":"Boiler pressure[mbar]",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x3500",
+"name":"Główny moduł IO",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3501",
+"name":"Autokonfiguracja",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3502",
+"name":"Moduł rozrzerzający obwody CO",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3505",
+"name":"Czujnik temperatury zewnętrznej",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3507",
+"name":"Całkowite zużycie paliwa",
+"unit":"kg",
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3508",
+"name":"Cisza nocna od",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"KOCIOL"
+},
+{
+"pid":"0x3509",
+"name":"Cisza nocna do",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"KOCIOL"
+},
+{
+"pid":"0x350A",
+"name":"Czujnik powrotu do kotła",
+"unit":null,
+"level_min":1,
+"live":true,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x350B",
+"name":"Numer profilu",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x350C",
+"name":"Kaskada master",
+"unit":null,
+"level_min":1,
+"live":true,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x350D",
+"name":"Czujnik ciśnienia",
+"unit":null,
+"level_min":1,
+"live":true,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3511",
+"name":"Master stopień mocy",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"KASKADA"
+},
+{
+"pid":"0x3512",
+"name":"Slave 1 stopień mocy",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"KASKADA"
+},
+{
+"pid":"0x3513",
+"name":"Slave 2 stopień mocy",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"KASKADA"
+},
+{
+"pid":"0x3514",
+"name":"Slave 3 stopień mocy",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"KASKADA"
+},
+{
+"pid":"0x3515",
+"name":"Próg zwiększania stopnia mocy",
+"unit":"%",
+"level_min":0,
+"live":false,
+"list":"KASKADA"
+},
+{
+"pid":"0x3516",
+"name":"Próg zmniejszania stopnia mocy",
+"unit":"%",
+"level_min":0,
+"live":false,
+"list":"KASKADA"
+},
+{
+"pid":"0x3517",
+"name":"Opóźn. zwiększ. stopnia mocy",
+"unit":"min",
+"level_min":0,
+"live":false,
+"list":"KASKADA"
+},
+{
+"pid":"0x3518",
+"name":"Opóźn. zmniejsz. stopnia mocy",
+"unit":"min",
+"level_min":0,
+"live":false,
+"list":"KASKADA"
+},
+{
+"pid":"0x351A",
+"name":"Liczba kotłów slave",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"KASKADA"
+},
+{
+"pid":"0x3520",
+"name":"Praca silnika transportującego (1)",
+"unit":"s",
+"level_min":0,
+"live":false,
+"list":"MAGAZYN"
+},
+{
+"pid":"0x3521",
+"name":"Pauza silnika transportującego (1)",
+"unit":"s",
+"level_min":0,
+"live":false,
+"list":"MAGAZYN"
+},
+{
+"pid":"0x3522",
+"name":"External fuel storage motor 1 state",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x3523",
+"name":"External fuel storage motor 2 state",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x3524",
+"name":"External fuel storage level sens. state",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x3525",
+"name":"Dodatkowy magazyn paliwa",
+"unit":null,
+"level_min":1,
+"live":true,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3526",
+"name":"Wybieg silnika transportującego (1)",
+"unit":"s",
+"level_min":1,
+"live":false,
+"list":"MAGAZYN"
+},
+{
+"pid":"0x3527",
+"name":"Praca silnika podajnika (2)",
+"unit":"s",
+"level_min":0,
+"live":false,
+"list":"MAGAZYN"
+},
+{
+"pid":"0x3528",
+"name":"Pauza silnika podajnika (2)",
+"unit":"s",
+"level_min":0,
+"live":false,
+"list":"MAGAZYN"
+},
+{
+"pid":"0x3529",
+"name":"Czujnik rezerwy paliwa",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"MAGAZYN"
+},
+{
+"pid":"0x352B",
+"name":"Maksymalna liczba cykli",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"MAGAZYN"
+},
+{
+"pid":"0x3600",
+"name":"Pojemność zbiornika paliwa",
+"unit":"kg",
+"level_min":1,
+"live":true,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3601",
+"name":"Paliwo w zasobniku",
+"unit":"kg",
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x3603",
+"name":"Rezerwa zbiornika paliwa",
+"unit":"kg",
+"level_min":0,
+"live":true,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3604",
+"name":"Rezerwa paliwa stop",
+"unit":"kg",
+"level_min":1,
+"live":false,
+"list":"KOCIOL"
+},
+{
+"pid":"0x3605",
+"name":"Sterowanie Lambda",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x3606",
+"name":"Konfiguracja IN17",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3608",
+"name":"Licznik rozpaleń",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3609",
+"name":"Średni czas rozpalania",
+"unit":"s",
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3610",
+"name":"Średnia moc palnika z 50 godzin",
+"unit":"%",
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3611",
+"name":"Czas pracy podajnika 1",
+"unit":"h",
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3612",
+"name":"Czas pracy podajnika 2",
+"unit":"h",
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3613",
+"name":"Średni tlen dla mocy 30%",
+"unit":"%",
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3614",
+"name":"Średni tlen dla mocy 50%",
+"unit":"%",
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3615",
+"name":"Średni tlen dla mocy 70%",
+"unit":"%",
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3616",
+"name":"Średni tlen dla mocy 90%",
+"unit":"%",
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3618",
+"name":"Liczba czyszczeń wymiennika",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3619",
+"name":"Liczba przegrzań kotła",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3628",
+"name":"Statistics - total energy produced [kWh]",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x3629",
+"name":"Pomiar energii",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x362A",
+"name":"Liczba zaników zasilania",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"STATYSTYKI"
+},
+{
+"pid":"0x3700",
+"name":"Okres podajnika zasobnika",
+"unit":"s",
+"level_min":2,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x3704",
+"name":"Moc dmuchawy rozżarzanie",
+"unit":"%",
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x3706",
+"name":"Current burner power [dkW]",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x3708",
+"name":"Wybieg pompy",
+"unit":"min",
+"level_min":1,
+"live":false,
+"list":"KOCIOL"
+},
+{
+"pid":"0x370A",
+"name":"Boiler image selector",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x370B",
+"name":"Pod. palnika",
+"unit":"% pod. zasobnika",
+"level_min":2,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x3710",
+"name":"Fuel consumption [Dkg/h]",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x3711",
+"name":"Time to grate cleaning [min]",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x3715",
+"name":"Czas pauzy",
+"unit":"min",
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x3716",
+"name":"Moc w pauzie",
+"unit":"%",
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x3717",
+"name":"Dmuchawa w pauzie",
+"unit":"%",
+"level_min":1,
+"live":false,
+"list":"PALNIK"
+},
+{
+"pid":"0x3720",
+"name":"Uśrednianie temp. zewnętrznej",
+"unit":"h",
+"level_min":0,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3721",
+"name":"Outside temperature averaged",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x3722",
+"name":"Kopiuj nastawy z innego sterownika",
+"unit":null,
+"level_min":1,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3729",
+"name":"Is summer time",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x372A",
+"name":"Temperatura przełączenia na lato",
+"unit":"C",
+"level_min":0,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x372F",
+"name":"Auto synchronizacja zegara",
+"unit":null,
+"level_min":0,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3747",
+"name":"Kalibracja czujnika zew.",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"KONFIGURACJA"
+},
+{
+"pid":"0x3749",
+"name":"Hot water circular pump state",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x374B",
+"name":"Cyrkulacja praca",
+"unit":"min",
+"level_min":0,
+"live":false,
+"list":"CWU"
+},
+{
+"pid":"0x374C",
+"name":"Cyrkulacja pauza",
+"unit":"min",
+"level_min":0,
+"live":false,
+"list":"CWU"
+},
+{
+"pid":"0x4000",
+"name":"Boiler return temp [dC]",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x4005",
+"name":"Burner power [%]",
+"unit":null,
+"level_min":0,
+"live":true,
+"list":null
+},
+{
+"pid":"0x400C",
+"name":"Temperatura CO dla -10°C",
+"unit":"°C",
+"level_min":0,
+"live":false,
+"list":"OGRZEWANIE"
+},
+{
+"pid":"0x404E",
+"name":"Dmuchawa z HALL",
+"unit":null,
+"level_min":2,
+"live":false,
+"list":"KONFIGURACJA"
+}
+]
+}

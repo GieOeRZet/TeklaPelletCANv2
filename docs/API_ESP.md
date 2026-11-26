@@ -25,7 +25,7 @@ Stan: zgodne z `esp/main/web.cpp` (firmware 0.2, **API wersja 2**). Skompilowane
 - `POST /api/level` `{pin}` → `{ok, level}` (poziom 1‑3 wg PIN-u; błędny → 403 `bad_pin`, blokada → 423 `locked`); `DELETE /api/level` → poziom 0.
 
 ## 5. Dane z kotła
-- `GET /api/state` → `{ok, v:{"0x2001":66.9, ...}}` (ostatnie znane wartości „na żywo”; jednostki wyświetlane, stany wyjść jako 0/1/2).
+- `GET /api/state` → `{ok, v:{"0x2001":66.9, ...}}` (ostatnie znane wartości „na żywo”; jednostki wyświetlane, stany wyjść jako 0/1/2). Domyślnie tylko zestaw podstawowy (+ zestawy zamówione przez klientów WebSocket); **`GET /api/state?all=1`** włącza na 20 s odpytywanie wszystkich zestawów (używa integracja Home Assistant).
 - `GET /api/params?list=<klucz>` (np. `0x00|KOCIOL|inst1`; klucze list w `data/device_model.json` → `lists`) lub `GET /api/params?pids=0x2209,0x220A,...` (do ok. 40) → `{ok, values:{"0x2003":65,...}}` (odczyt z kotła przez SDO; brakujące PID-y pomijane).
 - `PUT /api/param/{pid}` `{value}` (np. `/api/param/0x2003`) → `{ok, v}`; wartość po zapisie i **odczycie zwrotnym** (przy niezgodności 502 `verify_failed`). Warunki: tryb `full`, PID z `panel_write`, nie na liście zablokowanych, poziom PIN ≥ wymagany dla wiersza, wartość w zakresie. Wartość w jednostkach wyświetlanych (skala z modelu).
 - `GET /api/alarms` → `{ok, alarms:[{n,code,text,active,acked}]}` (**obecnie pusta lista**: odczyt historii niezaimplementowany).
@@ -52,7 +52,12 @@ Wymagają wcześniejszego **odblokowania serwisowego** `POST /api/service/unlock
 - **Konto DEV** (osobne hasło, min. 8 znaków): `GET /api/dev` → `{ok, configured, unlocked, beta_url}`; `POST /api/dev/set` `{password}` (wymaga odblokowania serwisowego; gdy już ustawione, także odblokowanego DEV); `POST /api/dev/unlock` `{password}` (5 min).
 - **Kanał BETA** (po odblokowaniu DEV; pobieranie przez HTTPS z `beta_url`, domyślnie wydanie GitHub `beta`): `GET /api/dev/beta` → `{ok, version, current}`; `POST /api/dev/beta/update` (start pobierania `tekla_pellet_beta.bin` z podpisem, weryfikacja tym samym kluczem, restart); `GET /api/dev/beta/status` → `{ok, state, pct, msg}` (`state`: 0 bezczynny, 1 sprawdzanie, 2 pobieranie, 3 weryfikacja, 4 gotowe, 5 błąd); `POST /api/dev/beta/url` `{url}` (https, zmiana źródła). Publikacja BETA wymaga sekretu z kluczem podpisu w CI (patrz `.github/workflows/ci.yml`).
 
-## 10. Błędy
+## 10. Odzyskiwanie zapomnianego hasła (bez fizycznego dostępu)
+- **Kod odzyskiwania**: 20 znaków (`XXXX-XXXX-XXXX-XXXX-XXXX`, alfabet bez 0/O/1/I), **generuje klient** (aplikacja/strona serwisowa) przy pierwszej konfiguracji i pokazuje właścicielowi; w urządzeniu tylko hasz PBKDF2. Przekazywany w `POST /api/setup` jako `recovery` albo później `POST /api/recovery` `{code}` (odblokowanie serwisowe; nowy kod unieważnia poprzedni). `GET /api/identity` ma pole `recovery` (true/false).
+- `POST /api/recover` `{code, new}` (**bez tokenu**) → `{ok}`: ustawia nowe hasło (≥ 8 znaków), zrywa sesje z hasła, tokeny klientów zostają. Limit prób jak dla haseł (429 `locked`); `403 bad_code`, `409 no_recovery` (urządzenie bez kodu: wtedy zostaje reset fabryczny z przycisku/UART). Kod w BLE: patrz pkt 12.
+- Kod jest równoważny hasłu: przechowuj go jak hasło. Reset fabryczny kasuje także kod.
+
+## 11. Błędy
 | HTTP | `code` | znaczenie |
 |---|---|---|
 | 400 | `bad_request`, `bad_name`, `bad_ip`, `bad_url`, `out_of_range`, `confirm_required` | zły format/wartość |
@@ -64,5 +69,11 @@ Wymagają wcześniejszego **odblokowania serwisowego** `POST /api/service/unlock
 | 423/429 | `locked` | zbyt wiele błędnych prób |
 | 502 | `can_timeout`, `verify_failed`, `http_*` | kocioł nie odpowiada / odczyt zwrotny się nie zgadza / pobieranie BETA |
 
-## 11. Czego jeszcze nie ma / niezweryfikowane
+## 12. Bluetooth LE (tylko pierwsza konfiguracja)
+Reklamowanie BLE włącza się, gdy moduł **nie jest skonfigurowany** albo **nie ma Wi‑Fi od > 3 min**, i wyłącza po stabilnym połączeniu z siecią (> 60 s). Nazwa `TeklaPellet-<xxxxxx>`, usługa `8f1c0001-5a7e-4c1b-9d2a-7e6b2f0a1001` (filtr skanowania), MTU do 256.
+- `…0002` (odczyt): `{"id","name","fw","api","setup_needed","wifi","state"}`; `state`: 0 bezczynny, 1 przetwarzanie, 2 ok (moduł restartuje), 3 ok (zmiana Wi‑Fi z cofnięciem), 4 błędne hasło, 5 zablokowane, 6 złe dane, 7 błąd zapisu.
+- `…0003` (zapis JSON, **wymaga szyfrowanego łącza** - Android paruje „Just Works” automatycznie): moduł nieskonfigurowany: `{ssid, wifi_pass, password, pin1, pin2, pin3, recovery}`; skonfigurowany: `{ssid, wifi_pass, password}` albo (zapomniane hasło) `{ssid, wifi_pass, recovery, new_password}`. Po sukcesie aplikacja czeka na moduł w mDNS (po `id`) i paruje przez `POST /api/pair`.
+- Bezpieczeństwo: szyfrowanie „Just Works” chroni przed podsłuchem pasywnym, **nie** przed aktywnym atakującym w zasięgu (MITM) w chwili konfiguracji. Skonfigurowany moduł wymaga hasła/kodu (limit prób, wspólny z REST: 5/60 s).
+
+## 13. Czego jeszcze nie ma / niezweryfikowane
 Odczyt historii alarmów; wykrywanie konfliktu węzła CAN (domyślnie 95); HTTPS i parowanie bez przesyłania hasła jawnie (hasło idzie po HTTP w sieci lokalnej/VPN); wszystkie punkty niesprawdzone na sprzęcie (w tym zmiana IP/Wi‑Fi z cofnięciem, awaryjny AP, OTA BETA po HTTPS).

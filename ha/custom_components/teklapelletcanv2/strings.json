@@ -1,0 +1,71 @@
+{
+ "config": {
+  "flow_title": "{name}",
+  "step": {
+   "user": {
+    "title": "Dodaj moduł TeklaPellet",
+    "description": "Moduły w sieci są wykrywane automatycznie. Jeśli nie widzisz swojego, wpisz jego adres (IP lub nazwa, także przez VPN).",
+    "data": {
+     "host": "Adres modułu"
+    }
+   },
+   "pair": {
+    "title": "Parowanie z {name}",
+    "description": "Podaj hasło urządzenia (to samo co w aplikacji i na stronie serwisowej). Jest potrzebne tylko teraz - Home Assistant zapamięta token klienta, nie hasło.",
+    "data": {
+     "password": "Hasło urządzenia"
+    }
+   }
+  },
+  "error": {
+   "cannot_connect": "Nie można połączyć się z modułem.",
+   "invalid_auth": "Błędne hasło.",
+   "locked": "Zbyt wiele prób, spróbuj za minutę.",
+   "too_many_clients": "Moduł ma już 8 sparowanych klientów - usuń któregoś na stronie serwisowej.",
+   "api_mismatch": "Niezgodna wersja API modułu - zaktualizuj integrację lub firmware.",
+   "not_configured": "Moduł nie jest skonfigurowany - użyj aplikacji (Bluetooth) albo strony serwisowej modułu."
+  },
+  "abort": {
+   "already_configured": "Ten moduł jest już dodany.",
+   "cannot_connect": "Nie można połączyć się z modułem.",
+   "api_mismatch": "Niezgodna wersja API modułu.",
+   "not_configured": "Moduł nie jest skonfigurowany.",
+   "reauth_successful": "Ponownie sparowano."
+  }
+ },
+ "options": {
+  "step": {
+   "init": {
+    "title": "Poziom dostępu i odświeżanie",
+    "description": "Poziom wyznacza, które parametry panelu możesz wybrać jako encje (jak poziomy PIN w panelu kotła). PIN służy tylko do sprawdzenia i nie jest zapisywany.",
+    "data": {
+     "level": "Poziom dostępu",
+     "pin": "PIN tego poziomu (dla 1-3)",
+     "scan_interval": "Odświeżanie danych"
+    }
+   },
+   "entities": {
+    "title": "Encje",
+    "description": "Domyślnie tworzony jest tylko czujnik połączenia. Wybierz, co dodać do Home Assistanta. Karta panelu działa niezależnie od tego wyboru.",
+    "data": {
+     "pids": "Parametry jako encje"
+    }
+   }
+  },
+  "error": {
+   "bad_pin": "Błędny PIN.",
+   "pin_level_too_low": "Ten PIN daje niższy poziom niż wybrany.",
+   "locked": "Zbyt wiele prób, spróbuj za 5 minut."
+  }
+ },
+ "selector": {
+  "level": {
+   "options": {
+    "0": "0 - użytkownik",
+    "1": "1 - instalator",
+    "2": "2 - poziom 2",
+    "3": "3 - poziom 3"
+   }
+  }
+ }
+}

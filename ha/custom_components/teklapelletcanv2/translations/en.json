@@ -1,0 +1,71 @@
+{
+ "config": {
+  "flow_title": "{name}",
+  "step": {
+   "user": {
+    "title": "Add TeklaPellet module",
+    "description": "Modules on the network are discovered automatically. Otherwise enter its address (IP or name, VPN works too).",
+    "data": {
+     "host": "Module address"
+    }
+   },
+   "pair": {
+    "title": "Pair with {name}",
+    "description": "Enter the device password (same as in the app). It is used once; Home Assistant stores a client token, not the password.",
+    "data": {
+     "password": "Device password"
+    }
+   }
+  },
+  "error": {
+   "cannot_connect": "Cannot connect to the module.",
+   "invalid_auth": "Wrong password.",
+   "locked": "Too many attempts, try again in a minute.",
+   "too_many_clients": "The module already has 8 paired clients.",
+   "api_mismatch": "API version mismatch.",
+   "not_configured": "Module is not configured yet - use the app (Bluetooth) or its service page."
+  },
+  "abort": {
+   "already_configured": "This module is already added.",
+   "cannot_connect": "Cannot connect to the module.",
+   "api_mismatch": "API version mismatch.",
+   "not_configured": "Module is not configured.",
+   "reauth_successful": "Re-paired."
+  }
+ },
+ "options": {
+  "step": {
+   "init": {
+    "title": "Access level and refresh",
+    "description": "The level decides which panel parameters can be selected as entities. The PIN is only verified, never stored.",
+    "data": {
+     "level": "Access level",
+     "pin": "PIN of this level (1-3)",
+     "scan_interval": "Refresh interval"
+    }
+   },
+   "entities": {
+    "title": "Entities",
+    "description": "Only the connectivity sensor is created by default. The panel card works independently of this selection.",
+    "data": {
+     "pids": "Parameters as entities"
+    }
+   }
+  },
+  "error": {
+   "bad_pin": "Wrong PIN.",
+   "pin_level_too_low": "This PIN gives a lower level than selected.",
+   "locked": "Too many attempts, try again in 5 minutes."
+  }
+ },
+ "selector": {
+  "level": {
+   "options": {
+    "0": "0 - user",
+    "1": "1 - installer",
+    "2": "2",
+    "3": "3"
+   }
+  }
+ }
+}
