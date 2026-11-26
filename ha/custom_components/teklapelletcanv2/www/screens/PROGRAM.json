@@ -1,0 +1,9 @@
+{
+ "name": "PROGRAM",
+ "size": [
+  480,
+  272
+ ],
+ "dynamic": [],
+ "source": "tlo = zrzut z emulatora (ref) - render z danych dawal artefakty (ikona, brak segmentu); pola dynamiczne brak (pasek harmonogramu to dane z PID dni)"
+}

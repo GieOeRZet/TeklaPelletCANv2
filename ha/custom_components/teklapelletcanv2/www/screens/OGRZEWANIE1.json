@@ -1,0 +1,55 @@
+{
+ "name": "OGRZEWANIE1",
+ "size": [
+  480,
+  272
+ ],
+ "dynamic": [
+  {
+   "widget": "0x20017650",
+   "rect": [
+    71,
+    80,
+    26,
+    32
+   ],
+   "font": 2,
+   "align": 1,
+   "color": "#ffffff",
+   "template": "70",
+   "sample": "70",
+   "bind": [
+    {
+     "pid": "0x22D5",
+     "id": "co1_tmax",
+     "scale": 1.0,
+     "evidence": "FACT-DYNAMIC (wstrzykniecie w emulatorze)"
+    }
+   ]
+  },
+  {
+   "widget": "0x20017694",
+   "rect": [
+    429,
+    195,
+    49,
+    32
+   ],
+   "font": 2,
+   "align": 2,
+   "color": "#ffffff",
+   "template": "7°C",
+   "sample": "7°C",
+   "bind": [
+    {
+     "pid": "0x2064",
+     "id": "co_mode",
+     "scale": 20.0,
+     "evidence": "FACT-DYNAMIC (wstrzykniecie w emulatorze)"
+    }
+   ]
+  }
+ ],
+ "source": "emulator render z danych (STRONG); bindingi PID: data_binding.py gdzie dostepne",
+ "bindings_source": "tools/bind_screen.py"
+}
