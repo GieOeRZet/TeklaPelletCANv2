@@ -39,7 +39,7 @@ class AppModel(ctx: Context) {
 
     val menu: List<MenuRow> = app.getJSONArray("menu").objs().map { m ->
         MenuRow(m.getString("title"), m.str("target"), m.getInt("level_min"),
-            m.getJSONArray("cond").objs().map { Cond(normPid(it.getString("pid")), it.getString("op"), it.getInt("val")) }, m.getInt("icon"))
+            m.getJSONArray("cond").objs().map { Cond(normPid(it.getString("pid")), it.getString("op"), it.getInt("val")) }, m.getInt("icon_sel"))   // glify menu = bitmapy icon_sel (icon = tlo/stan nieaktywny)
     }
     val screens: Map<String, ScreenDef> = app.getJSONObject("screens").let { s ->
         s.keys().asSequence().associateWith { id ->

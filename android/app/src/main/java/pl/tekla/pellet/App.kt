@@ -47,7 +47,7 @@ class Ui(val src: DataSource, val v: Map<String, Double>, val level: Int, val fu
 
 fun f1(x: Double?, d: Int = 1): String = if (x == null || x.isNaN()) "--" else if (d == 0) Math.round(x).toString() else String.format(java.util.Locale.US, "%.${d}f", x)
 val PROGICON = listOf(133, 135, 122, 128, 120)
-val TABS = listOf(Triple("home", "Pulpit", "⌂"), Triple("kociol", "Kocioł", "60"), Triple("palnik", "Palnik", "61"), Triple("cwu", "Woda", "66"), Triple("more", "Więcej", "≡"))
+val TABS = listOf(Triple("home", "Pulpit", "⌂"), Triple("kociol", "Kocioł", "83"), Triple("palnik", "Palnik", "85"), Triple("cwu", "Woda", "88"), Triple("more", "Więcej", "≡"))
 
 fun fuelDots(fuel: Double, cap: Double, res: Double): Pair<Int, Boolean> {
     if (cap <= 0) return 0 to false
@@ -361,7 +361,7 @@ fun OutTestView(ui: Ui) {
 fun MoreView(ui: Ui) {
     val items = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { m -> ui.m.routeOf(m)?.let { it to m } }.filter { it.first !in listOf("kociol", "palnik", "cwu") }
     Card("Więcej") {
-        for ((r, m) in items) Row(Modifier.fillMaxWidth().clickable { ui.go(r) }.padding(vertical = 11.dp, horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) { Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
+        for ((r, m) in items) Row(Modifier.fillMaxWidth().clickable { ui.go(r) }.padding(vertical = 11.dp, horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) { Ic(m.icon, 22.dp); Spacer(Modifier.width(10.dp)); Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
         Row(Modifier.fillMaxWidth().clickable { ui.go("module") }.padding(vertical = 11.dp, horizontal = 4.dp)) { Text("Moduł ESP (Wi-Fi, hasło, aktualizacja)", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
         Row(Modifier.fillMaxWidth().clickable { ui.go("appset") }.padding(vertical = 11.dp, horizontal = 4.dp)) { Text("Ustawienia aplikacji (demo / ESP)", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
     }

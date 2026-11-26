@@ -15,7 +15,7 @@ function fuelIcon(fuel, cap, res) {                                      // krop
 const ROUTE = { KOCIOL: 'kociol', PALNIK: 'palnik', CWU: 'cwu', SOLARY: 'solary', BUFOR: 'bufor', KASKADA: 'kaskada', MAGAZYN: 'magazyn', ALARMY: 'alarms', INFO: 'info', KONFIGURACJA: 'config', TEST_WYJSC: 'outtest', STATYSTYKI: 'stats', SIEC: 'network', INTERNET: 'module', DLG_PIN: 'pin' };
 const routeOf = r => r.target === 'OGRZEWANIE' ? 'co' + r.title.slice(-1) : ROUTE[r.target];
 const condOk = c => c.every(x => { const v = num(x.pid); if (v === undefined) return x.op === '!=' ? false : false; return x.op === '>=' ? v >= x.val : x.op === '!=' ? v !== x.val : v === x.val; });
-function navItems() { return ST.app.menu.filter(r => routeOf(r) && r.level_min <= ST.level && condOk(r.cond)).map(r => ({ id: routeOf(r), t: r.title, icon: r.icon })).concat([{ id: 'module', t: 'Moduł ESP', icon: 77 }]).filter((x, i, a) => a.findIndex(y => y.id === x.id) === i); }
+function navItems() { return ST.app.menu.filter(r => routeOf(r) && r.level_min <= ST.level && condOk(r.cond)).map(r => ({ id: routeOf(r), t: r.title, icon: r.icon_sel })).concat([{ id: 'module', t: 'Moduł ESP', icon: 77 }]).filter((x, i, a) => a.findIndex(y => y.id === x.id) === i); }
 const TABS = [['home', 'Pulpit', '⌂'], ['kociol', 'Kocioł', '♨'], ['palnik', 'Palnik', '♦'], ['cwu', 'Woda', '◍'], ['more', 'Więcej', '≡']];
 
 // ---------- API
