@@ -10,13 +10,15 @@ let fails = 0; const ok = (c, m) => { if (!c) { console.log('FAIL', m); fails++;
     p.on('pageerror', e => errs.push(name + ': ' + e.message)); p.on('console', m => { if (m.type() === 'error' && !m.text().includes('Failed to load resource')) errs.push(name + ' console: ' + m.text()); });
     await p.goto(URL); await p.fill('#pw', 'zle'); await p.click('#lok'); await p.waitForTimeout(300);
     ok((await p.textContent('#lerr')).includes('Błędne'), name + ': błędne hasło odrzucone');
-    await p.fill('#pw', 'demo'); await p.click('#lok'); await p.waitForSelector('.hero', { timeout: 5000 });
+    await p.fill('#pw', 'demo'); await p.click('#lok'); await p.waitForSelector('.home', { timeout: 5000 });
     await p.waitForTimeout(1500); await p.screenshot({ path: `/tmp/tp_shots/${name}_home.png` });
     const ov = await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, tabs: (document.querySelector('#tabs') || {}).getBoundingClientRect ? document.querySelector('#tabs').getBoundingClientRect().bottom : 0, vh: innerHeight }));
-    ok(ov.sw <= ov.cw, name + ': brak poziomego przewijania'); if (name === 'phone') ok(ov.tabs <= ov.vh + 0.5 && ov.tabs > 0, name + ': pasek zakładek w obrębie ekranu');
+    ok(ov.sw <= ov.cw, name + ': brak poziomego przewijania'); 
     // palnik
     await p.evaluate(() => { location.hash = 'palnik'; }); await p.waitForTimeout(1500); await p.screenshot({ path: `/tmp/tp_shots/${name}_palnik.png` });
     ok(await p.locator('.bar .cell').count() >= 5, name + ': dolna belka PALNIK ma komórki');
+    if (name === 'phone') { const tb = await p.evaluate(() => { const r = document.querySelector('#tabs').getBoundingClientRect(); return [r.bottom, innerHeight]; }); ok(tb[0] <= tb[1] + 0.5 && tb[0] > 0, name + ': pasek zakładek w obrębie ekranu (poza Pulpitem)'); }
+    await p.evaluate(() => { location.hash = 'home'; }); await p.waitForTimeout(500); ok(await p.locator('.tile').count() === 6, name + ': Pulpit ma 6 kafli'); await p.click('.tile >> nth=2'); await p.waitForTimeout(500); ok((await p.textContent('#top')).includes('Palnik'), name + ': kafel Palnik prowadzi do ekranu palnika'); await p.evaluate(() => { location.hash = 'palnik'; });
     { const bs = await p.evaluate(() => ST.vals['0x2007']); const vis = await p.locator('.bar .cell:visible').count(); ok(bs !== 0 || vis === 0, name + ': przy wyłączonym palniku belka pusta (stan ' + bs + ', widoczne ' + vis + ')'); }
     // nastawy kociola
     await p.evaluate(() => { location.hash = 'set:0x00|KOCIOL|inst1'; }); await p.waitForSelector('.rows .row'); await p.waitForTimeout(500);

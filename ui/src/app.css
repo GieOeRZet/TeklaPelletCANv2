@@ -55,3 +55,21 @@ table{width:100%;border-collapse:collapse}td,th{padding:8px 4px;border-bottom:1p
 .day{text-align:center;font-weight:600;margin-top:4px}.legend{display:flex;gap:8px;align-items:center;justify-content:center;color:var(--mut);font-size:12px}.lg{display:inline-block;width:12px;height:12px;border-radius:4px;background:var(--panel2);border:1px solid var(--line)}.lg.on{background:var(--acc);border-color:var(--acc)}
 .log{white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace;color:var(--mut)}.rows .row[data-go]{cursor:pointer}
 .cell{justify-content:flex-start;min-height:0;gap:0}.cell small{height:14px;line-height:14px;min-height:14px}.cell .ib{width:34px;height:34px;display:flex;align-items:center;justify-content:center}.cell .ib img{width:auto;height:auto;max-width:34px;max-height:30px;position:static}.cell.pump .ib img{width:19px;height:19px}.cell .ib .mix{width:18px;height:auto}.bar{align-items:flex-start}
+
+/* Pulpit w stylu panelu */
+#app.home #top h1.clock{color:var(--acc2);font-weight:600;font-size:20px}#top .date{color:var(--mut);font-size:13px;white-space:nowrap}
+.home{display:flex;flex-direction:column;min-height:100%;gap:10px}
+.hmain{flex:1;align-content:center;display:grid;grid-template-columns:minmax(120px,1fr) 1.6fr;grid-template-areas:"boiler center" "boiler out";align-items:center;gap:6px 12px;padding-top:6px}
+.hboiler{grid-area:boiler;text-align:center}.hboiler .boiler{max-width:100%;width:auto;max-height:42vh;margin:0 auto}
+.hcenter{grid-area:center;text-align:center}.hbig{font-size:clamp(64px,22vw,128px);font-weight:200;letter-spacing:-3px;line-height:1;font-variant-numeric:tabular-nums}.hbig small{font-size:.32em;color:var(--acc);letter-spacing:0;margin-left:4px}
+.hst{font-size:clamp(20px,6vw,30px);font-weight:600;color:var(--acc2);margin-top:6px}.hset{color:var(--mut);margin-top:4px}
+.hout{grid-area:out;justify-self:center;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 14px}.hout b{font-size:26px;font-weight:300}.hout small{font-size:13px;color:var(--mut);margin-left:2px}.hout img{width:36px;height:auto}
+.tiles{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:84px;background:var(--panel);border:1px solid var(--line);border-radius:12px;color:var(--txt);cursor:pointer;padding:8px 2px 4px;font:inherit}
+.tile.empty{border-style:dashed;background:transparent;cursor:default}.tile img{max-width:46px;max-height:40px;width:auto;height:auto}
+.tile .tb{position:absolute;top:5px;left:22%;right:22%;height:4px;border-radius:2px;background:#3a3a42}.tb.g{background:#7ad03a}.tb.y{background:#f2c200}.tb.w{background:#fff}
+.tile .tl{font-size:12px;font-weight:600;color:var(--txt);min-height:14px}.tile .tl.E{color:var(--acc);font-size:20px}.tile .tn{position:absolute;top:14px;right:10px;font-size:13px;font-weight:700;color:var(--acc2)}
+.fuelsvg{width:34px;height:34px}
+@media (max-width:600px){#app.home{grid-template-rows:calc(52px + var(--sat)) 1fr;grid-template-areas:"top" "main"}#app.home #tabs{display:none}
+ .hmain{grid-template-columns:1fr;grid-template-areas:"boiler" "center" "out"}.hboiler .boiler{max-height:34vh}.hmain{gap:14px}.tile{height:72px}.tile img{max-width:38px;max-height:34px}}
+@media (min-width:601px) and (max-width:900px){#app.home #tabs{display:none}}

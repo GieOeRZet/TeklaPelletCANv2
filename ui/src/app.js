@@ -15,7 +15,7 @@ function fuelIcon(fuel, cap, res) {                                      // krop
 const ROUTE = { KOCIOL: 'kociol', PALNIK: 'palnik', CWU: 'cwu', SOLARY: 'solary', BUFOR: 'bufor', KASKADA: 'kaskada', MAGAZYN: 'magazyn', ALARMY: 'alarms', INFO: 'info', KONFIGURACJA: 'config', TEST_WYJSC: 'outtest', STATYSTYKI: 'stats', SIEC: 'network', INTERNET: 'module', DLG_PIN: 'pin' };
 const routeOf = r => r.target === 'OGRZEWANIE' ? 'co' + r.title.slice(-1) : ROUTE[r.target];
 const condOk = c => c.every(x => { const v = num(x.pid); if (v === undefined) return x.op === '!=' ? false : false; return x.op === '>=' ? v >= x.val : x.op === '!=' ? v !== x.val : v === x.val; });
-function navItems() { return ST.app.menu.filter(r => routeOf(r) && r.level_min <= ST.level && condOk(r.cond)).map(r => ({ id: routeOf(r), t: r.title, icon: r.icon_sel })).concat([{ id: 'module', t: 'Moduł ESP', icon: 77 }]).filter((x, i, a) => a.findIndex(y => y.id === x.id) === i); }
+function navItems() { return ST.app.menu.filter(r => routeOf(r) && r.level_min <= ST.level && condOk(r.cond)).map(r => ({ id: routeOf(r), t: r.title, icon: r.icon_sel })).concat([{ id: 'module', t: 'Moduł ESP', icon: 101 }]).filter((x, i, a) => a.findIndex(y => y.id === x.id) === i); }
 const TABS = [['home', 'Pulpit', '⌂'], ['kociol', 'Kocioł', '♨'], ['palnik', 'Palnik', '♦'], ['cwu', 'Woda', '◍'], ['more', 'Więcej', '≡']];
 
 // ---------- API
@@ -33,7 +33,7 @@ async function writeParam(pid, value) { const x = await api('PUT', '/api/param/'
 function connectWs() {
   if (!ST.token) return; const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws'); ST.ws = ws;
   ws.onopen = () => { ws.send(JSON.stringify({ t: 'auth', token: ST.token })); subscribe(); };
-  ws.onmessage = e => { const m = JSON.parse(e.data); if (m.t === 'hello') { ST.wsOk = true; renderTop(); } if (m.t === 'live') { Object.assign(ST.vals, m.v); draw(true); } if (m.t === 'param') { ST.listVals[m.pid] = m.v; ST.vals[m.pid] = m.v; if (!ST.screen.startsWith('set:') && ST.screen !== 'config') draw(true); } };
+  ws.onmessage = e => { const m = JSON.parse(e.data); if (m.t === 'hello') { ST.wsOk = true; renderTop(); } if (m.t === 'live') { Object.assign(ST.vals, m.v); draw(true); if (ST.screen === 'home') renderTop(); } if (m.t === 'param') { ST.listVals[m.pid] = m.v; ST.vals[m.pid] = m.v; if (!ST.screen.startsWith('set:') && ST.screen !== 'config') draw(true); } };
   ws.onclose = () => { ST.wsOk = false; renderTop(); setTimeout(connectWs, 2000); };
 }
 function subscribe() { if (ST.ws && ST.ws.readyState === 1) ST.ws.send(JSON.stringify({ t: 'sub', sets: ['home', ST.screen.split(':')[0]] })); }
@@ -50,19 +50,28 @@ function cellHtml(c) {
 }
 const boilerImg = () => `<img class="boiler" src="${IC(ST.app.boiler_images[String(num('0x370A') || 2)] || 12)}" alt="kocioł">`;
 function homeView() {
+  // Pulpit jak w panelu: duza temperatura kotla + obraz kotla + temperatura zewnetrzna, dolna belka kafli (MENU, paliwo, palnik, CO, CWU, program).
   const t = num('0x2001'), set = num('0x2004'), bs = num('0x2007') || 0, on = num('0x2005') !== 0;
   const fuel = num('0x3601'), cap = num('0x3600'), res = num('0x3603') || 0, fi = fuelIcon(fuel || 0, cap || 0, res);
-  const dots = Array.from({ length: 24 }, (_, i) => { const r = Math.floor(i / 4), c = i % 4; const idx = (5 - r) * 4 + c; return `<circle cx="${14 + c * 18}" cy="${16 + r * 14}" r="5" fill="${idx < fi.dots ? 'var(--acc2)' : 'transparent'}" stroke="var(--line)"/>`; }).join('');
-  const led = (n, cls, a) => `<span class="${a ? 'on ' : ''}${cls}"><i></i>${n}</span>`;
-  const prog = PROGICON[on ? Math.min(num('0x2002') || 0, 4) : 4], nco = num('0x2105') || 0;
-  return `<div class="grid">
-   <div class="card hero"><h3>Kocioł</h3>${boilerImg()}<div class="big">${f1(t)}<small>°C</small></div><div class="st">${ST.app.status.burner[bs] || '?'}</div><div><span class="pill">${f1(set, 0)}°C</span> <img src="${IC(prog)}" alt="program" width="35" height="37" style="vertical-align:middle"></div></div>
-   <div class="card"><h3>Pogoda</h3><div class="val">${f1(num('0x215F'))}<small>°C</small></div><div class="kv" style="margin-top:8px"><div>Średnia<b>${f1(num('0x3721'))} °C</b></div><div>Pora roku<b><img src="${IC(num('0x3729') === 1 ? 180 : 181)}" alt="" width="26" height="14" style="vertical-align:middle"></b></div></div></div>
-   <div class="card"><h3>Paliwo</h3><div class="fuel ${fi.E ? 'E' : ''}"><svg viewBox="0 0 84 104"><rect x="2" y="2" width="80" height="100" rx="8" fill="none" stroke="${fi.E ? 'var(--acc)' : 'var(--mut)'}" stroke-width="2"/>${dots}${fi.E ? '<text x="42" y="64" text-anchor="middle" font-size="40" fill="var(--acc)" font-weight="700">E</text>' : ''}</svg><div><div class="t">${f1(fuel, 0)} kg</div><div class="kv" style="margin-top:6px"><div>Pojemność<b>${f1(cap, 0)}</b></div></div></div></div></div>
-   <div class="card wide"><h3>Diody</h3><div class="led">${led('Zasilanie', 'g', on)}${led('Palnik', 'y', bs >= 1 && bs <= 8)}${nco >= 1 ? led('CO 1', 'w', num('0x2064') > 0) : ''}${nco >= 2 ? led('CO 2', 'w', num('0x2065') > 0) : ''}${num('0x2106') ? led('CWU', 'w', num('0x2014') > 0) : ''}</div></div>
-   <div class="card"><h3>Pompy</h3>${bar([{ k: 'pump', p: '0x2277' }, { k: 'pump', p: '0x2299' }, { k: 'pump', p: '0x2278' }])}</div>
-   <div class="card"><h3>Moc palnika</h3><div class="val">${f1(num('0x4005'), 0)}<small>%</small></div></div>
-  </div>`;
+  const prog = PROGICON[on ? Math.min(num('0x2002') || 0, 4) : 4], nco = num('0x2105') || 0, cwu = (num('0x2106') || 0) !== 0;
+  const dots = Array.from({ length: 24 }, (_, i) => { const r = Math.floor(i / 4), c = i % 4; const idx = (5 - r) * 4 + c; return `<circle cx="${5 + c * 6}" cy="${5 + r * 5}" r="1.9" fill="${idx < fi.dots ? 'var(--acc2)' : 'none'}" stroke="var(--mut)" stroke-width=".5"/>`; }).join('');
+  const tile = (go, icon, bar, extra) => `<button class="tile" ${go ? `data-go="${go}"` : ''}><i class="tb ${bar || ''}"></i>${extra || ''}<img src="${IC(icon)}" alt=""></button>`;
+  const empty = '<div class="tile empty" aria-hidden="true"></div>';
+  const tiles = [
+    tile('more', 77, ''),
+    `<div class="tile"><i class="tb"></i><span class="tl ${fi.E ? 'E' : ''}">${fi.E ? 'E' : f1(fuel, 0) + ' kg'}</span><svg viewBox="0 0 28 28" class="fuelsvg">${dots}</svg></div>`,
+    tile('palnik', 85, bs >= 1 && bs <= 8 ? 'y' : ''),
+    nco >= 1 ? tile('co1', 86, (num('0x2064') || 0) > 0 ? 'w' : '', `<span class="tn">${nco}</span>`) : empty,
+    cwu ? tile('cwu', 88, (num('0x2014') || 0) > 0 ? 'w' : '') : empty,
+    tile('kociol', prog, on ? 'g' : ''),
+  ].join('');
+  return `<div class="home">
+   <div class="hmain">
+     <div class="hboiler">${boilerImg()}</div>
+     <div class="hcenter"><div class="hbig">${f1(t)}<small>°C</small></div><div class="hst">${ST.app.status.burner[bs] || '?'}</div><div class="hset">zadana ${f1(set, 0)}°C</div></div>
+     <div class="hout"><b>${f1(num('0x215F'))}<small>°C</small></b><img src="${IC(num('0x3729') === 1 ? 180 : 181)}" alt="pora roku"></div>
+   </div>
+   <div class="tiles">${tiles}</div></div>`;
 }
 function modeChips(s) {
   if (!s.mode) return ''; const cur = num(s.mode);
@@ -119,7 +128,9 @@ function moreView() { return `<div class="card rows"><h3>Więcej</h3>${navItems(
 
 function renderTop() {
   const t = $('#top'); const nav = ST.app ? navItems() : []; const cur = nav.find(n => n.id === ST.screen); const title = cur ? cur.t : ({ home: 'Pulpit', more: 'Więcej', log: 'Dziennik' }[ST.screen] || (ST.screen.startsWith('set:') ? 'Nastawy' : ST.screen.startsWith('sched:') ? 'Harmonogram' : ''));
-  t.innerHTML = `<h1>${esc(title)}</h1><span class="sp"></span><span class="chip ${ST.wsOk ? '' : 'bad'}" title="Połączenie"><i></i><span class="hid">${ST.wsOk ? 'na żywo' : 'offline'}</span></span><span class="chip ${ST.mode === 'full' ? 'warn' : ''}" data-act="mode"><i></i>${ST.mode === 'full' ? 'pełna' : 'odczyt'}</span><span class="chip" data-act="pin">PIN ${ST.level}</span>`;
+  const now = new Date(), hh = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'), dd = now.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
+  $('#app').classList.toggle('home', ST.screen === 'home');
+  t.innerHTML = (ST.screen === 'home' ? `<h1 class="clock">${hh}</h1><span class="date">${esc(dd)}</span>` : `<h1>${esc(title)}</h1>`) + `<span class="sp"></span><span class="chip ${ST.wsOk ? '' : 'bad'}" title="Połączenie"><i></i><span class="hid">${ST.wsOk ? 'na żywo' : 'offline'}</span></span><span class="chip ${ST.mode === 'full' ? 'warn' : ''}" data-act="mode"><i></i>${ST.mode === 'full' ? 'pełna' : 'odczyt'}</span><span class="chip" data-act="pin">PIN ${ST.level}</span>`;
   $('#side').innerHTML = `<div class="brand"><i></i><span>TeklaPellet</span></div><a data-go="home" class="${ST.screen === 'home' ? 'on' : ''}"><span>Pulpit</span></a>` + nav.filter(n => n.id !== 'pin').map(n => `<a data-go="${n.id}" class="${ST.screen === n.id ? 'on' : ''}"><img src="${IC(n.icon)}" width="22" height="22" alt=""><span>${esc(n.t)}</span></a>`).join('');
   $('#tabs').innerHTML = TABS.map(x => `<a data-go="${x[0]}" class="${ST.screen === x[0] ? 'on' : ''}"><b>${x[2]}</b>${x[1]}</a>`).join('');
 }
