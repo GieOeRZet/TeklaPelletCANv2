@@ -571,7 +571,7 @@ fun Dialogs(ui: Ui, d: Dlg, close: () -> Unit) {
     when (d) {
         is Dlg.Pin -> { var pin by remember { mutableStateOf("") }
             AlertDialog(onDismissRequest = close, title = { Text("PIN poziomu") }, text = { Column { OutlinedTextField(pin, { pin = it }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword)); if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
-                confirmButton = { TextButton({ scope.launch { val e = ui.src.unlock(pin); if (e == null) { ui.toast("Poziom ${ui.src.level.value}"); close() } else err = e } }) { Text("OK") } }, dismissButton = { TextButton(close) { Text("Anuluj") } }) }
+                confirmButton = { TextButton({ scope.launch { val level = BoilerAccess.unlock(pin); ui.toast(if (level > 0) "Poziom $level" else "Błędny PIN poziomu"); if (level > 0) close() } }) { Text("OK") } }, dismissButton = { TextButton(close) { Text("Anuluj") } }) }
         is Dlg.Fuel -> { val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0; val (dots, empty) = fuelDots(fuel, cap, res)
             AlertDialog(onDismissRequest = close, title = { Text("Paliwo") }, text = { Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) { HopperIcon(dots, empty, 72.dp, 86.dp); BigNum(f1(fuel, 0), "kg", 40) }
@@ -579,9 +579,7 @@ fun Dialogs(ui: Ui, d: Dlg, close: () -> Unit) {
                 KvRow("pojemność", f1(cap, 0) + " kg"); KvRow("rezerwa", f1(res, 0) + " kg")
                 Text("Zmiana poziomu paliwa z aplikacji nie jest jeszcze obsługiwana: panel nie ma zmierzonego kodowania zapisu dla tego parametru (0x3601).", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 10.dp)) } },
                 confirmButton = { TextButton(close) { Text("Zamknij") } }) }
-        is Dlg.Mode -> { var pw by remember { mutableStateOf("") }; val to = !ui.full
-            AlertDialog(onDismissRequest = close, title = { Text(if (to) "Włączyć pełną kontrolę?" else "Przełączyć na tylko odczyt?") }, text = { Column { if (!ui.src.isDemo) OutlinedTextField(pw, { pw = it }, label = { Text("Hasło urządzenia") }, singleLine = true, visualTransformation = PasswordVisualTransformation()); if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
-                confirmButton = { TextButton({ scope.launch { val e = ui.src.setFullMode(to, pw); if (e == null) { ui.toast(if (to) "Pełna kontrola" else "Tylko odczyt"); close() } else err = e } }) { Text("OK") } }, dismissButton = { TextButton(close) { Text("Anuluj") } }) }
+        is Dlg.Mode -> { AlertDialog(onDismissRequest = close, title = { Text("Dostęp ESP") }, text = { Text("ESP pracuje w trybie Full. Uprawnienia zapisu są kontrolowane lokalnie przez poziom dostępu aplikacji oraz walidację modelu urządzenia.") }, confirmButton = { TextButton(close) { Text("OK") } }) }
         is Dlg.EditRow -> { val r = d.row; val pid = r.pid!!
             if (ui.level < r.levelMin) { LaunchedEffect(Unit) { ui.toast("Wymagany PIN poziomu ${r.levelMin}"); close(); ui.open(Dlg.Pin) }; return }
             val sc = ui.m.scale(pid)
