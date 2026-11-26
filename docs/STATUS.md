@@ -35,3 +35,7 @@ Nic nie było uruchomione na prawdziwym kotle, module ESP ani telefonie. W szcze
 
 ## Jak sprawdzić stan samemu
 `sh esp/components/tekla_core/test/run.sh` · `python3 analiza/tools/validate_ui_model.py` · `cd tools/mock && npm i && node server.js` i `node e2e.js` · CI (`.github/workflows/ci.yml`): kompilacja ESP, APK, zrzuty z emulatora.
+
+
+## Układ flash (4 MB) i rozmiar firmware
+NVS 24 kB · otadata 8 kB · phy 4 kB · **ota_0 i ota_1 po 0x1E0000 (1,875 MB)** · store 128 kB (0x3E0000). Brak partycji UI (klienci mają własny interfejs). Obraz z BLE+HTTPS+mDNS przy `-Os` zajmuje ok. 1,34 MB, czyli w slocie zostaje ok. 0,5 MB zapasu. Zmiana tablicy partycji wymaga wgrania **jednego pliku `tekla_pellet_flash.bin`** (artefakt CI, adres 0x0) przez UART/USB; kolejne aktualizacje już przez OTA samym `tekla_pellet.bin`.
