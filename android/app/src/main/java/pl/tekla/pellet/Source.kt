@@ -83,8 +83,6 @@ class DemoSource(private val model: AppModel, private val scope: CoroutineScope)
 
     override suspend fun read(pids: List<String>): Map<String, Double> = pids.mapNotNull { p -> store[fmtPid(p)]?.let { fmtPid(p) to it } }.toMap()
     override suspend fun write(pid: String, v: Double): String? { store[fmtPid(pid)] = v; publish(); return null }
-    override suspend fun unlock(pin: String): String? { val lv = mapOf("1111" to 1, "2222" to 2, "3333" to 3)[pin] ?: return "Błędny PIN (demo: 1111 / 2222 / 3333)"; level.value = lv; return null }
-    override suspend fun setFullMode(full: Boolean, password: String): String? { fullMode.value = full; return null }
     override suspend fun alarms() = listOf(AlarmRow(1, 12, "Przykładowy alarm (dane demo)", "potwierdzony"))
     override suspend fun network() = listOf(NodeRow(4, "Kocioł", "pracuje"), NodeRow(95, "TeklaPellet (ten moduł)", "pracuje"))
     override suspend fun wifiStatus() = "DomowaSiec (demo) ●"
@@ -107,10 +105,16 @@ class DemoSource(private val model: AppModel, private val scope: CoroutineScope)
 }
 
 val ERR = mapOf(
-    "read_only_mode" to "Tryb „tylko odczyt” - zmień tryb, aby zapisywać.", "blocked" to "Parametr zablokowany (poza listami panelu).", "level_too_low" to "Wymagany wyższy poziom PIN.",
-    "out_of_range" to "Wartość poza zakresem.", "not_writable" to "Parametr tylko do odczytu.", "unknown_pid" to "Nieznany parametr.", "no_encoding" to "Zapis tego parametru nie jest obsługiwany.",
-    "bad_password" to "Błędne hasło.", "bad_pin" to "Błędny PIN.", "locked" to "Zbyt wiele prób - spróbuj za chwilę.", "can_timeout" to "Brak odpowiedzi kotła.",
-    "verify_failed" to "Odczyt zwrotny nie potwierdził zapisu.", "unauthorized" to "Sesja wygasła - połącz ponownie.",
+    "blocked" to "Parametr zablokowany (poza listami panelu).",
+    "out_of_range" to "Wartość poza zakresem.",
+    "not_writable" to "Parametr tylko do odczytu.",
+    "unknown_pid" to "Nieznany parametr.",
+    "no_encoding" to "Zapis tego parametru nie jest obsługiwany.",
+    "bad_password" to "Błędne hasło.",
+    "locked" to "Zbyt wiele prób - spróbuj za chwilę.",
+    "can_timeout" to "Brak odpowiedzi kotła.",
+    "verify_failed" to "Odczyt zwrotny nie potwierdził zapisu.",
+    "unauthorized" to "Sesja wygasła - połącz ponownie.",
 )
 
 const val OFFLINE_MSG = "Moduł jest offline – zmiana niemożliwa. Pokazuję ostatnie znane wartości."
@@ -176,12 +180,9 @@ class RemoteSource(host: String, private val scope: CoroutineScope, private var 
         val j = call("PUT", "/api/param/" + fmtPid(pid), JSONObject().put("value", v)); if (!j.optBoolean("ok")) return err(j)
         _values.value = HashMap(_values.value).also { it[fmtPid(pid)] = j.optDouble("v", v) }; return null
     }
-    override suspend fun unlock(pin: String): String? { offline()?.let { return it }; val j = call("POST", "/api/level", JSONObject().put("pin", pin)); if (!j.optBoolean("ok")) return err(j); level.value = j.optInt("level"); return null }
-    override suspend fun setFullMode(full: Boolean, password: String): String? {
-        offline()?.let { return it }
-        val j = call("POST", "/api/mode", JSONObject().put("mode", if (full) "full" else "readonly").put("password", password)); if (!j.optBoolean("ok")) return err(j)
-        fullMode.value = j.optString("mode") == "full"; return null
-    }
+    override suspend fun unlock(pin: String): String? = "Logika PIN poziomów jest realizowana w aplikacji Android, nie w ESP."
+    override suspend fun setFullMode(full: Boolean, password: String): String? = "ESP pracuje w trybie Full dla autoryzowanych klientów."
+
     override suspend fun alarms(): List<AlarmRow> = (call("GET", "/api/alarms").optJSONArray("alarms")?.objs() ?: emptyList()).map {
         AlarmRow(it.optInt("n"), it.optInt("code"), it.optString("text"), if (it.optBoolean("active")) "AKTYWNY" else if (it.optBoolean("acked")) "potwierdzony" else "nowy")
     }
