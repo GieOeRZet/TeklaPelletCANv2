@@ -56,7 +56,7 @@ class DemoSource(private val model: AppModel, private val scope: CoroutineScope)
     private val _values = MutableStateFlow<Map<String, Double>>(emptyMap())
     override val values: StateFlow<Map<String, Double>> = _values
     override val connected = MutableStateFlow(true)
-    override val level = MutableStateFlow(0)
+    override val level = MutableStateFlow(BoilerAccess.level())
     override val fullMode = MutableStateFlow(true)
     private var tick = Ctl.startTick
     private var job: Job? = null
@@ -83,7 +83,7 @@ class DemoSource(private val model: AppModel, private val scope: CoroutineScope)
 
     override suspend fun read(pids: List<String>): Map<String, Double> = pids.mapNotNull { p -> store[fmtPid(p)]?.let { fmtPid(p) to it } }.toMap()
     override suspend fun write(pid: String, v: Double): String? { store[fmtPid(pid)] = v; publish(); return null }
-    // PIN-y kotła są logiką aplikacji Android; ESP pozostaje Full. Te metody zmieniają wyłącznie lokalny poziom UI.\n    override suspend fun unlock(pin: String): String? = androidPinUnlock(pin, level)\n    override suspend fun setFullMode(full: Boolean, password: String): String? { fullMode.value = full; return null }\n    override suspend fun alarms() = listOf(AlarmRow(1, 12, "Przykładowy alarm (dane demo)", "potwierdzony"))
+    // PIN-y kotła są logiką aplikacji Android; ESP pozostaje Full. Te metody zmieniają wyłącznie lokalny poziom UI.\n    override suspend fun unlock(pin: String): String? { val l = BoilerAccess.unlock(pin); level.value = l; return if (l > 0 || BoilerAccess.hasPin(1) || BoilerAccess.hasPin(2) || BoilerAccess.hasPin(3)) { if (l > 0) null else "Błędny PIN poziomu" } else "Najpierw ustaw PIN poziomu w ustawieniach aplikacji." }\n    override suspend fun setFullMode(full: Boolean, password: String): String? { fullMode.value = full; return null }\n    override suspend fun alarms() = listOf(AlarmRow(1, 12, "Przykładowy alarm (dane demo)", "potwierdzony"))
     override suspend fun network() = listOf(NodeRow(4, "Kocioł", "pracuje"), NodeRow(95, "TeklaPellet (ten moduł)", "pracuje"))
     override suspend fun wifiStatus() = "DomowaSiec (demo) ●"
     override suspend fun wifiScan() = listOf("DomowaSiec" to -52, "Goscinna" to -70)
@@ -180,8 +180,8 @@ class RemoteSource(host: String, private val scope: CoroutineScope, private var 
         val j = call("PUT", "/api/param/" + fmtPid(pid), JSONObject().put("value", v)); if (!j.optBoolean("ok")) return err(j)
         _values.value = HashMap(_values.value).also { it[fmtPid(pid)] = j.optDouble("v", v) }; return null
     }
-    override suspend fun unlock(pin: String): String? = "Logika PIN poziomów jest realizowana w aplikacji Android, nie w ESP."
-    override suspend fun setFullMode(full: Boolean, password: String): String? = "ESP pracuje w trybie Full dla autoryzowanych klientów."
+    override suspend fun unlock(pin: String): String? { val l = BoilerAccess.unlock(pin); level.value = l; return if (l > 0) null else "Błędny PIN poziomu" }
+    override suspend fun setFullMode(full: Boolean, password: String): String? = "ESP jest zawsze w trybie Full; poziom sterowania ustawia aplikacja."
 
     override suspend fun alarms(): List<AlarmRow> = (call("GET", "/api/alarms").optJSONArray("alarms")?.objs() ?: emptyList()).map {
         AlarmRow(it.optInt("n"), it.optInt("code"), it.optString("text"), if (it.optBoolean("active")) "AKTYWNY" else if (it.optBoolean("acked")) "potwierdzony" else "nowy")
