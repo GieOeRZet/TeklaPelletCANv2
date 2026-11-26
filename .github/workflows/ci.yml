@@ -23,11 +23,14 @@ jobs:
       - name: Paczka UI
         run: python3 tools/pack_ui.py ui/ui_pack.bin
       - name: Kompilacja ESP-IDF (esp32c6)
+        shell: bash
         run: |
+          set -o pipefail
           . $IDF_PATH/export.sh
           cd esp
           idf.py set-target esp32c6
           idf.py build 2>&1 | tee /tmp/build.log
+          grep -E 'error:|FAILED' /tmp/build.log | head -40 || true
           ls -la build/*.bin
       - uses: actions/upload-artifact@v4
         with:
