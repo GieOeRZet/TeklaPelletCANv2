@@ -47,7 +47,7 @@ class Ui(val src: DataSource, val v: Map<String, Double>, val level: Int, val fu
 
 fun f1(x: Double?, d: Int = 1): String = if (x == null || x.isNaN()) "--" else if (d == 0) Math.round(x).toString() else String.format(java.util.Locale.US, "%.${d}f", x)
 val PROGICON = listOf(133, 135, 122, 128, 120)
-val TABS = listOf(Triple("home", "Pulpit", "⌂"), Triple("kociol", "Kocioł", "♨"), Triple("palnik", "Palnik", "♦"), Triple("cwu", "Woda", "◍"), Triple("more", "Więcej", "≡"))
+val TABS = listOf(Triple("home", "Pulpit", "⌂"), Triple("kociol", "Kocioł", "60"), Triple("palnik", "Palnik", "61"), Triple("cwu", "Woda", "66"), Triple("more", "Więcej", "≡"))
 
 fun fuelDots(fuel: Double, cap: Double, res: Double): Pair<Int, Boolean> {
     if (cap <= 0) return 0 to false
@@ -79,7 +79,7 @@ fun TeklaApp() {
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
                     NavigationBar(containerColor = Color(0xFF101014)) {
-                        for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { Text(ic, fontSize = 18.sp) }, label = { Text(t, fontSize = 10.sp) },
+                        for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) }, label = { Text(t, fontSize = 10.sp) },
                             colors = NavigationBarItemDefaults.colors(selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2, unselectedIconColor = Mut, unselectedTextColor = Mut))
                     }
                 },
@@ -270,8 +270,8 @@ fun ModeChips(ui: Ui, pid: String) {
         for (m in ui.m.programModes) {
             val sel = cur == m.v
             Row(Modifier.background(if (sel) Acc else Panel2, RoundedCornerShape(20.dp)).border(1.dp, if (sel) Acc else Line, RoundedCornerShape(20.dp))
-                .clickable { scope.launch { val e = ui.src.write(pid, m.v.toDouble()); ui.toast(e ?: "Zapisano") } }.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Ic(m.icon, 18.dp); Spacer(Modifier.width(4.dp)); Text(m.label, color = if (sel) Color.Black else Mut, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                .clickable { scope.launch { val e = ui.src.write(pid, m.v.toDouble()); ui.toast(e ?: "Zapisano") } }.padding(horizontal = 7.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Ic(m.icon, 16.dp); Spacer(Modifier.width(3.dp)); Text(m.label, color = if (sel) Color.Black else Mut, fontSize = 10.sp, maxLines = 1, softWrap = false, fontWeight = FontWeight.SemiBold)
             }
         }
     }
