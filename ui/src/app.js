@@ -62,10 +62,10 @@ function barPill(c, id) {
   let val = ''; if (c.n && on) { const x = num(c.n) || 0; if (c.hm) { const m = Math.round(x); val = Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); } else if (c.nd) val = f1(x, 1) + ' s'; else if (x) val = Math.round(x) + '%'; }
   return ix(c.l, val, on, id === 'palnik' ? PC.burn : PC.on);
 }
-function hopper(fi, w = 40, h = 46) {
-  // zasobnik z lejkiem: siatka 4 x 6 kropek zapalanych od dolu (progi wg promili pojemnosci); przy rezerwie litera E
-  const dots = Array.from({ length: 24 }, (_, i) => { const r = Math.floor(i / 4), c = i % 4, idx = (5 - r) * 4 + c; const lit = idx < fi.dots; return `<circle cx="${11 + c * 6}" cy="${8 + r * 5}" r="${lit ? 1.9 : 1.5}" fill="${lit ? '#ffb066' : '#2b2b33'}"${lit ? ' style="filter:drop-shadow(0 0 2px #ffb066aa)"' : ''}/>`; }).join('');
-  return `<svg viewBox="0 0 40 46" width="${w}" height="${h}" aria-hidden="true"><path d="M4 2H36V30L25 42H15L4 30Z" fill="#17171c" stroke="#7d7d8a" stroke-width="1.5" stroke-linejoin="round"/>${fi.E ? '<text x="20" y="25" text-anchor="middle" font-size="18" font-weight="800" fill="#ffb066">E</text>' : dots}</svg>`;
+function hopper(fi, w = 40, h = 48) {
+  // zbiornik paliwa: wypelnienie rzedami kropek w pionie, od dolu (6 rzedow x 4 kolumny; liczba zapalonych wg promili pojemnosci); przy rezerwie litera E
+  const dots = Array.from({ length: 24 }, (_, i) => { const r = Math.floor(i / 4), c = i % 4, idx = (5 - r) * 4 + c; const lit = idx < fi.dots; return `<circle cx="${9.5 + c * 7}" cy="${9 + r * 6.4}" r="2.2" fill="${lit ? '#ffb066' : '#2b2b33'}"${lit ? ' style="filter:drop-shadow(0 0 2px #ffb066aa)"' : ''}/>`; }).join('');
+  return `<svg viewBox="0 0 40 48" width="${w}" height="${h}" aria-hidden="true"><rect x="3" y="2" width="34" height="44" rx="6" fill="#17171c" stroke="#7d7d8a" stroke-width="1.5"/>${fi.E ? '<text x="20" y="31" text-anchor="middle" font-size="22" font-weight="800" fill="#ffb066">E</text>' : dots}</svg>`;
 }
 function tileTitle(id, sc) { return /^co\d$/.test(id) ? 'CO ' + id.slice(2) : id === 'cwu' ? 'CWU' : sc.t; }
 function tile(id) {
@@ -99,7 +99,7 @@ function homeView() {
 function circuitsView() { const ids = visibleIds().filter(i => /^co\d$/.test(i) || i === 'cwu'); return `<div class="tg">${ids.map(tile).join('') || '<div class="card">Brak skonfigurowanych obwodów</div>'}</div>`; }
 function fuelDialog() {
   const fuel = num('0x3601') || 0, cap = num('0x3600') || 0, res = num('0x3603') || 0, fi = fuelIcon(fuel, cap, res);
-  dlg(`<h2>Paliwo</h2><div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0">${hopper(fi, 76, 87)}<div class="num" style="margin:0">${f1(fuel, 0)}<small style="font-size:16px"> kg</small></div></div>
+  dlg(`<h2>Paliwo</h2><div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0">${hopper(fi, 72, 86)}<div class="num" style="margin:0">${f1(fuel, 0)}<small style="font-size:16px"> kg</small></div></div>
    <input type="range" min="0" max="${cap || 100}" value="${fuel}" disabled aria-label="Poziom paliwa"><div class="rng"><span>0</span><span>${f1(cap, 0)} kg</span></div>
    <div class="r2"><span class="k">rezerwa</span><b>${f1(res, 0)} kg</b></div>
    <p class="k" style="margin-top:10px">Zmiana poziomu paliwa z aplikacji nie jest jeszcze obsługiwana: panel nie ma zmierzonego kodowania zapisu dla tego parametru (<code>0x3601</code>).</p>

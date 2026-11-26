@@ -119,7 +119,7 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
             }
             if (wx != null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Ic(if (ui.n("0x3729")?.toInt() == 1) 180 else 181, 24.dp)
-                Column { Text(f1(wx) + "°", color = Txt, fontSize = 12.sp, fontWeight = FontWeight.SemiBold); Text(f1(ui.n("0x3721")) + "°", color = Mut, fontSize = 11.sp) }
+                Column(verticalArrangement = Arrangement.spacedBy((-2).dp)) { Text(f1(wx) + "°", color = Txt, fontSize = 12.sp, fontWeight = FontWeight.SemiBold); Text(f1(ui.n("0x3721")) + "°", color = Mut, fontSize = 11.sp) }
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(java.text.SimpleDateFormat("HH:mm", java.util.Locale("pl")).format(now), color = Acc2, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
@@ -296,20 +296,21 @@ fun SysTile(ui: Ui, id: String, modifier: Modifier) {
     }
 }
 
-/** Zasobnik z lejkiem: siatka 4 x 6 kropek zapalanych od dołu (progi wg promili pojemności); przy rezerwie litera E. */
+/** Zbiornik paliwa: wypełnienie rzędami kropek w pionie, od dołu (6 rzędów x 4 kolumny; liczba zapalonych wg promili pojemności); przy rezerwie litera E. */
 @Composable
-fun HopperIcon(dots: Int, empty: Boolean, w: androidx.compose.ui.unit.Dp = 40.dp, h: androidx.compose.ui.unit.Dp = 46.dp) {
+fun HopperIcon(dots: Int, empty: Boolean, w: androidx.compose.ui.unit.Dp = 40.dp, h: androidx.compose.ui.unit.Dp = 48.dp) {
     val tm = androidx.compose.ui.text.rememberTextMeasurer()
     Canvas(Modifier.size(w, h)) {
         val sc = size.width / 40f
-        val path = androidx.compose.ui.graphics.Path().apply { moveTo(4f * sc, 2f * sc); lineTo(36f * sc, 2f * sc); lineTo(36f * sc, 30f * sc); lineTo(25f * sc, 42f * sc); lineTo(15f * sc, 42f * sc); lineTo(4f * sc, 30f * sc); close() }
-        drawPath(path, Color(0xFF17171C)); drawPath(path, Color(0xFF7D7D8A), style = Stroke(1.5f * sc, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+        val rr = androidx.compose.ui.geometry.CornerRadius(6f * sc)
+        drawRoundRect(Color(0xFF17171C), Offset(3f * sc, 2f * sc), Size(34f * sc, 44f * sc), rr)
+        drawRoundRect(Color(0xFF7D7D8A), Offset(3f * sc, 2f * sc), Size(34f * sc, 44f * sc), rr, style = Stroke(1.5f * sc))
         if (empty) {
-            val r = tm.measure("E", androidx.compose.ui.text.TextStyle(color = Acc2, fontSize = (18f * sc / density).sp, fontWeight = FontWeight.ExtraBold))
-            drawText(r, topLeft = Offset(20f * sc - r.size.width / 2f, 21f * sc - r.size.height / 2f))
+            val r = tm.measure("E", androidx.compose.ui.text.TextStyle(color = Acc2, fontSize = (22f * sc / density).sp, fontWeight = FontWeight.ExtraBold))
+            drawText(r, topLeft = Offset(20f * sc - r.size.width / 2f, 24f * sc - r.size.height / 2f))
         } else for (r in 0 until 6) for (c in 0 until 4) {
-            val idx = (5 - r) * 4 + c; val ctr = Offset((11f + c * 6f) * sc, (8f + r * 5f) * sc)
-            if (idx < dots) { drawCircle(Acc2.copy(alpha = 0.3f), 3.4f * sc, ctr); drawCircle(Acc2, 1.9f * sc, ctr) } else drawCircle(Color(0xFF2B2B33), 1.5f * sc, ctr)
+            val idx = (5 - r) * 4 + c; val ctr = Offset((9.5f + c * 7f) * sc, (9f + r * 6.4f) * sc)
+            if (idx < dots) { drawCircle(Acc2.copy(alpha = 0.3f), 3.6f * sc, ctr); drawCircle(Acc2, 2.2f * sc, ctr) } else drawCircle(Color(0xFF2B2B33), 2.2f * sc, ctr)
         }
     }
 }
@@ -332,8 +333,7 @@ fun PowerTile(ui: Ui, modifier: Modifier) {
 fun TileGrid(ui: Ui, entries: List<String>, rowH: androidx.compose.ui.unit.Dp = 116.dp) {
     for (pair in entries.chunked(2)) {
         Row(Modifier.height(rowH), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            for (id in pair) { val m = Modifier.weight(1f).fillMaxHeight(); when (id) { "fuel" -> FuelTile(ui, m); "power" -> PowerTile(ui, m); else -> SysTile(ui, id, m) } }
-            if (pair.size == 1) Spacer(Modifier.weight(1f))
+            for (id in pair) { val m = if (pair.size == 1) Modifier.fillMaxWidth().fillMaxHeight() else Modifier.weight(1f).fillMaxHeight(); when (id) { "fuel" -> FuelTile(ui, m); "power" -> PowerTile(ui, m); else -> SysTile(ui, id, m) } }
         }
     }
 }
@@ -382,7 +382,7 @@ fun HomeView(ui: Ui) {
                             drawArc(Brush.sweepGradient(listOf(Warn, Acc, Warn)), 135f, 270f * frac.coerceAtLeast(0.01f), false, Offset(sw / 2, sw / 2), Size(d, d), style = Stroke(sw, cap = androidx.compose.ui.graphics.StrokeCap.Round))
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Row(verticalAlignment = Alignment.Top) { Text(f1(t), color = Txt, fontSize = 38.sp, fontWeight = FontWeight.Light, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum")); Text("°C", color = Acc, fontSize = 13.sp, modifier = Modifier.padding(start = 2.dp, top = 4.dp)) }
+                            Row(verticalAlignment = Alignment.Top) { Text(f1(t), color = Txt, fontSize = 33.sp, fontWeight = FontWeight.Light, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum")); Text("°C", color = Acc, fontSize = 12.sp, modifier = Modifier.padding(start = 2.dp, top = 3.dp)) }
                             Text(ui.m.statusTables["burner"]?.getOrNull(bs) ?: "?", color = Acc2, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Ic(prog, 15.dp); Text("zadana ${f1(set, 0)} °C", color = Mut, fontSize = 11.sp) }
                         }
@@ -578,7 +578,7 @@ fun Dialogs(ui: Ui, d: Dlg, close: () -> Unit) {
                 confirmButton = { TextButton({ scope.launch { val e = ui.src.unlock(pin); if (e == null) { ui.toast("Poziom ${ui.src.level.value}"); close() } else err = e } }) { Text("OK") } }, dismissButton = { TextButton(close) { Text("Anuluj") } }) }
         is Dlg.Fuel -> { val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0; val (dots, empty) = fuelDots(fuel, cap, res)
             AlertDialog(onDismissRequest = close, title = { Text("Paliwo") }, text = { Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) { HopperIcon(dots, empty, 76.dp, 87.dp); BigNum(f1(fuel, 0), "kg", 40) }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) { HopperIcon(dots, empty, 72.dp, 86.dp); BigNum(f1(fuel, 0), "kg", 40) }
                 LinearProgressIndicator(progress = { if (cap > 0) (fuel / cap).coerceIn(0.0, 1.0).toFloat() else 0f }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp), color = Acc2, trackColor = Line)
                 KvRow("pojemność", f1(cap, 0) + " kg"); KvRow("rezerwa", f1(res, 0) + " kg")
                 Text("Zmiana poziomu paliwa z aplikacji nie jest jeszcze obsługiwana: panel nie ma zmierzonego kodowania zapisu dla tego parametru (0x3601).", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 10.dp)) } },
