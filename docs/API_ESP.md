@@ -6,8 +6,8 @@ Stan: zgodne z `esp/main/web.cpp` (firmware 0.2, **API wersja 2**). Skompilowane
 - HTTP (bez TLS) w sieci lokalnej lub przez VPN, port 80. Treść: JSON UTF‑8. Odpowiedź zawsze zawiera `"ok": true|false`; przy błędzie `"code"` (tabela w pkt 10).
 - Uwierzytelnienie: nagłówek `Authorization: Bearer <token>`. Token pochodzi z `POST /api/login` (sesja, wygasa po 12 h bezczynności) **albo** z `POST /api/pair` (**stały token klienta**, bez wygaśnięcia, odwoływany ręcznie; zapamiętany w aplikacji).
 - Bez tokenu dostępne tylko: `GET /api/identity`, `POST /api/login`, `POST /api/pair`, `POST /api/setup` (tylko przed konfiguracją) i strona serwisowa `GET /`.
-- Limit prób haseł: 5 błędnych / 60 s na adres IP (HTTP 429 `locked`); PIN poziomów: 5 błędnych → blokada 5 min.
-- Trzy niezależne bramki: **tryb zapisu do kotła** (`readonly`/`full`, globalny dla urządzenia, po restarcie zawsze `readonly`), **poziom PIN 0‑3** (per klient; auto‑blokada po 5 min bezczynności), **odblokowanie serwisowe** (hasło, 5 min, per klient; dla operacji na module, nie na kotle) i **konto DEV** (osobne hasło, 5 min, dla OTA BETA).
+ - Limit prób haseł: 5 błędnych / 60 s na adres IP (HTTP 429 `locked`).
+- ESP pracuje jako **Full** dla autoryzowanych klientów: nie ma globalnego trybu readonly ani PIN 1‑3 w firmware. Ograniczenia zapisu wynikają wyłącznie z modelu PID (zapisywalność, kodowanie, zakres i lista blokad). Odblokowanie serwisowe dotyczy operacji administracyjnych modułu; konto DEV dotyczy OTA BETA.
 
 ## 2. Wykrywanie i tożsamość
 - **mDNS**: usługa `_teklapellet._tcp` (port 80), host `teklapellet-<ostatnie 6 znaków MAC>.local`, instancja = nazwa urządzenia. TXT: `id`, `name`, `fw`, `api`, `node`. Pole `id` (`tp-<12 hex z MAC>`) jest **stałym, unikalnym identyfikatorem** urządzenia (używaj go jako klucza zamiast IP/nazwy; obsługa wielu urządzeń).
@@ -15,14 +15,13 @@ Stan: zgodne z `esp/main/web.cpp` (firmware 0.2, **API wersja 2**). Skompilowane
 - mDNS bywa niedostępny między sieciami/VLAN-ami: klient musi pozwalać dodać urządzenie ręcznie po adresie.
 
 ## 3. Pierwsza konfiguracja i parowanie
-1. **Konfiguracja (jednorazowa)**: urządzenie bez konfiguracji tworzy otwarty AP `TeklaPellet-<xxxxxx>`. Połącz się i otwórz `http://192.168.4.1/` (strona serwisowa) albo wywołaj `POST /api/setup` `{password, pin1, pin2, pin3, ssid, wifi_pass}` (hasło ≥ 8 znaków). Zapis w NVS (przeżywa restart, zanik zasilania i aktualizacje firmware); urządzenie restartuje się i łączy z Wi‑Fi. Powtórzenie → 409 `already_configured`.
+1. **Konfiguracja (jednorazowa)**: urządzenie bez konfiguracji tworzy otwarty AP `TeklaPellet-<xxxxxx>`. Połącz się i otwórz `http://192.168.4.1/` (strona serwisowa) albo wywołaj `POST /api/setup` `{password, ssid, wifi_pass}` (hasło ≥ 8 znaków). Zapis w NVS (przeżywa restart, zanik zasilania i aktualizacje firmware); urządzenie restartuje się i łączy z Wi‑Fi. Powtórzenie → 409 `already_configured`.
 2. **Parowanie klienta**: `POST /api/pair` `{password, name}` (`name` 1‑23 znaków, bez `"` i `\`) → `{ok, token, id}`. **Token zapisz w kliencie** (43 znaki, pokazywany tylko raz; w urządzeniu tylko SHA‑256). Maks. 8 klientów (409 `too_many_clients`). Dalej samo `Authorization: Bearer <token>`, hasło niepotrzebne. Zmiana hasła urządzenia **nie** odwołuje tokenów; odwołanie: pkt 8.
 3. **Sesja z hasła** (np. strona serwisowa): `POST /api/login` `{password}` → `{ok, token}` (12 h).
 
 ## 4. Informacje i tryby
 - `GET /api/info` → `{ok, id, name, fw, api, node, can, uptime, client}` (`client:true` gdy token sparowanego klienta).
-- `POST /api/mode` pozostaje kompatybilnościowo, ale **nie steruje już dostępem do zapisu kotła**.
-- Endpointy `/api/level` są wycofane z użycia; klienci nie mają podawać PIN-ów.
+- Nie ma `/api/mode` ani `/api/level`. Każdy autoryzowany klient ma dostęp do pełnego zapisu, który nadal podlega modelowi PID i read-back.
 
 ## 5. Dane z kotła
 - `GET /api/state` → `{ok, v:{"0x2001":66.9, ...}}` (ostatnie znane wartości „na żywo”; jednostki wyświetlane, stany wyjść jako 0/1/2). Domyślnie tylko zestaw podstawowy (+ zestawy zamówione przez klientów WebSocket); **`GET /api/state?all=1`** włącza na 20 s odpytywanie wszystkich zestawów (używa integracja Home Assistant).
@@ -42,7 +41,7 @@ Wymagają wcześniejszego **odblokowania serwisowego** `POST /api/service/unlock
 - `POST /api/wifi` `{ssid, pass}` → `{ok, apply_s:40}`; łączenie asynchronicznie, **bez IP w 40 s moduł wraca do poprzedniej sieci** (nowa zapisywana dopiero po sukcesie). Adres może się zmienić: znajdź urządzenie po `id`.
 - `GET /api/ip` → `{ok, saved:{dhcp,ip,mask,gw,dns1,dns2}, current:{...}, pending}`; `POST /api/ip` `{dhcp, ip, mask, gw, dns1, dns2}` (przy `dhcp:true` pozostałe pomijane) → `{ok, confirm_within_s:60, new_ip}`. **Potwierdź z nowego adresu** `POST /api/net/confirm` w 60 s (wystarczy token, bez odblokowania serwisowego), inaczej powrót do poprzednich ustawień. Walidacja: maska ciągła /1‑/30, IP i brama w jednej podsieci, nie adres sieci/rozgłoszeniowy (400 `bad_ip`).
 - `POST /api/device` `{name}` → zmiana nazwy (aktualizuje też mDNS); `POST /api/password` `{new}` (≥ 8 znaków; zrywa sesje z hasła, tokeny klientów zostają).
-- `POST /api/restart` `{}`; `POST /api/factory_reset` `{confirm:"RESET"}` (kasuje hasło, PIN-y, Wi‑Fi, IP, nazwę, klientów, hasło DEV).
+- `POST /api/restart` `{}`; `POST /api/factory_reset` `{confirm:"RESET"}` (kasuje hasło,  Wi‑Fi, IP, nazwę, klientów, hasło DEV).
 - Awaryjny AP: po > 3 min bez Wi‑Fi moduł włącza otwarty AP `TeklaPellet-<xxxxxx>` (tylko strona serwisowa; operacje wymagają hasła); wyłącza się po powrocie sieci.
 
 ## 8. Sparowani klienci (wymaga odblokowania serwisowego do zmian)
@@ -73,7 +72,7 @@ Wymagają wcześniejszego **odblokowania serwisowego** `POST /api/service/unlock
 ## 12. Bluetooth LE (tylko pierwsza konfiguracja)
 Reklamowanie BLE włącza się, gdy moduł **nie jest skonfigurowany** albo **nie ma Wi‑Fi od > 3 min**, i wyłącza po stabilnym połączeniu z siecią (> 60 s). Nazwa `TeklaPellet-<xxxxxx>`, usługa `8f1c0001-5a7e-4c1b-9d2a-7e6b2f0a1001` (filtr skanowania), MTU do 256.
 - `…0002` (odczyt): `{"id","name","fw","api","setup_needed","wifi","state"}`; `state`: 0 bezczynny, 1 przetwarzanie, 2 ok (moduł restartuje), 3 ok (zmiana Wi‑Fi z cofnięciem), 4 błędne hasło, 5 zablokowane, 6 złe dane, 7 błąd zapisu.
-- `…0003` (zapis JSON, **wymaga szyfrowanego łącza** - Android paruje „Just Works” automatycznie): moduł nieskonfigurowany: `{ssid, wifi_pass, password, pin1, pin2, pin3, recovery}`; skonfigurowany: `{ssid, wifi_pass, password}` albo (zapomniane hasło) `{ssid, wifi_pass, recovery, new_password}`. Po sukcesie aplikacja czeka na moduł w mDNS (po `id`) i paruje przez `POST /api/pair`.
+- `…0003` (zapis JSON, **wymaga szyfrowanego łącza** - Android paruje „Just Works” automatycznie): moduł nieskonfigurowany: `{ssid, wifi_pass, password, recovery}`; skonfigurowany: `{ssid, wifi_pass, password}` albo (zapomniane hasło) `{ssid, wifi_pass, recovery, new_password}`. Po sukcesie aplikacja czeka na moduł w mDNS (po `id`) i paruje przez `POST /api/pair`.
 - Bezpieczeństwo: szyfrowanie „Just Works” chroni przed podsłuchem pasywnym, **nie** przed aktywnym atakującym w zasięgu (MITM) w chwili konfiguracji. Skonfigurowany moduł wymaga hasła/kodu (limit prób, wspólny z REST: 5/60 s).
 
 ## 13. Czego jeszcze nie ma / niezweryfikowane
