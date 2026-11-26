@@ -12,7 +12,7 @@ CI buduje automatycznie przy zmianach w `esp/`, `ui/`, `tools/`, `data/` (artefa
 cd esp && idf.py set-target esp32c6 && idf.py build
 ```
 Wymaga zgodnie z `idf_component.yml`: `espressif/mdns`. Przed budowa: klucz OTA (`python3 tools/ota_sign.py keygen priv.pem pub.pem`, `pub.pem` -> `main/ota_pubkey.pem`) i paczka UI (`python3 tools/pack_ui.py`, wgrywana do partycji `ui_0`: `esptool.py write_flash 0x300000 ui/ui_pack.bin`).
-Piny MCP2515 (XIAO ESP32-C6): `main/config.hpp` (SCK 19, MISO 20, MOSI 18, CS 1, INT 2 - do potwierdzenia z okablowaniem), kwarc 8 MHz (zmiana `kOsc16MHz`).
+Piny MCP2515 (XIAO ESP32-C6) i kwarc ze starego projektu: `main/config.hpp` - SCK 19, MISO 20, MOSI 18, CS 17, INT nieuzywany, kwarc 16 MHz (jak PelletCAN/ESPHome).
 
 ## Zachowanie
 - Domyslnie tryb **tylko odczyt**; zapis tylko po `POST /api/mode` (haslo), poziomie PIN sesji, przez straznik `tekla::plan_write` (40 PID poza listami panelu = `WE_BLOCKED`), z odczytem zwrotnym po zapisie.

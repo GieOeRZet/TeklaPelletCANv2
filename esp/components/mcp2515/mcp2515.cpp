@@ -20,8 +20,8 @@ bool init(const Pins& p, Osc osc) {
   if (spi_bus_add_device(SPI2_HOST, &dc, &dev) != ESP_OK) return false;
   uint8_t r = CMD_RESET; xfer(&r, nullptr, 1); vTaskDelay(pdMS_TO_TICKS(10));
   if ((rd(CANSTAT) & 0xE0) != 0x80) return false;                           // po resecie: tryb konfiguracji
-  // 125 kbit/s (wartosci jak w popularnych bibliotekach MCP_CAN): 8 MHz: 01 B1 85, 16 MHz: 03 F0 86
-  if (osc == Osc::MHz8) { wr(CNF1, 0x01); wr(CNF2, 0xB1); wr(CNF3, 0x85); } else { wr(CNF1, 0x03); wr(CNF2, 0xF0); wr(CNF3, 0x86); }
+  // 125 kbit/s (wartosci jak w popularnych bibliotekach MCP_CAN): 8 MHz: 01 F1 85, 16 MHz: 03 F0 86 (jak w starym firmware)
+  if (osc == Osc::MHz8) { wr(CNF1, 0x01); wr(CNF2, 0xF1); wr(CNF3, 0x85); } else { wr(CNF1, 0x03); wr(CNF2, 0xF0); wr(CNF3, 0x86); }
   wr(RXB0CTRL, 0x64); wr(RXB1CTRL, 0x60);                                  // RXM=11 (bez filtrow), RXB0 rollover do RXB1
   wr(CANINTE, 0x00);                                                       // odczyt przez odpytywanie flag (bez przerwan)
   wr(CANCTRL, 0x00); vTaskDelay(pdMS_TO_TICKS(5));                         // tryb normalny
