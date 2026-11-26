@@ -145,7 +145,6 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
             if (screen == "home") Text(java.text.SimpleDateFormat("EEE, d MMM · HH:mm", java.util.Locale("pl")).format(now), color = Mut, fontSize = 12.sp, maxLines = 1)
         }
         Chip("", if (demo) Warn else if (conn) Okc else Bad) { ui.go("appset") }
-        Chip(if (ui.full) "Pełna kontrola" else "Tylko odczyt", if (ui.full) Warn else Okc) { ui.open(Dlg.Mode) }
         Chip("PIN ${ui.level}", Mut) { ui.open(Dlg.Pin) }
     }
 }
@@ -487,7 +486,7 @@ fun ConfigView(ui: Ui) {
         if (ui.level < 1) Text("Więcej opcji po wpisaniu PIN poziomu 1", color = Mut, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
     }
     Card("Dostęp") {
-        RowItem("Tryb pracy ESP", if (ui.full) "pełna kontrola" else "tylko odczyt") { ui.open(Dlg.Mode) }
+        RowItem("Dostęp ESP", "Full · zapis modelowy")
         RowItem("Poziom PIN", ui.level.toString()) { ui.open(Dlg.Pin) }
         RowItem("Ustawienia aplikacji (demo / ESP)", "›") { ui.go("appset") }
     }
