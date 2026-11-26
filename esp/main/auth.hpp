@@ -20,6 +20,9 @@ bool service_ok(Session* s);
 bool dev_configured(); bool dev_set(const char* password);
 int dev_unlock(Session* s, const char* password, uint32_t ip);   // 0 ok, 1 bledne haslo, 2 zablokowane
 bool dev_ok(Session* s);
+// Kod odzyskiwania (zapomniane haslo, brak fizycznego dostepu): generuje go klient przy pierwszej konfiguracji i pokazuje wlascicielowi; w urzadzeniu tylko hasz PBKDF2.
+bool recovery_configured(); bool recovery_set(const char* code);   // min. 16 znakow
+int recover(const char* code, const char* new_password, uint32_t key);   // 0 ok (nowe haslo ustawione), 1 bledny kod, 2 zablokowane, 3 zle nowe haslo, 4 brak kodu w urzadzeniu
 bool verify_password(const char* pw); bool set_password(const char* pw);   // set_password: min. 8 znakow
 void factory_reset();                                                  // kasuje haslo, PIN-y i Wi-Fi z NVS
 tekla::Mode mode(); bool set_mode(tekla::Mode m, const char* password);   // tryb globalny urzadzenia, po restarcie zawsze tylko-odczyt

@@ -37,9 +37,10 @@ static void prov_task(void*) {   // poza watkiem hosta BLE: hasla przechodza prz
   const char* ssid = s("ssid"); const char* wp = s("wifi_pass"); int st = 6;
   if (j && *ssid && strlen(ssid) <= 32 && strlen(wp) <= 64) {
     if (!auth::configured()) {                                            // pierwsza konfiguracja: haslo urzadzenia, PIN-y i Wi-Fi; potem restart
-      if (auth::setup(s("password"), s("pin1"), s("pin2"), s("pin3"))) { st = net::wifi_save(ssid, wp) ? 2 : 7; } else st = 6;
+      if (auth::setup(s("password"), s("pin1"), s("pin2"), s("pin3"))) { if (*s("recovery")) auth::recovery_set(s("recovery"));  st = net::wifi_save(ssid, wp) ? 2 : 7; } else st = 6;
     } else {                                                              // zmiana Wi-Fi na skonfigurowanym module: haslo urzadzenia + cofniecie przy braku IP
-      int rc = auth::verify_limited(s("password"), 0xB1E00001u); st = rc == 0 ? (net::wifi_apply(ssid, wp) ? 3 : 7) : (rc == 2 ? 5 : 4);
+      int rc; if (*s("recovery")) { int rr = auth::recover(s("recovery"), s("new_password"), 0xB1E00002u); rc = rr == 0 ? 0 : (rr == 2 ? 2 : 1); } else rc = auth::verify_limited(s("password"), 0xB1E00001u);   // zapomniane haslo: kod odzyskiwania + nowe haslo
+      st = rc == 0 ? (net::wifi_apply(ssid, wp) ? 3 : 7) : (rc == 2 ? 5 : 4);
     }
   }
   cJSON_Delete(j); g_state = st; g_busy = false;
