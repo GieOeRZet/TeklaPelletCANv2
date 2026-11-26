@@ -85,3 +85,7 @@ table{width:100%;border-collapse:collapse}td,th{padding:8px 4px;border-bottom:1p
 @media (max-width:900px){#app{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:600px){#top .hid{display:none}#top{gap:6px}}
 .hcard>div:not(.inds):not(.val){display:flex;justify-content:space-between;gap:8px;margin-top:6px;color:var(--mut);font-size:13px}.hcard>div b{color:var(--txt);white-space:nowrap}
+
+.fbar{height:8px;border-radius:4px;background:var(--line);margin-top:8px;overflow:hidden}.fbar i{display:block;height:100%;background:linear-gradient(90deg,#ff7a1a,#ffc233);border-radius:4px}
+#tabs a b{position:relative}.bdg{position:absolute;top:-6px;left:60%;background:var(--acc);color:#000;font-style:normal;font-size:10px;font-weight:800;border-radius:9px;padding:1px 5px}
+#top .tt{min-width:0}#top .date{overflow:hidden;text-overflow:ellipsis}@media (max-width:600px){#top .date{font-size:11px}}

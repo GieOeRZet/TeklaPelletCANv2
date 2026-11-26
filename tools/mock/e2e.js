@@ -30,7 +30,7 @@ let fails = 0; const ok = (c, m) => { if (!c) { console.log('FAIL', m); fails++;
     if (name === 'phone') {
       // tryb pelny + PIN
       await p.click('#top [data-act=mode]'); await p.fill('#inp', 'demo'); await p.click('#dk'); await p.waitForTimeout(400);
-      ok((await p.textContent('#top')).includes('pełna'), name + ': tryb pełna kontrola');
+      ok((await p.textContent('#top')).includes('Pełna'), name + ': tryb pełna kontrola');
       await p.click('.rows .row >> nth=0'); await p.waitForSelector('#rg'); await p.fill('#rg', '66'); await p.click('#dk'); await p.waitForTimeout(500);
       ok((await p.textContent('.rows .row >> nth=0')).includes('66'), name + ': zapis 66 przyjęty (poziom 0 wystarcza dla wiersza 0)');
       await p.fill('#rg', '66').catch(() => { });

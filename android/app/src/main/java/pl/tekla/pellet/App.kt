@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
@@ -47,7 +48,7 @@ class Ui(val src: DataSource, val v: Map<String, Double>, val level: Int, val fu
 
 fun f1(x: Double?, d: Int = 1): String = if (x == null || x.isNaN()) "--" else if (d == 0) Math.round(x).toString() else String.format(java.util.Locale.US, "%.${d}f", x)
 val PROGICON = listOf(133, 135, 122, 128, 120)
-val TABS = listOf(Triple("home", "Pulpit", "⌂"), Triple("co1", "Ogrzewanie", "▥"), Triple("sched:co1", "Harmonogram", "▦"), Triple("alarms", "Alarmy", "♪"), Triple("more", "Menu", "≡"))
+val TABS = listOf(Triple("home", "Pulpit", "⌂"), Triple("co1", "Ogrzewanie", "▥"), Triple("sched:co1", "Harmonogram", "▦"), Triple("alarms", "Alarmy", "🔔"), Triple("more", "Menu", "≡"))
 
 fun fuelDots(fuel: Double, cap: Double, res: Double): Pair<Int, Boolean> {
     if (cap <= 0) return 0 to false
@@ -69,6 +70,8 @@ fun TeklaApp() {
         LaunchedEffect(Unit) { while (true) { delay(130); frame++ } }
         val stack = remember { mutableStateListOf("home").also { l -> Ctl.startScreen?.let { if (it != "home") l.add(it) } } }
         var dlg by remember { mutableStateOf<Dlg?>(null) }
+        var alarmCount by remember { mutableIntStateOf(0) }
+        LaunchedEffect(src) { while (true) { alarmCount = src.alarms().size; delay(15000) } }
         fun go(s: String) { if (s == "home") { stack.clear(); stack.add("home") } else if (stack.last() != s) stack.add(s) }
         BackHandler(stack.size > 1) { stack.removeAt(stack.lastIndex) }
         val ui = Ui(src, vals, level, full, ::go, { dlg = it }, { Toast.makeText(ctx, it, Toast.LENGTH_SHORT).show() })
@@ -79,7 +82,7 @@ fun TeklaApp() {
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
                     NavigationBar(containerColor = Color(0xFF101014)) {
-                        for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) } }, label = { Text(t, fontSize = 10.sp) },
+                        for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { BadgedBox(badge = { if (id == "alarms" && alarmCount > 0) Badge(containerColor = Acc, contentColor = Color.Black) { Text("$alarmCount") } }) { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) } } }, label = { Text(t, fontSize = 10.sp) },
                             colors = NavigationBarItemDefaults.colors(selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2, unselectedIconColor = Mut, unselectedTextColor = Mut))
                     }
                 },
@@ -108,7 +111,7 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
             if (screen == "home") Text(java.text.SimpleDateFormat("EEEE, d MMMM · HH:mm", java.util.Locale("pl")).format(now), color = Mut, fontSize = 12.sp, maxLines = 1)
         }
         Chip(if (demo) "demo" else if (conn) "na żywo" else "offline", if (demo) Warn else if (conn) Okc else Bad) { ui.go("appset") }
-        Chip(if (ui.full) "pełna" else "odczyt", if (ui.full) Warn else Okc) { ui.open(Dlg.Mode) }
+        Chip(if (ui.full) "Pełna kontrola" else "Tylko odczyt", if (ui.full) Warn else Okc) { ui.open(Dlg.Mode) }
         Chip("PIN ${ui.level}", Mut) { ui.open(Dlg.Pin) }
     }
 }
@@ -235,7 +238,7 @@ fun HomeView(ui: Ui) {
                 Canvas(Modifier.fillMaxSize().padding(6.dp)) {
                     val sw = size.width * 0.065f; val d = size.minDimension - sw
                     drawArc(Line, 135f, 270f, false, Offset(sw / 2, sw / 2), Size(d, d), style = Stroke(sw, cap = androidx.compose.ui.graphics.StrokeCap.Round))
-                    drawArc(androidx.compose.ui.graphics.Brush.sweepGradient(listOf(Warn, Acc, Warn)), 135f, 270f * frac.coerceAtLeast(0.01f), false, Offset(sw / 2, sw / 2), Size(d, d), style = Stroke(sw, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                    drawArc(Brush.sweepGradient(listOf(Warn, Acc, Warn)), 135f, 270f * frac.coerceAtLeast(0.01f), false, Offset(sw / 2, sw / 2), Size(d, d), style = Stroke(sw, cap = androidx.compose.ui.graphics.StrokeCap.Round))
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(verticalAlignment = Alignment.Top) { Text(f1(t), color = Txt, fontSize = 38.sp, fontWeight = FontWeight.Light); Text("°C", color = Acc, fontSize = 14.sp, modifier = Modifier.padding(start = 2.dp, top = 4.dp)) }
@@ -245,7 +248,6 @@ fun HomeView(ui: Ui) {
             }
             Column(Modifier.weight(1.05f)) {
                 KvRow("Powrót", f1(ui.n("0x4000")) + " °C"); KvRow("Temp. palnika", f1(ui.n("0x226C")) + " °C"); KvRow("Temp. zewnętrzna", f1(ui.n("0x215F")) + " °C"); KvRow("Moc palnika", f1(ui.n("0x4005"), 0) + " %")
-                KvRow("Paliwo", f1(ui.n("0x3601"), 0) + " / " + f1(ui.n("0x3600"), 0) + " kg")
             }
         }
     }
@@ -267,9 +269,10 @@ fun HomeView(ui: Ui) {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { Ind(ui, "Zapalarka", "0x2253", "burn"); Ind(ui, "Ruszt", "0x2276") }
             }
         }
-        HomeCard("Kocioł", f1(ui.n("0x4000")), "°C powrót", Modifier.weight(1f), "kociol", ui) {
-            KvRow("ciśnienie", f1(ui.n("0x3333"), 0) + " mbar"); KvRow("energia", f1(ui.n("0x3628"), 0) + " kWh")
-            Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) { Ind(ui, "Pompa", "0x2277"); Ind(ui, "Mieszacz", "0x216F", "mix") }
+        val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0
+        HomeCard("Paliwo", f1(fuel, 0), "kg z ${f1(cap, 0)}", Modifier.weight(1f), "magazyn", ui) {
+            Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(8.dp).background(Line, RoundedCornerShape(4.dp))) { Box(Modifier.fillMaxWidth(if (cap > 0) (fuel / cap).coerceIn(0.03, 1.0).toFloat() else 0f).fillMaxHeight().background(Brush.horizontalGradient(listOf(Acc, Warn)), RoundedCornerShape(4.dp))) }
+            KvRow("rezerwa", f1(ui.n("0x3603"), 0) + " kg")
         }
     }
     Column(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(16.dp)).border(1.dp, Color(0xFF5A2A2A), RoundedCornerShape(16.dp)).clickable { ui.go("alarms") }.padding(14.dp)) {
