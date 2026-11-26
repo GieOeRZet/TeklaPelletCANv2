@@ -2,7 +2,7 @@ name: CI
 # Oszczednie: tylko zmiany w kodzie/modelu (paths) albo reczny start. Kompilacja ESP-IDF jak w starym projekcie (kontener espressif/idf).
 on:
   push:
-    paths: ["esp/**", "ui/**", "tools/**", "data/**", ".github/workflows/ci.yml"]
+    paths: ["esp/**", "ui/**", "tools/**", "data/**", "android/**", ".github/workflows/ci.yml"]
   workflow_dispatch:
 jobs:
   host-tests:
@@ -41,3 +41,23 @@ jobs:
             esp/build/bootloader/bootloader.bin
             ui/ui_pack.bin
           retention-days: 14
+  android-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: "8.9" }
+      - name: Spojnosc zasobow Androida z WWW (app.json, model, ikony)
+        run: |
+          cmp ui/gen/app.json android/app/src/main/assets/app.json
+          cmp ui/gen/model.min.json android/app/src/main/assets/model.min.json
+          diff -rq ui/assets/ic android/app/src/main/assets/ic
+      - name: Kompilacja aplikacji (debug APK)
+        working-directory: android
+        run: gradle --no-daemon assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tekla-android-debug
+          path: android/app/build/outputs/apk/debug/*.apk
