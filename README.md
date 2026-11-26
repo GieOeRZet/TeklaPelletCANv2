@@ -2,10 +2,10 @@
 
 Samodzielne monorepo: dodatkowy moduł **ESP32‑C6 (Seeed XIAO) + MCP2515** na magistrali CAN kotła na pellet z panelem Estyma igneoTouch (sterownik FW2213TK) oraz klienci (aplikacja Android, strona WWW, docelowo Windows i Home Assistant). W repo jest też **cała analiza panelu** (emulacja, dekompilacja, narzędzia, dowody), więc nie potrzeba żadnego innego repozytorium.
 
-**Nowy agent/osoba: zacznij od `docs/PROMPT_DLA_AGENTA.md`**, potem `docs/STATUS.md` (co działa, co nie) i `docs/ZADANIA.md` (lista prac).
+**Nowy agent/osoba: zacznij od `docs/AGENT_CONTINUITY.md`**, potem `docs/PRZEJECIE_PROJEKTU_2026-11-26.md`, `docs/STATUS.md`, `docs/ZADANIA.md` i `docs/API_ESP.md`. Nie odtwarzaj historii rozmów — stan i decyzje mają być utrzymywane w repo.
 
 ## Architektura w jednym akapicie
-ESP to **cienki most CAN ↔ API (REST + WebSocket)** z małą wbudowaną stroną serwisową (konfiguracja Wi‑Fi/IP, hasło, parowanie klientów, aktualizacja firmware). **Interfejsu użytkownika ESP nie serwuje**: robią to klienci (Android, Windows, HA), którzy parują się z modułem raz hasłem i dostają stały token. Moduł się ogłasza (mDNS, stały ID z MAC), więc można mieć wiele urządzeń. Strażnik zapisu (tryb odczyt/pełny, PIN-y poziomów, kodowanie z modelu, odczyt zwrotny) działa w ESP.
+ESP to **bramka i sterownik CAN ↔ API (REST + WebSocket)** z małą wbudowaną stroną serwisową (konfiguracja Wi‑Fi/IP, hasło, parowanie klientów, logi/eksport, aktualizacja firmware). **Interfejsu użytkownika ESP nie serwuje**: robią to klienci (Android, Windows, HA), którzy parują się z modułem raz hasłem i dostają stały token. Moduł się ogłasza (mDNS, stały ID z MAC), więc można mieć wiele urządzeń. Strażnik zapisu (tryb odczyt/pełny, PIN-y poziomów, kodowanie z modelu, odczyt zwrotny) działa w ESP.
 
 ## Struktura
 | Katalog | Zawartość |
