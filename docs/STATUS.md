@@ -6,7 +6,7 @@ Legenda: ✅ sprawdzone (test/CI/emulator) · 🟡 kod jest, kompiluje się, ale
 | Element | Stan |
 |---|---|
 | Most CAN: odczyt SDO, zapis z odczytem zwrotnym, strażnik zapisu, tożsamość węzła (heartbeat/SDO) | 🟡 rdzeń ✅ testy natywne (`esp/components/tekla_core/test`), reszta 🟡 (kompilacja w CI) |
-| API REST + WebSocket wg `docs/API_ESP.md`; tryby, PIN-y poziomów | 🟡 |
+| API REST + WebSocket wg `docs/API_ESP.md`; pełny odczyt/zapis, bez PIN-ów ESP | 🟡 |
 | Tożsamość: stały ID z MAC, nazwa, mDNS (TXT: id, name, fw, api, node) | 🟡 |
 | Pierwsza konfiguracja (AP + strona serwisowa), parowanie tokenem (do 8 klientów, odwoływanie) | 🟡 |
 | Operacje serwisowe po haśle (5 min): Wi‑Fi (z cofnięciem 40 s), IP/DNS (z potwierdzeniem 60 s), nazwa, hasło, restart, reset | 🟡 |
@@ -48,12 +48,13 @@ NVS 24 kB · otadata 8 kB · phy 4 kB · **ota_0 i ota_1 po 0x1E0000 (1,875 MB)*
 
 ## Aktualizacja 2026-11-26 — kierunek firmware po decyzji właściciela
 
-- Poziomy dostępu/PIN 1-3 zostały wycofane z docelowego przepływu zapisu.
-- ESP jest traktowany jako aktywny sterownik/bramka: odczyt i zapis są dwustronne, a zapis nadal przechodzi przez model PID, znane kodowanie, zakres i odczyt zwrotny.
+- Poziomy dostępu/PIN 1-3 zostały usunięte z firmware ESP. ESP jest **Full** dla autoryzowanych klientów.
+- Android będzie miał osobno blokadę uruchomienia aplikacji (PIN/biometria) oraz logikę poziomów z oryginalnego panelu; te poziomy nie są przekazywane do ESP.
+- Odczyt i zapis są dwustronne, a zapis nadal przechodzi przez model PID, znane kodowanie, zakres, listę blokad i odczyt zwrotny.
 - Logi rozszerzono do 64 wpisów w pamięci roboczej i dodano eksport tekstowy przez /api/log/export.
 - /api/clients zwraca stan connected dla klientów aktywnie autoryzowanych przez WebSocket oraz łączną liczbę aktywnych połączeń.
 - Dodano docs/AGENT_CONTINUITY.md jako obowiązkową instrukcję ciągłości pracy.
-- Status tej zmiany: CI PASS dopiero po wykonaniu workflow; sprzęt nadal NOT TESTED.
+- Status tej zmiany: CI dla bieżącego commita jest uruchomione; sprzęt nadal NOT TESTED.
 
 ## Przejęcie projektu
 Stan i zasady przejęcia z 2026-11-26 są zapisane w `docs/PRZEJECIE_PROJEKTU_2026-11-26.md`. Dokument rozróżnia TESTED/CONFIRMED, CI PASS, EMULATED, MOCK, INFERENCE i OPEN oraz wskazuje kolejność dalszych prac.
