@@ -16,7 +16,7 @@ static void bitmod(uint8_t reg, uint8_t mask, uint8_t v) { uint8_t b[4] = {CMD_B
 bool init(const Pins& p, Osc osc) {
   spi_bus_config_t bc{}; bc.sclk_io_num = p.sck; bc.miso_io_num = p.miso; bc.mosi_io_num = p.mosi; bc.quadwp_io_num = -1; bc.quadhd_io_num = -1; bc.max_transfer_sz = 32;
   if (spi_bus_initialize(SPI2_HOST, &bc, SPI_DMA_DISABLED) != ESP_OK) return false;
-  spi_device_interface_config_t dc{}; dc.clock_speed_hz = 4 * 1000 * 1000; dc.mode = 0; dc.spics_io_num = p.cs; dc.queue_size = 2;
+  spi_device_interface_config_t dc{}; dc.clock_speed_hz = p.spi_hz; dc.mode = 0; dc.spics_io_num = p.cs; dc.queue_size = 2;
   if (spi_bus_add_device(SPI2_HOST, &dc, &dev) != ESP_OK) return false;
   uint8_t r = CMD_RESET; xfer(&r, nullptr, 1); vTaskDelay(pdMS_TO_TICKS(10));
   if ((rd(CANSTAT) & 0xE0) != 0x80) return false;                           // po resecie: tryb konfiguracji

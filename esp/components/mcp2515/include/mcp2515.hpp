@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "tekla/sdo.hpp"
 namespace mcp {
-struct Pins { int sck, miso, mosi, cs, irq; };
+struct Pins { int sck, miso, mosi, cs, irq, spi_hz; };
 enum class Osc : uint8_t { MHz8, MHz16 };
 bool init(const Pins& p, Osc osc);                 // reset, konfiguracja 125 kbit/s, filtry wylaczone (przyjmuje wszystko), tryb normalny
 bool send(const tekla::CanFrame& f, uint32_t timeout_ms);

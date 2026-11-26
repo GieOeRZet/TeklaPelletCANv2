@@ -2,6 +2,8 @@
 #include "config.hpp"
 #include "mcp2515.hpp"
 #include "tekla/model.hpp"
+#include "tekla/identity.hpp"
+#include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
@@ -12,15 +14,21 @@ using namespace tekla;
 namespace bus {
 static const char* TAG = "bus";
 struct Req { bool write; uint16_t pid; uint32_t raw; uint32_t* out; bool* ok; SemaphoreHandle_t done; };
-static QueueHandle_t q; static bool g_can_ok; static int64_t g_last_reply_us; static volatile uint8_t g_mask = LS_BASE;
+static QueueHandle_t q; static tekla::IdentityResponder g_ident(cfg::kNodeId, cfg::kName, cfg::kVersion, cfg::kProduct); static bool g_booted; static int64_t g_hb_us;
+static bool g_can_ok; static int64_t g_last_reply_us; static volatile uint8_t g_mask = LS_BASE;
 static double g_val[kLiveCount]; static bool g_known[kLiveCount], g_dirty[kLiveCount]; static int64_t g_next_us[kLiveCount]; static SemaphoreHandle_t g_mu;
 static bool transact(const CanFrame& tx, uint16_t pid, uint32_t* raw) {                // wyslij, czekaj na 0x580+node z tym samym indeksem
   if (!mcp::send(tx, 50)) return false; int64_t end = esp_timer_get_time() + (int64_t)cfg::kSdoTimeoutMs * 1000;
-  while (esp_timer_get_time() < end) { CanFrame f; if (mcp::recv(&f)) { SdoReply r = sdo_parse_reply(cfg::kBoilerNode, f); if (r.ok && r.index == pid) { g_last_reply_us = esp_timer_get_time(); g_can_ok = true; if (raw) *raw = r.value; return true; } if (r.abort && r.index == pid) return false; } else vTaskDelay(1); }
+  while (esp_timer_get_time() < end) { CanFrame f; if (mcp::recv(&f)) { if (f.id == 0x600u + cfg::kNodeId) { CanFrame o; if (g_ident.handle(f, &o)) mcp::send(o, 20); continue; } SdoReply r = sdo_parse_reply(cfg::kBoilerNode, f); if (r.ok && r.index == pid) { g_last_reply_us = esp_timer_get_time(); g_can_ok = true; if (raw) *raw = r.value; return true; } if (r.abort && r.index == pid) return false; } else vTaskDelay(1); }
   g_can_ok = esp_timer_get_time() - g_last_reply_us < 5000000; return false;
+}
+static void service() {                                      // tozsamosc wezla: odpowiedzi SDO na zapytania panelu + boot-up/heartbeat NMT
+  CanFrame f, o; while (mcp::recv(&f)) if (f.id == 0x600u + cfg::kNodeId && g_ident.handle(f, &o)) mcp::send(o, 20);
+  int64_t now = esp_timer_get_time(); if (now - g_hb_us >= (int64_t)cfg::kHeartbeatMs * 1000) { g_hb_us = now; mcp::send(g_booted ? tekla::nmt_heartbeat_frame(cfg::kNodeId) : tekla::nmt_bootup_frame(cfg::kNodeId), 20); g_booted = true; }
 }
 static void task(void*) {
   for (;;) {
+    service();
     Req r; if (xQueueReceive(q, &r, 0) == pdTRUE) {
       uint32_t v = 0; bool ok = r.write ? transact(sdo_write_frame(cfg::kBoilerNode, r.pid, r.raw), r.pid, &v) : transact(sdo_read_frame(cfg::kBoilerNode, r.pid), r.pid, &v);
       if (r.out) *r.out = v; if (r.ok) *r.ok = ok; xSemaphoreGive(r.done); continue;
@@ -35,7 +43,8 @@ static void task(void*) {
   }
 }
 bool start() {
-  mcp::Pins p{cfg::kPinSck, cfg::kPinMiso, cfg::kPinMosi, cfg::kPinCs, cfg::kPinInt};
+  if (cfg::kExternalAntenna) { gpio_config_t g{}; g.pin_bit_mask = (1ULL << cfg::kPinRfSwitch) | (1ULL << cfg::kPinRfAntenna); g.mode = GPIO_MODE_OUTPUT; gpio_config(&g); gpio_set_level((gpio_num_t)cfg::kPinRfSwitch, 0); gpio_set_level((gpio_num_t)cfg::kPinRfAntenna, 1); }   // jak PelletCAN (external_antenna)
+  mcp::Pins p{cfg::kPinSck, cfg::kPinMiso, cfg::kPinMosi, cfg::kPinCs, cfg::kPinInt, cfg::kSpiHz};
   if (!mcp::init(p, cfg::kOsc16MHz ? mcp::Osc::MHz16 : mcp::Osc::MHz8)) { ESP_LOGE(TAG, "MCP2515 init nieudany"); return false; }
   q = xQueueCreate(16, sizeof(Req)); g_mu = xSemaphoreCreateMutex(); xTaskCreate(task, "bus", 4096, nullptr, 5, nullptr); return true;
 }

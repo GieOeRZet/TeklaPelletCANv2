@@ -129,3 +129,8 @@ Wlasciciel zlecil pelna autonomie; ponizej wartosci domyslne zamykajace punkty O
 - ESP v1 **nie zapisuje** 42 parametrow, ktorych panel nie pokazuje w zadnej liscie NASTAW (lista w `data/device_model.json` -> `firmware_row_table.rows_not_in_any_panel_list`): wymiennik (0x216B, 0x3121-0x3124), kominiarz 0x3750, spaliny/przeplyw (0x3701-0x3703, 0x3707, 0x362B, 0x215A/B), palnik i paliwo (0x3709, 0x370C-0x370F, 0x3727, 0x3748, 0x3705, 0x300E, 0x299F), drewno (0x3000, 0x3005-0x3007), powietrze wtorne i przedmuch (0x3008/9, 0x3713/4), ruszt (0x3010, 0x3012, 0x2151, 0x218A, 0x218C, 0x228E/F). Wlasciciel: dwa tryby sa nieaktywne - nie dotykac.
 - Egzekwowanie: generator oznacza je `WE_BLOCKED` w `esp/main/gen/model_pids.inc`; REST/WS odrzuca zapis (HTTP 403) niezaleznie od trybu i poziomu PIN. Odczyt dozwolony.
 - Zmiana tej listy tylko przez wlasciciela.
+
+### 13.7 Tozsamosc wezla na magistrali i sprzet (z PelletCAN/ESPHome, 2026-11-26)
+- Sprzet ze starego projektu (`GieOeRZet/PelletCAN` esphome/PelletCAN.yaml): XIAO ESP32-C6 + MCP2515 16 MHz, **SCK=GPIO19, MISO=GPIO20, MOSI=GPIO18, CS=GPIO17**, INT nieuzywany (odpytywanie), SPI 1 MHz, CAN 125 kbit/s; przelacznik anteny GPIO3 (niski = sterowanie) / GPIO14 (wysoki = antena zewnetrzna U.FL) uzywany tylko przy `kExternalAntenna=true` (po podpieciu anteny).
+- Wezel ESP **95** (stary firmware: 90; 86 i 87 zajete przez urzadzenia kotla): boot-up NMT (0x75F, `00`) i heartbeat co 1 s (`05`), odpowiedzi SDO upload na 0x1000, 0x1001, 0x1008 (nazwa, segmentowo), 0x100A (wersja), 0x1018:0..4 - dzieki temu panel pokazuje wezel na zakladce Siec; kod produktu 1 = "Unknown" (jak dotychczas u wlasciciela).
+- PIN-y instalatora NIE trafiaja do repo (decyzja wlasciciela: ustawiane przy konfiguracji ESP).
