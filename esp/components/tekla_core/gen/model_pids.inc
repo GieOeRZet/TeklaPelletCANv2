@@ -36,17 +36,17 @@
   {0x204A, TT_U16, PM_SETTING, 100LL, 300LL, WE_NONE, 1.0f}, /* CH eco temp set [dC] */
   {0x204B, TT_U16, PM_SETTING, 100LL, 300LL, WE_NONE, 1.0f}, /* CH eco temp set [dC] */
   {0x2064, TT_U8, PM_SETTING, 0LL, 3LL, WE_BLOCKED, 1.0f}, /* CH program */
-  {0x2065, TT_U8, PM_SETTING, 0LL, 3LL, WE_NONE, 1.0f}, /* CH program */
-  {0x2066, TT_U8, PM_SETTING, 0LL, 3LL, WE_NONE, 1.0f}, /* CH program */
-  {0x2067, TT_U8, PM_SETTING, 0LL, 3LL, WE_NONE, 1.0f}, /* CH program */
+  {0x2065, TT_U8, PM_SETTING, 0LL, 3LL, WE_OPTION_INDEX, 1.0f}, /* CH program */
+  {0x2066, TT_U8, PM_SETTING, 0LL, 3LL, WE_OPTION_INDEX, 1.0f}, /* CH program */
+  {0x2067, TT_U8, PM_SETTING, 0LL, 3LL, WE_OPTION_INDEX, 1.0f}, /* CH program */
   {0x2101, TT_U16, PM_LIVE, 0LL, 10000LL, WE_NONE, 1.0f}, /* Solar power [W] */
   {0x2102, TT_S16, PM_LIVE, 0LL, 1500LL, WE_NONE, 1.0f}, /* Solar temperature 2 [C] */
   {0x2103, TT_S16, PM_LIVE, 0LL, 1500LL, WE_NONE, 1.0f}, /* Solar temperature 3 [C] */
   {0x2104, TT_S16, PM_LIVE, 0LL, 1500LL, WE_NONE, 1.0f}, /* Solar temperature 4 [C] */
   {0x2105, TT_U8, PM_SETTING, 0LL, 4LL, WE_PLAIN, 1.0f}, /* Heating configuration */
-  {0x2106, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Hot water configuration */
-  {0x2107, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Buffer configuration */
-  {0x2108, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Solar configuration */
+  {0x2106, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Hot water configuration */
+  {0x2107, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Buffer configuration */
+  {0x2108, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Solar configuration */
   {0x2109, TT_S16, PM_LIVE, 0LL, 1500LL, WE_NONE, 1.0f}, /* Solar temperature 1 [C] */
   {0x2110, TT_S16, PM_LIVE, -100LL, 1500LL, WE_NONE, 1.0f}, /* Hot water 1 measured temperature */
   {0x2111, TT_U16, PM_LIVE, 0LL, 150LL, WE_NONE, 1.0f}, /* Hot water 1 needed temp. [C] */
@@ -58,37 +58,37 @@
   {0x2119, TT_S16, PM_LIVE, -50LL, 350LL, WE_NONE, 1.0f}, /* Exhaust gas temperature (2) [C] */
   {0x2120, TT_U16, PM_LIVE, 0LL, 65535LL, WE_NONE, 1.0f}, /* Lambda oxygen [%] */
   {0x2122, TT_U32, PM_LIVE, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* Compatibility igneo solar pump state */
-  {0x2123, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Lambda module presence */
+  {0x2123, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Lambda module presence */
   {0x2124, TT_U32, PM_SETTING, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* Total fuel counter[hg] */
   {0x2125, TT_U32, PM_LIVE, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* Device type */
-  {0x2126, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule monday */
-  {0x2127, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule monday */
-  {0x2128, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule monday */
-  {0x2129, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule monday */
-  {0x212A, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule tuesday */
-  {0x212B, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule tuesday */
-  {0x212C, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule tuesday */
-  {0x212D, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule tuesday */
-  {0x212E, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule wednesday */
-  {0x212F, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule wednesday */
-  {0x2130, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule wednesday */
-  {0x2131, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule wednesday */
-  {0x2132, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule thursday */
-  {0x2133, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule thursday */
-  {0x2134, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule thursday */
-  {0x2135, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule thursday */
-  {0x2136, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule friday */
-  {0x2137, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule friday */
-  {0x2138, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule friday */
-  {0x2139, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule friday */
-  {0x213A, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule saturday */
-  {0x213B, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule saturday */
-  {0x213C, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule saturday */
-  {0x213D, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule saturday */
-  {0x213E, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule sunday */
-  {0x213F, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule sunday */
-  {0x2140, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule sunday */
-  {0x2141, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* CH schedule sunday */
+  {0x2126, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule monday */
+  {0x2127, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule monday */
+  {0x2128, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule monday */
+  {0x2129, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule monday */
+  {0x212A, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule tuesday */
+  {0x212B, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule tuesday */
+  {0x212C, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule tuesday */
+  {0x212D, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule tuesday */
+  {0x212E, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule wednesday */
+  {0x212F, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule wednesday */
+  {0x2130, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule wednesday */
+  {0x2131, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule wednesday */
+  {0x2132, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule thursday */
+  {0x2133, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule thursday */
+  {0x2134, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule thursday */
+  {0x2135, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule thursday */
+  {0x2136, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule friday */
+  {0x2137, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule friday */
+  {0x2138, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule friday */
+  {0x2139, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule friday */
+  {0x213A, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule saturday */
+  {0x213B, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule saturday */
+  {0x213C, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule saturday */
+  {0x213D, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule saturday */
+  {0x213E, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule sunday */
+  {0x213F, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule sunday */
+  {0x2140, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule sunday */
+  {0x2141, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* CH schedule sunday */
   {0x2142, TT_U8, PM_SETTING, 0LL, 1LL, WE_OPTION_INDEX, 1.0f}, /* CH mode */
   {0x2143, TT_U8, PM_SETTING, 0LL, 1LL, WE_OPTION_INDEX, 1.0f}, /* CH mode */
   {0x2144, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* CH mode */
@@ -101,20 +101,20 @@
   {0x214B, TT_U8, PM_COMMAND, 0LL, 2LL, WE_NONE, 1.0f}, /* CH mixer test */
   {0x214C, TT_U8, PM_COMMAND, 0LL, 2LL, WE_NONE, 1.0f}, /* CH mixer test */
   {0x214D, TT_U8, PM_COMMAND, 0LL, 2LL, WE_NONE, 1.0f}, /* CH mixer test */
-  {0x214E, TT_U8, PM_SETTING, 60LL, 150LL, WE_NONE, 1.0f}, /* Oxygen for 30% of power [%] */
+  {0x214E, TT_U8, PM_SETTING, 60LL, 150LL, WE_SCALED, 0.1f}, /* Oxygen for 30% of power [%] */
   {0x2151, TT_U8, PM_SETTING, 0LL, 1LL, WE_BLOCKED, 1.0f}, /* Grate silence mode */
-  {0x2152, TT_U8, PM_SETTING, 80LL, 150LL, WE_NONE, 1.0f}, /* Oxygen for 100% of power [%] */
-  {0x2153, TT_U8, PM_SETTING, 1LL, 60LL, WE_NONE, 1.0f}, /* Burner inertia [min] */
-  {0x2154, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Hot water 1 schedule monday */
-  {0x2155, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Hot water 1 schedule tuesday */
-  {0x2156, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Hot water 1 schedule wednesday */
-  {0x2157, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Hot water 1 schedule thursday */
-  {0x2158, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Hot water 1 schedule friday */
-  {0x2159, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Hot water 1 schedule saturday */
+  {0x2152, TT_U8, PM_SETTING, 80LL, 150LL, WE_SCALED, 0.1f}, /* Oxygen for 100% of power [%] */
+  {0x2153, TT_U8, PM_SETTING, 1LL, 60LL, WE_PLAIN, 1.0f}, /* Burner inertia [min] */
+  {0x2154, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Hot water 1 schedule monday */
+  {0x2155, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Hot water 1 schedule tuesday */
+  {0x2156, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Hot water 1 schedule wednesday */
+  {0x2157, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Hot water 1 schedule thursday */
+  {0x2158, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Hot water 1 schedule friday */
+  {0x2159, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Hot water 1 schedule saturday */
   {0x215A, TT_U16, PM_SETTING, 5LL, 500LL, WE_BLOCKED, 1.0f}, /* Airflow speed for 30% of power [m/s] */
   {0x215B, TT_U16, PM_SETTING, 10LL, 500LL, WE_BLOCKED, 1.0f}, /* Airflow speed for 100% of power [m/s] */
   {0x215F, TT_S16, PM_LIVE, -500LL, 1000LL, WE_NONE, 1.0f}, /* Outside temperature */
-  {0x2160, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Hot water 1 schedule sunday */
+  {0x2160, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Hot water 1 schedule sunday */
   {0x2161, TT_U16, PM_COMMAND, 0LL, 65535LL, WE_NONE, 1.0f}, /* Weather forecast 0 */
   {0x2162, TT_U16, PM_COMMAND, 0LL, 65535LL, WE_NONE, 1.0f}, /* Weather forecast 1 */
   {0x2163, TT_U16, PM_COMMAND, 0LL, 65535LL, WE_NONE, 1.0f}, /* Weather forecast 2 */
@@ -126,21 +126,21 @@
   {0x2169, TT_S16, PM_COMMAND, 0LL, 500LL, WE_NONE, 1.0f}, /* CH res [dC] */
   {0x216A, TT_U8, PM_LIVE, 0LL, 1LL, WE_NONE, 1.0f}, /* Exchanger cleaning request */
   {0x216B, TT_U8, PM_SETTING, 0LL, 1LL, WE_BLOCKED, 1.0f}, /* Exchanger silence mode */
-  {0x216C, TT_U16, PM_SETTING, 35LL, 75LL, WE_NONE, 1.0f}, /* Boiler minimal return temperature */
+  {0x216C, TT_U16, PM_SETTING, 35LL, 75LL, WE_PLAIN, 1.0f}, /* Boiler minimal return temperature */
   {0x216D, TT_U8, PM_COMMAND, 0LL, 2LL, WE_NONE, 1.0f}, /* Boiler return mixer test */
-  {0x216E, TT_U16, PM_SETTING, 15LL, 360LL, WE_NONE, 1.0f}, /* Boiler mixer opening time [s] */
+  {0x216E, TT_U16, PM_SETTING, 15LL, 360LL, WE_PLAIN, 1.0f}, /* Boiler mixer opening time [s] */
   {0x216F, TT_U8, PM_LIVE, 0LL, 2LL, WE_NONE, 1.0f}, /* CH mixer state */
   {0x2170, TT_U16, PM_LIVE, 0LL, 65535LL, WE_NONE, 1.0f}, /* VideRoom PIN */
   {0x218A, TT_U8, PM_SETTING, 1LL, 1LL, WE_BLOCKED, 1.0f}, /* Is grate cleaning on */
   {0x2207, TT_U16, PM_SETTING, 20LL, 70LL, WE_PLAIN, 1.0f}, /* Boiler minimal pump temperature */
   {0x2208, TT_U16, PM_SETTING, 0LL, 20LL, WE_PLAIN, 1.0f}, /* Boiler on histeresis */
-  {0x2209, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Boiler schedule monday */
-  {0x220A, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Boiler schedule tuesday */
-  {0x220B, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Boiler schedule wednesday */
-  {0x220C, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Boiler schedule thursday */
-  {0x220D, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Boiler schedule friday */
-  {0x220E, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Boiler schedule saturday */
-  {0x220F, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_NONE, 1.0f}, /* Boiler schedule sunday */
+  {0x2209, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Boiler schedule monday */
+  {0x220A, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Boiler schedule tuesday */
+  {0x220B, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Boiler schedule wednesday */
+  {0x220C, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Boiler schedule thursday */
+  {0x220D, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Boiler schedule friday */
+  {0x220E, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Boiler schedule saturday */
+  {0x220F, TT_U32, PM_SETTING, 0LL, 16777215LL, WE_PLAIN, 1.0f}, /* Boiler schedule sunday */
   {0x2210, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Hot water 1 heat now */
   {0x2211, TT_U16, PM_LIVE, 0LL, 150LL, WE_NONE, 1.0f}, /*  */
   {0x2212, TT_U16, PM_SETTING, 5LL, 30LL, WE_PLAIN, 1.0f}, /* Hot water 1 histeresis */
@@ -152,11 +152,11 @@
   {0x2252, TT_U8, PM_LIVE, 0LL, 100LL, WE_NONE, 1.0f}, /* Burner burner feeder */
   {0x2253, TT_U16, PM_LIVE, 0LL, 100LL, WE_NONE, 1.0f}, /* Burner igniter */
   {0x2254, TT_U8, PM_LIVE, 0LL, 100LL, WE_NONE, 1.0f}, /* Burner blower */
-  {0x2256, TT_U16, PM_SETTING, 10LL, 200LL, WE_NONE, 1.0f}, /* Pellet predose [s] */
-  {0x2257, TT_U16, PM_SETTING, 10LL, 150LL, WE_NONE, 1.0f}, /* Max Feeding [s] */
-  {0x2258, TT_U8, PM_SETTING, 1LL, 3LL, WE_NONE, 1.0f}, /* Grate cleaning number */
+  {0x2256, TT_U16, PM_SETTING, 10LL, 200LL, WE_PLAIN, 1.0f}, /* Pellet predose [s] */
+  {0x2257, TT_U16, PM_SETTING, 10LL, 150LL, WE_SCALED, 0.1f}, /* Max Feeding [s] */
+  {0x2258, TT_U8, PM_SETTING, 1LL, 3LL, WE_PLAIN, 1.0f}, /* Grate cleaning number */
   {0x2259, TT_U8, PM_COMMAND, 0LL, 2LL, WE_NONE, 1.0f}, /* Burner storage feeder test */
-  {0x225A, TT_U8, PM_SETTING, 2LL, 30LL, WE_NONE, 1.0f}, /* Pwr reg. speed */
+  {0x225A, TT_U8, PM_SETTING, 2LL, 30LL, WE_PLAIN, 1.0f}, /* Pwr reg. speed */
   {0x2260, TT_U16, PM_LIVE, 0LL, 3600LL, WE_NONE, 1.0f}, /* Burner storage feeder work time during refuling [s] */
   {0x2261, TT_U16, PM_SETTING, 0LL, 100LL, WE_NONE, 1.0f}, /* blower char. 1 */
   {0x2262, TT_U16, PM_SETTING, 0LL, 100LL, WE_NONE, 1.0f}, /* blower char. 2 */
@@ -166,8 +166,8 @@
   {0x2266, TT_U8, PM_COMMAND, 0LL, 1LL, WE_NONE, 1.0f}, /* Refueling need request */
   {0x2267, TT_U16, PM_LIVE, 0LL, 3600LL, WE_NONE, 1.0f}, /* Burner storage feeder left time during refuling [s] */
   {0x2268, TT_U16, PM_SETTING, 0LL, 100LL, WE_NONE, 1.0f}, /* exh. fan char. 1 */
-  {0x226A, TT_U8, PM_SETTING, 5LL, 100LL, WE_NONE, 1.0f}, /* Brightness threshold */
-  {0x226B, TT_U8, PM_SETTING, 2LL, 6LL, WE_NONE, 1.0f}, /* Burning off time [min] */
+  {0x226A, TT_U8, PM_SETTING, 5LL, 100LL, WE_PLAIN, 1.0f}, /* Brightness threshold */
+  {0x226B, TT_U8, PM_SETTING, 2LL, 6LL, WE_PLAIN, 1.0f}, /* Burning off time [min] */
   {0x226C, TT_S16, PM_LIVE, 0LL, 1500LL, WE_NONE, 1.0f}, /* Burner feeder temperature [dC] */
   {0x226D, TT_U16, PM_LIVE, 0LL, 1000LL, WE_NONE, 1.0f}, /* Burner storage feeding time [dS] */
   {0x226E, TT_U16, PM_SETTING, 0LL, 100LL, WE_NONE, 1.0f}, /* exh. fan char. 2 */
@@ -195,11 +195,11 @@
   {0x2285, TT_U8, PM_COMMAND, 0LL, 2LL, WE_NONE, 1.0f}, /* Exchanger cleaner test */
   {0x2286, TT_U8, PM_COMMAND, 0LL, 2LL, WE_NONE, 1.0f}, /* Boiler pump test */
   {0x2288, TT_U8, PM_COMMAND, 0LL, 100LL, WE_NONE, 1.0f}, /* Blower test power */
-  {0x2289, TT_U8, PM_SETTING, 20LL, 100LL, WE_NONE, 1.0f}, /* Blower power during fire up */
+  {0x2289, TT_U8, PM_SETTING, 20LL, 100LL, WE_PLAIN, 1.0f}, /* Blower power during fire up */
   {0x228A, TT_U16, PM_SETTING, 0LL, 2000LL, WE_NONE, 1.0f}, /* Pwr reg. Kp 2 */
   {0x228B, TT_U16, PM_SETTING, 3LL, 500LL, WE_NONE, 1.0f}, /* Grate full move time [s] */
   {0x228C, TT_U8, PM_LIVE, 0LL, 100LL, WE_NONE, 1.0f}, /* Exhaust fan power */
-  {0x2290, TT_U8, PM_SETTING, 1LL, 10LL, WE_NONE, 1.0f}, /* Incandescing time [min] */
+  {0x2290, TT_U8, PM_SETTING, 1LL, 10LL, WE_PLAIN, 1.0f}, /* Incandescing time [min] */
   {0x2291, TT_U16, PM_SETTING, 0LL, 20LL, WE_PLAIN, 1.0f}, /* Boiler off histeresis */
   {0x2292, TT_U8, PM_SETTING, 20LL, 100LL, WE_SCALED, 0.1f}, /* Fuel calorific [kWh/kg] */
   {0x2293, TT_U8, PM_COMMAND, 0LL, 2LL, WE_NONE, 1.0f}, /* Exhaust fan test */
@@ -232,7 +232,7 @@
   {0x22B2, TT_U8, PM_SETTING, 0LL, 30LL, WE_PLAIN, 1.0f}, /* CH delta source [C] */
   {0x22B3, TT_U8, PM_SETTING, 0LL, 30LL, WE_NONE, 1.0f}, /* CH delta source [C] */
   {0x22B4, TT_U8, PM_SETTING, 0LL, 30LL, WE_NONE, 1.0f}, /* CH delta source [C] */
-  {0x22B5, TT_U16, PM_SETTING, 60LL, 360LL, WE_NONE, 1.0f}, /* CH mixer opening time [s] */
+  {0x22B5, TT_U16, PM_SETTING, 60LL, 360LL, WE_PLAIN, 1.0f}, /* CH mixer opening time [s] */
   {0x22B6, TT_U16, PM_SETTING, 60LL, 360LL, WE_PLAIN, 1.0f}, /* CH mixer opening time [s] */
   {0x22B7, TT_U16, PM_SETTING, 60LL, 360LL, WE_NONE, 1.0f}, /* CH mixer opening time [s] */
   {0x22B8, TT_U16, PM_SETTING, 60LL, 360LL, WE_NONE, 1.0f}, /* CH mixer opening time [s] */
@@ -280,7 +280,7 @@
   {0x22EA, TT_U8, PM_SETTING, 20LL, 60LL, WE_PLAIN, 1.0f}, /* Min CH temp for pump [C] */
   {0x22EB, TT_U8, PM_SETTING, 20LL, 60LL, WE_NONE, 1.0f}, /* Min CH temp for pump [C] */
   {0x22EC, TT_U8, PM_SETTING, 20LL, 60LL, WE_NONE, 1.0f}, /* Min CH temp for pump [C] */
-  {0x22F1, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Permament pump */
+  {0x22F1, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Permament pump */
   {0x22F2, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Permament pump */
   {0x22F3, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Permament pump */
   {0x22F4, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Permament pump */
@@ -288,7 +288,7 @@
   {0x22F6, TT_U16, PM_LIVE, 0LL, 150LL, WE_NONE, 1.0f}, /* CH needed temp. [C] */
   {0x22F7, TT_U16, PM_LIVE, 0LL, 150LL, WE_NONE, 1.0f}, /* CH needed temp. [C] */
   {0x22F8, TT_U16, PM_LIVE, 0LL, 150LL, WE_NONE, 1.0f}, /* CH needed temp. [C] */
-  {0x22F9, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Tch lowering for energ. consumption reduction */
+  {0x22F9, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Tch lowering for energ. consumption reduction */
   {0x22FA, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Tch lowering for energ. consumption reduction */
   {0x22FB, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Tch lowering for energ. consumption reduction */
   {0x22FC, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Tch lowering for energ. consumption reduction */
@@ -316,7 +316,7 @@
   {0x2312, TT_U16, PM_LIVE, 0LL, 65535LL, WE_NONE, 1.0f}, /* Room temp. radio sensor time since lasr rec. */
   {0x2313, TT_U16, PM_LIVE, 0LL, 65535LL, WE_NONE, 1.0f}, /* Room temp. radio sensor time since lasr rec. */
   {0x2314, TT_U16, PM_LIVE, 0LL, 65535LL, WE_NONE, 1.0f}, /* Room temp. radio sensor time since lasr rec. */
-  {0x2315, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Automatic summer recognition */
+  {0x2315, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Automatic summer recognition */
   {0x2316, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Automatic summer recognition */
   {0x2317, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Automatic summer recognition */
   {0x2318, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Automatic summer recognition */
@@ -328,7 +328,7 @@
   {0x231E, TT_U8, PM_LIVE, 0LL, 255LL, WE_NONE, 1.0f}, /* Room temp. radio sensor soft. ver. after dot */
   {0x231F, TT_U8, PM_LIVE, 0LL, 255LL, WE_NONE, 1.0f}, /* Room temp. radio sensor soft. ver. after dot */
   {0x2320, TT_U8, PM_LIVE, 0LL, 255LL, WE_NONE, 1.0f}, /* Room temp. radio sensor soft. ver. after dot */
-  {0x2321, TT_U32, PM_SETTING, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* CH circuit name part1 */
+  {0x2321, TT_U32, PM_SETTING, 0LL, 4294967295LL, WE_OPTION_INDEX, 1.0f}, /* CH circuit name part1 */
   {0x2322, TT_U32, PM_SETTING, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* CH circuit name part1 */
   {0x2323, TT_U32, PM_SETTING, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* CH circuit name part1 */
   {0x2324, TT_U32, PM_SETTING, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* CH circuit name part1 */
@@ -340,16 +340,16 @@
   {0x232A, TT_U32, PM_SETTING, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* CH circuit name part3 */
   {0x232B, TT_U32, PM_SETTING, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* CH circuit name part3 */
   {0x232C, TT_U32, PM_SETTING, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* CH circuit name part3 */
-  {0x2999, TT_U16, PM_SETTING, 1LL, 12LL, WE_NONE, 1.0f}, /* Burner max continuous work time [h] */
-  {0x299A, TT_U8, PM_SETTING, 20LL, 50LL, WE_NONE, 1.0f}, /* Incandenscing fuel [%] */
+  {0x2999, TT_U16, PM_SETTING, 1LL, 12LL, WE_PLAIN, 1.0f}, /* Burner max continuous work time [h] */
+  {0x299A, TT_U8, PM_SETTING, 20LL, 50LL, WE_PLAIN, 1.0f}, /* Incandenscing fuel [%] */
   {0x299B, TT_U8, PM_SETTING, 3LL, 30LL, WE_PLAIN, 1.0f}, /*  */
   {0x299C, TT_U16, PM_LIVE, 0LL, 65535LL, WE_NONE, 1.0f}, /* Burner blower RPM */
-  {0x299D, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* HALL Activated */
-  {0x299E, TT_U8, PM_SETTING, 0LL, 2LL, WE_NONE, 1.0f}, /* Boiler pump work mode */
+  {0x299D, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* HALL Activated */
+  {0x299E, TT_U8, PM_SETTING, 0LL, 2LL, WE_OPTION_INDEX, 1.0f}, /* Boiler pump work mode */
   {0x299F, TT_U8, PM_SETTING, 0LL, 2LL, WE_BLOCKED, 1.0f}, /* Burning type */
   {0x3000, TT_U8, PM_SETTING, 10LL, 100LL, WE_BLOCKED, 1.0f}, /* Modulation blower power on wood [%] */
   {0x3001, TT_U8, PM_COMMAND, 0LL, 1LL, WE_NONE, 1.0f}, /* Start burning wood */
-  {0x3003, TT_U16, PM_SETTING, 0LL, 200LL, WE_NONE, 1.0f}, /* Grate move in modulation [0.1s] */
+  {0x3003, TT_U16, PM_SETTING, 0LL, 200LL, WE_SCALED, 0.1f}, /* Grate move in modulation [0.1s] */
   {0x3004, TT_U8, PM_COMMAND, 7LL, 150LL, WE_NONE, 1.0f}, /* Virt. energy consumer requested temp [C] */
   {0x3005, TT_U8, PM_SETTING, 5LL, 100LL, WE_BLOCKED, 1.0f}, /* Fireup blower power on wood [%] */
   {0x3006, TT_U8, PM_SETTING, 1LL, 100LL, WE_BLOCKED, 1.0f}, /* Incandescing blower power on wood [%] */
@@ -358,7 +358,7 @@
   {0x3009, TT_U8, PM_SETTING, 1LL, 100LL, WE_BLOCKED, 1.0f}, /* Sec. air modulation MAX [%] */
   {0x300A, TT_U8, PM_LIVE, 0LL, 100LL, WE_NONE, 1.0f}, /* Sec. air mixer position [%] */
   {0x300B, TT_U8, PM_COMMAND, 0LL, 1LL, WE_NONE, 1.0f}, /* Stop burning wood */
-  {0x300C, TT_U8, PM_SETTING, 25LL, 100LL, WE_NONE, 1.0f}, /* Blower power in burning off [%] */
+  {0x300C, TT_U8, PM_SETTING, 25LL, 100LL, WE_PLAIN, 1.0f}, /* Blower power in burning off [%] */
   {0x300D, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Hot water priority */
   {0x300E, TT_U16, PM_SETTING, 0LL, 5LL, WE_BLOCKED, 1.0f}, /* Burner blower minimal RPM [*100] */
   {0x300F, TT_U8, PM_COMMAND, 0LL, 100LL, WE_NONE, 1.0f}, /* Virt. consumer maximal power */
@@ -369,9 +369,9 @@
   {0x3116, TT_U8, PM_SETTING, 0LL, 20LL, WE_PLAIN, 1.0f}, /* Solar delta on [C] */
   {0x3117, TT_U8, PM_SETTING, 0LL, 10LL, WE_PLAIN, 1.0f}, /* Solar delta off [C] */
   {0x3118, TT_U16, PM_SETTING, 15LL, 60LL, WE_SCALED, 0.1f}, /* Solar liquid specific heat [kJ/(kg * C)] */
-  {0x3119, TT_S16, PM_SETTING, 70LL, 95LL, WE_NONE, 1.0f}, /* Solar temperature water max [C] */
-  {0x311A, TT_S16, PM_SETTING, 90LL, 145LL, WE_NONE, 1.0f}, /* Solar temperature alarm max[C] */
-  {0x311B, TT_S16, PM_SETTING, -40LL, 0LL, WE_NONE, 1.0f}, /* Solar temperature alarm min[C] */
+  {0x3119, TT_S16, PM_SETTING, 70LL, 95LL, WE_PLAIN, 1.0f}, /* Solar temperature water max [C] */
+  {0x311A, TT_S16, PM_SETTING, 90LL, 145LL, WE_PLAIN, 1.0f}, /* Solar temperature alarm max[C] */
+  {0x311B, TT_S16, PM_SETTING, -40LL, 0LL, WE_PLAIN, 1.0f}, /* Solar temperature alarm min[C] */
   {0x311C, TT_U8, PM_LIVE, 0LL, 1LL, WE_NONE, 1.0f}, /* Solar pump state */
   {0x311F, TT_U8, PM_COMMAND, 0LL, 2LL, WE_NONE, 1.0f}, /* Solar pump test */
   {0x3120, TT_U8, PM_LIVE, 0LL, 1LL, WE_NONE, 1.0f}, /* Solar status */
@@ -383,8 +383,8 @@
   {0x3126, TT_U32, PM_MIRROR, 0LL, 4294967295LL, WE_NONE, 1.0f}, /*  */
   {0x3127, TT_U16, PM_LIVE, 0LL, 65535LL, WE_NONE, 1.0f}, /* Clean burner monit period [kg] */
   {0x3128, TT_U16, PM_LIVE, 0LL, 65535LL, WE_NONE, 1.0f}, /* Clean exchanger monit period [kg] */
-  {0x3129, TT_U8, PM_SETTING, 1LL, 15LL, WE_NONE, 1.0f}, /* Boiler min hydraulic pressure [0.1bar] */
-  {0x312A, TT_U8, PM_SETTING, 4LL, 25LL, WE_NONE, 1.0f}, /* Boiler max hydraulic pressure [0.1bar] */
+  {0x3129, TT_U8, PM_SETTING, 1LL, 15LL, WE_SCALED, 0.1f}, /* Boiler min hydraulic pressure [0.1bar] */
+  {0x312A, TT_U8, PM_SETTING, 4LL, 25LL, WE_SCALED, 0.1f}, /* Boiler max hydraulic pressure [0.1bar] */
   {0x3170, TT_U8, PM_SETTING, 2LL, 20LL, WE_PLAIN, 1.0f}, /* Buffer pump delta min temperature */
   {0x3171, TT_S16, PM_LIVE, -300LL, 1500LL, WE_NONE, 1.0f}, /* Buffer T1 measured temperature */
   {0x3172, TT_S16, PM_LIVE, -300LL, 1500LL, WE_NONE, 1.0f}, /* Buffer T2 measured temperature */
@@ -392,16 +392,16 @@
   {0x3174, TT_S16, PM_LIVE, -100LL, 200LL, WE_NONE, 1.0f}, /* Buffer internal energy [%] */
   {0x3333, TT_U16, PM_LIVE, 0LL, 65535LL, WE_NONE, 1.0f}, /* Boiler pressure[mbar] */
   {0x3500, TT_U8, PM_SETTING, 0LL, 1LL, WE_OPTION_INDEX, 1.0f}, /* Main module type */
-  {0x3501, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Autoconfig activation */
+  {0x3501, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Autoconfig activation */
   {0x3502, TT_U8, PM_SETTING, 0LL, 1LL, WE_OPTION_INDEX, 1.0f}, /* CH expansion module type */
   {0x3505, TT_U8, PM_SETTING, 0LL, 2LL, WE_OPTION_INDEX, 1.0f}, /* Outside temperature sensor configuration */
   {0x3506, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Sound alarm activation */
   {0x3507, TT_U32, PM_SETTING, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* Total fuel counter[kg] */
-  {0x3508, TT_U8, PM_SETTING, 0LL, 24LL, WE_NONE, 1.0f}, /* Silence hours from */
-  {0x3509, TT_U8, PM_SETTING, 0LL, 24LL, WE_NONE, 1.0f}, /* Silence hours to */
-  {0x350A, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Return to boiler temperature sensor */
-  {0x350B, TT_U8, PM_SETTING, 1LL, 3LL, WE_NONE, 1.0f}, /* Profile number */
-  {0x350C, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Is this device cascade master */
+  {0x3508, TT_U8, PM_SETTING, 0LL, 24LL, WE_PLAIN, 1.0f}, /* Silence hours from */
+  {0x3509, TT_U8, PM_SETTING, 0LL, 24LL, WE_PLAIN, 1.0f}, /* Silence hours to */
+  {0x350A, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Return to boiler temperature sensor */
+  {0x350B, TT_U8, PM_SETTING, 1LL, 3LL, WE_PLAIN, 1.0f}, /* Profile number */
+  {0x350C, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Is this device cascade master */
   {0x350D, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Pressure sensor */
   {0x3511, TT_U8, PM_SETTING, 1LL, 4LL, WE_PLAIN, 1.0f}, /* Cascade master power level */
   {0x3512, TT_U8, PM_SETTING, 1LL, 4LL, WE_PLAIN, 1.0f}, /* Cascade slave 1 power level */
@@ -433,8 +433,8 @@
   {0x3601, TT_U16, PM_SETTING, 0LL, 65535LL, WE_NONE, 1.0f}, /* How much fuel left in tank [kg] */
   {0x3602, TT_U8, PM_LIVE, 0LL, 1LL, WE_NONE, 1.0f}, /* Is fuel reserve */
   {0x3603, TT_U16, PM_SETTING, 0LL, 100LL, WE_PLAIN, 1.0f}, /* Fuel reserve [kg] */
-  {0x3604, TT_U16, PM_SETTING, 0LL, 100LL, WE_NONE, 1.0f}, /* Fuel reserve [kg] */
-  {0x3605, TT_U8, PM_SETTING, 0LL, 1LL, WE_NONE, 1.0f}, /* Lambda oxygen control */
+  {0x3604, TT_U16, PM_SETTING, 0LL, 100LL, WE_PLAIN, 1.0f}, /* Fuel reserve [kg] */
+  {0x3605, TT_U8, PM_SETTING, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Lambda oxygen control */
   {0x3606, TT_U8, PM_SETTING, 0LL, 2LL, WE_OPTION_INDEX, 1.0f}, /* Input IN17 config */
   {0x3607, TT_U8, PM_LIVE, 0LL, 1LL, WE_NONE, 1.0f}, /* Reserve sensor state */
   {0x3608, TT_U16, PM_LIVE, 0LL, 65535LL, WE_NONE, 1.0f}, /* Statistics - Ignition cnt */
@@ -500,18 +500,18 @@
   {0x3667, TT_U8, PM_LIVE, 0LL, 255LL, WE_NONE, 1.0f}, /* Airflowmeter 1 sw. ver. after dot */
   {0x366A, TT_U8, PM_LIVE, 0LL, 255LL, WE_NONE, 1.0f}, /* RadioGateway sw. ver. before dot */
   {0x366B, TT_U8, PM_LIVE, 0LL, 255LL, WE_NONE, 1.0f}, /* RadioGateway sw. ver. after dot */
-  {0x3700, TT_U16, PM_SETTING, 5LL, 180LL, WE_NONE, 1.0f}, /* Storage feeder period [s] */
+  {0x3700, TT_U16, PM_SETTING, 5LL, 180LL, WE_PLAIN, 1.0f}, /* Storage feeder period [s] */
   {0x3701, TT_U16, PM_SETTING, 70LL, 120LL, WE_BLOCKED, 1.0f}, /* Min EGT required [C] */
   {0x3702, TT_U16, PM_SETTING, 90LL, 240LL, WE_BLOCKED, 1.0f}, /* Nominal exhaust gas temp. [C] */
   {0x3703, TT_U16, PM_SETTING, 180LL, 280LL, WE_BLOCKED, 1.0f}, /* Max exhaust gas temp. [C] */
-  {0x3704, TT_U8, PM_SETTING, 30LL, 100LL, WE_NONE, 1.0f}, /* Blower power in incandescing [%] */
+  {0x3704, TT_U8, PM_SETTING, 30LL, 100LL, WE_PLAIN, 1.0f}, /* Blower power in incandescing [%] */
   {0x3705, TT_U8, PM_SETTING, 10LL, 100LL, WE_BLOCKED, 1.0f}, /* Blower power in hold/pause [%] */
   {0x3706, TT_U16, PM_LIVE, 0LL, 65535LL, WE_NONE, 1.0f}, /* Current burner power [dkW] */
   {0x3707, TT_U8, PM_SETTING, 0LL, 1LL, WE_BLOCKED, 1.0f}, /* EGT sensor type */
-  {0x3708, TT_U8, PM_SETTING, 0LL, 120LL, WE_NONE, 1.0f}, /* Boiler pump overrun [min] */
+  {0x3708, TT_U8, PM_SETTING, 0LL, 120LL, WE_PLAIN, 1.0f}, /* Boiler pump overrun [min] */
   {0x3709, TT_U16, PM_SETTING, 4LL, 200LL, WE_BLOCKED, 1.0f}, /* Nominal power [kW] */
   {0x370A, TT_U8, PM_SETTING, 1LL, 3LL, WE_NONE, 1.0f}, /* Boiler image selector */
-  {0x370B, TT_U16, PM_SETTING, 50LL, 500LL, WE_NONE, 1.0f}, /* Burner feeder % of stor. feeder */
+  {0x370B, TT_U16, PM_SETTING, 50LL, 500LL, WE_PLAIN, 1.0f}, /* Burner feeder % of stor. feeder */
   {0x370C, TT_U8, PM_SETTING, 1LL, 6LL, WE_BLOCKED, 1.0f}, /* Min fire up time [min] */
   {0x370D, TT_U16, PM_SETTING, 0LL, 300LL, WE_BLOCKED, 1.0f}, /* Igniter preheat time [s] */
   {0x370E, TT_U16, PM_SETTING, 0LL, 500LL, WE_BLOCKED, 1.0f}, /* Pellet predose [g] */
@@ -521,9 +521,9 @@
   {0x3712, TT_U8, PM_MIRROR, 0LL, 255LL, WE_NONE, 1.0f}, /* Blower type */
   {0x3713, TT_U16, PM_SETTING, 30LL, 240LL, WE_BLOCKED, 1.0f}, /*  */
   {0x3714, TT_U8, PM_SETTING, 1LL, 30LL, WE_BLOCKED, 1.0f}, /*  */
-  {0x3715, TT_U8, PM_SETTING, 0LL, 120LL, WE_NONE, 1.0f}, /* Burner pause time [min] */
-  {0x3716, TT_U8, PM_SETTING, 0LL, 30LL, WE_NONE, 1.0f}, /* Burner pause power [%] */
-  {0x3717, TT_U8, PM_SETTING, 0LL, 50LL, WE_NONE, 1.0f}, /* Burner pause blower power [%] */
+  {0x3715, TT_U8, PM_SETTING, 0LL, 120LL, WE_PLAIN, 1.0f}, /* Burner pause time [min] */
+  {0x3716, TT_U8, PM_SETTING, 0LL, 30LL, WE_PLAIN, 1.0f}, /* Burner pause power [%] */
+  {0x3717, TT_U8, PM_SETTING, 0LL, 50LL, WE_PLAIN, 1.0f}, /* Burner pause blower power [%] */
   {0x3718, TT_U32, PM_SETTING, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* Next service date timestamp */
   {0x3719, TT_U32, PM_SETTING, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* Confirm. service date timestamp */
   {0x371A, TT_U16, PM_LIVE, 0LL, 65535LL, WE_NONE, 1.0f}, /* Airflowmeter 1 flow */
@@ -656,4 +656,4 @@
   {0x404B, TT_U32, PM_MIRROR, 0LL, 4294967295LL, WE_NONE, 1.0f}, /* Alarm confirm timestamp */
   {0x404C, TT_U8, PM_MIRROR, 0LL, 19LL, WE_NONE, 1.0f}, /* Alarm next index */
   {0x404D, TT_U8, PM_LIVE, 0LL, 20LL, WE_NONE, 1.0f}, /* Number of alarms */
-  {0x404E, TT_U8, PM_COMMAND, 0LL, 1LL, WE_NONE, 1.0f}, /* Request reset alarm memory */
+  {0x404E, TT_U8, PM_COMMAND, 0LL, 1LL, WE_SWITCH, 1.0f}, /* Request reset alarm memory */
