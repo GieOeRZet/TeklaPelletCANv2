@@ -15,8 +15,8 @@ function fuelIcon(fuel, cap, res) {                                      // krop
 const ROUTE = { KOCIOL: 'kociol', PALNIK: 'palnik', CWU: 'cwu', SOLARY: 'solary', BUFOR: 'bufor', KASKADA: 'kaskada', MAGAZYN: 'magazyn', ALARMY: 'alarms', INFO: 'info', KONFIGURACJA: 'config', TEST_WYJSC: 'outtest', STATYSTYKI: 'stats', SIEC: 'network', INTERNET: 'module', DLG_PIN: 'pin' };
 const routeOf = r => r.target === 'OGRZEWANIE' ? 'co' + r.title.slice(-1) : ROUTE[r.target];
 const condOk = c => c.every(x => { const v = num(x.pid); if (v === undefined) return x.op === '!=' ? false : false; return x.op === '>=' ? v >= x.val : x.op === '!=' ? v !== x.val : v === x.val; });
-function navItems() { return ST.app.menu.filter(r => routeOf(r) && r.level_min <= ST.level && condOk(r.cond)).map(r => ({ id: routeOf(r), t: r.title, icon: r.icon_sel })).concat([{ id: 'module', t: 'Moduł ESP', icon: 101 }]).filter((x, i, a) => a.findIndex(y => y.id === x.id) === i); }
-const TABS = [['home', 'Pulpit', '⌂'], ['co1', 'Ogrzewanie', '▥'], ['sched:co1', 'Harmonogram', '▦'], ['alarms', 'Alarmy', '🔔'], ['more', 'Menu', '≡']];
+function navItems() { return ST.app.menu.filter(r => routeOf(r) && r.level_min <= ST.level && condOk(r.cond)).map(r => ({ id: routeOf(r), t: r.title, icon: r.icon_sel, lv: r.level_min })).concat([{ id: 'module', t: 'Moduł ESP', icon: 101 }]).filter((x, i, a) => a.findIndex(y => y.id === x.id) === i); }
+const TABS = [['home', 'Pulpit', '⌂'], ['circuits', 'Obwody', '▥'], ['sched:co1', 'Harmonogram', '▦'], ['more', 'Menu', '≡']];
 
 // ---------- API
 async function api(method, path, body) {
@@ -49,36 +49,61 @@ function cellHtml(c) {
   return `<div class="cell" ${hid}><small>${esc(n)}</small><span class="ib"><img data-fr="${c.fr.join(',')}" src="${IC(c.fr[0])}" alt=""></span></div>`;
 }
 const boilerImg = () => `<img class="boiler" src="${IC(ST.app.boiler_images[String(num('0x370A') || 2)] || 12)}" alt="kocioł">`;
-function arcPath(cx, cy, r, a0, a1) { const f = a => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)]; const [x0, y0] = f(a0), [x1, y1] = f(a1); return `M${x0.toFixed(1)} ${y0.toFixed(1)}A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; }
 const modeLabel = v => (ST.app.program_modes.find(m => m.v === Math.round(v)) || {}).label || '--';
+const modeIcon = v => (ST.app.program_modes.find(m => m.v === Math.round(v)) || {}).icon;
+// pastylka wyjscia: stala wysokosc 28 px; aktywna = kolor funkcji (polprzezroczyste tlo, ramka 40 %), nieaktywna = wygaszona (opacity .4). Mieszacz: O (czerwony, otwieranie) / Z (niebieski, zamykanie).
+const PC = { on: '#22C55E', burn: '#F59E0B', open: '#EF4444', close: '#38BDF8' };
+function pill(label, icon, val, on, col, frames) {
+  const im = frames ? `<img data-fr="${frames.join(',')}" src="${IC(frames[0])}" alt="">` : icon ? `<img src="${IC(icon)}" alt="">` : '';
+  return `<span class="pill ${on ? 'on' : ''}" style="--c:${col}">${im}<b>${esc(val || label)}</b></span>`;
+}
+function barPill(c, id) {
+  const v = num(c.p) || 0, on = v !== 0;
+  if (c.k === 'mixer') return pill('Mieszacz', v === 1 ? 106 : 107, v === 1 ? 'Z' : v === 2 ? 'O' : 'Mieszacz', on, v === 1 ? PC.close : PC.open);
+  if (c.k === 'pump') return pill(c.l || 'Pompa', 0, c.l || 'Pompa', on, PC.on, ST.app.pump_frames);
+  if (c.k === 'grate') return pill('Ruszt', 59, v === 1 ? '◀ Ruszt' : on ? 'Ruszt ▶' : 'Ruszt', on, PC.on);
+  let val = c.l || 'Wyjście'; if (c.n) { const x = num(c.n) || 0; if (c.hm) { const m = Math.round(x); val = Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); } else if (c.nd) val = f1(x, 1) + ' s'; else if (on && x) val = Math.round(x) + '%'; }
+  return pill(c.l, c.fr[0], val, on, id === 'palnik' ? PC.burn : PC.on, c.fr);
+}
+function hopper(fi, w = 34, h = 29) {
+  const dots = Array.from({ length: 24 }, (_, i) => { const r = Math.floor(i / 4), c = i % 4, idx = (5 - r) * 4 + c; return `<circle cx="${9 + c * 5.4}" cy="${6 + r * 3.6}" r="1.35" fill="${idx < fi.dots ? '#F59E0B' : 'none'}" stroke="#475569" stroke-width=".4"/>`; }).join('');
+  return `<svg viewBox="0 0 34 29" width="${w}" height="${h}" aria-hidden="true"><path d="M3 1h28l-7 22v5H10v-5z" fill="none" stroke="#94A3B8" stroke-width="1.4" stroke-linejoin="round"/>${fi.E ? '<text x="17" y="19" text-anchor="middle" font-size="15" font-weight="800" fill="#F59E0B">E</text>' : dots}</svg>`;
+}
+function tileTitle(id, sc) { return /^co\d$/.test(id) ? 'CO ' + id.slice(2) : id === 'cwu' ? 'CWU' : sc.t; }
+function tile(id) {
+  const sc = ST.app.screens[id]; if (!sc) return '';
+  const act = (/^co\d$/.test(id) || id === 'cwu') && (num(sc.mode) || 0) > 0;
+  const mi = sc.mode ? modeIcon(num(sc.mode)) : null;
+  const big = sc.state ? `<span style="font-size:20px">${ST.app.status[sc.state][num(sc.stateP || sc.big[0])] || '?'}</span>` : sc.big ? `${f1(num(sc.big[0]))}<small>${sc.big[1] === '°C' ? '°' : sc.big[1]}${sc.pill ? ' / ' + f1(num(sc.pill), 0) + '°' : ''}</small>` : '';
+  const pills = sc.bar.map(c => barPill(c, id)).join('');
+  return `<button class="tl" data-go="${id}"><i class="led ${act ? 'w' : ''}"></i><div class="th"><h3>${tileTitle(id, sc)}</h3>${mi ? `<img src="${IC(mi)}" alt="">` : ''}</div><div class="tv">${big}</div><div class="tp">${pills}</div></button>`;
+}
+const visibleIds = () => ST.app.menu.filter(r => condOk(r.cond) && r.level_min <= ST.level).map(routeOf).filter(r => r && ST.app.screens[r] && r !== 'kociol' && r !== 'palnik');
 function homeView() {
-  // Pulpit = calosc instalacji: luk kotla + karta dla kazdego elementu widocznego wg konfiguracji (palnik, obwody CO, CWU, bufor, solary, kaskada, magazyn). Klik w karte -> ekran szczegolow (nastawy, harmonogram, popupy).
+  // Pulpit wg przewodnika: karta "Kociol + Palnik" (duza temperatura, zadana z ikona trybu, metryki, pastylki wyjsc) + siatka kafli 2 kolumny (CO, CWU, bufor/solary/..., Paliwo, Zasilanie).
   const t = num('0x2001'), set = num('0x2004'), bs = num('0x2007') || 0, on = num('0x2005') !== 0;
-  const frac = Math.max(0, Math.min(1, ((t ?? 20) - 20) / 70)), a1 = 135 + 270 * frac;
-  const ind = (l, p, k) => { const v = num(p) || 0; const c = v ? (k === 'mix' ? (v === 1 ? 'close' : 'open') : k === 'burn' ? 'y' : 'on') : ''; return `<span class="ind"><i class="d ${c}"></i>${l}</span>`; };
-  const kv = (l, v) => `<div>${l}<b>${v}</b></div>`;
-  const fuel = num('0x3601'), cap = num('0x3600');
-  const card = id => {
-    const sc = ST.app.screens[id]; if (!sc) return '';
-    const big = sc.state ? `<div class="val" style="font-size:22px">${ST.app.status[sc.state][num(sc.stateP || sc.big[0])] || '?'}</div>` : sc.big ? `<div class="val">${f1(num(sc.big[0]))}<small>${sc.big[1]}</small></div>` : '';
-    const rows = []; if (sc.pill) rows.push(kv('zadana', f1(num(sc.pill), 1) + ' °C')); if (sc.mode) rows.push(kv('tryb', modeLabel(num(sc.mode))));
-    for (const r of sc.kv) { if (rows.length >= 2) break; if (!r[4] || num(r[4])) rows.push(kv(r[0], f1(num(r[1]), r[3]) + ' ' + r[2])); }
-    const inds = sc.bar.map(c => ind(c.l || 'Wyjście', c.p, c.k === 'mixer' ? 'mix' : id === 'palnik' ? 'burn' : '')).join('');
-    return `<button class="hcard" data-go="${id}"><h3>${sc.t}</h3>${big}${rows.join('')}${inds ? `<div class="inds">${inds}</div>` : ''}</button>`;
-  };
-  const fuelCard = `<button class="hcard" data-go="magazyn"><h3>Paliwo</h3><div class="val">${f1(fuel, 0)}<small>kg z ${f1(cap, 0)}</small></div><div class="fbar"><i style="width:${cap ? Math.max(3, Math.min(100, fuel * 100 / cap)) : 0}%"></i></div>${kv('rezerwa', f1(num('0x3603'), 0) + ' kg')}</button>`;
-  const ids = ST.app.menu.filter(r => condOk(r.cond) && r.level_min <= ST.level).map(routeOf).filter(r => r && ST.app.screens[r] && r !== 'kociol');
-  const coIds = ids.filter(i => /^co\d$/.test(i));
-  const heat = !coIds.length ? '' : `<div class="hcard heat"><h3>Ogrzewanie</h3>${coIds.map(id => { const sc = ST.app.screens[id]; return `<button class="corow" data-go="${id}"><span class="cn">${id.slice(2)}</span><span class="ct">${f1(num(sc.big[0]))}<small>°C</small></span><span class="cm">zadana ${f1(num(sc.pill), 0)} · ${modeLabel(num(sc.mode))}</span><span class="inds">${sc.bar.map(c => ind(c.l || 'Wyjście', c.p, c.k === 'mixer' ? 'mix' : '')).join('')}</span></button>`; }).join('')}</div>`;
-  const cards = ids.filter(i => !/^co\d$/.test(i)).map(id => card(id) + (id === 'palnik' ? fuelCard : '')).join('');
-  const act = (ST.alarms || []).find(x => x.active);
-  return `<div class="home">
-   <div class="card gauge" data-go="kociol" role="button"><svg viewBox="0 0 140 140" class="arc" aria-hidden="true"><defs><linearGradient id="ag" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ffc233"/><stop offset="1" stop-color="#ff7a1a"/></linearGradient></defs>
-     <path d="${arcPath(70, 70, 58, 135, 405)}" fill="none" stroke="var(--line)" stroke-width="9" stroke-linecap="round"/><path d="${arcPath(70, 70, 58, 135, Math.max(136, a1))}" fill="none" stroke="url(#ag)" stroke-width="9" stroke-linecap="round"/></svg>
-     <div class="gc"><div class="gv">${f1(t)}<small>°C</small></div><div class="gs">${ST.app.status.burner[bs] || '?'}</div><div class="gm">zadana ${f1(set, 0)} °C</div></div>
-     <div class="kv gk">${kv('Powrót', f1(num('0x4000')) + ' °C')}${kv('Temp. palnika', f1(num('0x226C')) + ' °C')}${kv('Temp. zewnętrzna', f1(num('0x215F')) + ' °C')}${kv('Moc palnika', f1(num('0x4005'), 0) + ' %')}</div></div>
-   ${act ? `<button class="card alarm" data-go="alarms"><h3>Alarm aktywny</h3><div class="al"><b>kod ${act.code}</b> · ${esc(act.text)}</div></button>` : ''}
-   ${heat}<div class="hgrid">${cards}</div></div>`;
+  const prog = PROGICON[on ? Math.min(num('0x2002') || 0, 4) : 4];
+  const fuel = num('0x3601'), cap = num('0x3600'), res = num('0x3603') || 0, fi = fuelIcon(fuel || 0, cap || 0, res);
+  const run = bs >= 1 && bs <= 8, pulse = bs === 1 || bs === 2;
+  const m = (l, v, show = true) => show ? `<div>${l}<b>${v}</b></div>` : '';
+  const metrics = m('Moc', f1(num('0x4005'), 0) + '%') + m('Spalanie', f1(num('0x3710'), 1) + ' kg/h') + m('Powrót', f1(num('0x4000'), 1) + '°', (num('0x350A') || 0) !== 0) + m('Ciśnienie', f1(num('0x3333'), 0) + ' mbar', (num('0x350D') || 0) !== 0);
+  const kp = [...ST.app.screens.palnik.bar.map(c => barPill(c, 'palnik')), ...ST.app.screens.kociol.bar.filter(c => c.k !== 'anim').map(c => barPill(c, 'kociol'))].join('');
+  const fuelTile = `<button class="tl" data-fuel="1"><i class="led ${fi.E ? 'o' : ''}"></i><div class="th"><h3>Paliwo</h3></div><div class="tv" style="display:flex;align-items:center;gap:10px">${hopper(fi)}<span>${f1(fuel, 0)}<small>kg</small></span></div><div class="tp"><span class="pill ${fi.E ? 'on' : ''}" style="--c:${PC.burn}"><b>${fi.E ? 'E · rezerwa' : 'z ' + f1(cap, 0) + ' kg'}</b></span></div></button>`;
+  const powerTile = `<button class="tl" data-go="kociol"><i class="led ${on ? 'g' : ''}"></i><div class="th"><h3>Zasilanie</h3><img src="${IC(prog)}" alt=""></div><div class="tv" style="font-size:20px">${on ? 'Włączone' : 'Wyłączone'}</div><div class="tp"><span class="pill ${on ? 'on' : ''}" style="--c:${PC.on}"><b>Kocioł</b></span></div></button>`;
+  return `<div class="dash"><div class="kcard"><i class="led ${run ? 'y' : ''} ${pulse ? 'pulse' : ''}"></i>
+   <div class="k1"><div><div class="kbig">${f1(t)}<small>°C</small></div><div class="badge"><i class="d ${run ? 'y' : ''}"></i>${ST.app.status.burner[bs] || '?'}</div></div>
+    <button class="cap" data-go="kociol" aria-label="Zadana">${f1(set, 0)}<img src="${IC(prog)}" alt="tryb"></button></div>
+   <div class="k2">${metrics}</div><div class="k3">${kp}</div></div>
+   <div class="tg">${visibleIds().map(tile).join('')}${fuelTile}${powerTile}</div></div>`;
+}
+function circuitsView() { const ids = visibleIds().filter(i => /^co\d$/.test(i) || i === 'cwu'); return `<div class="tg">${ids.map(tile).join('') || '<div class="card">Brak skonfigurowanych obwodów</div>'}</div>`; }
+function fuelDialog() {
+  const fuel = num('0x3601') || 0, cap = num('0x3600') || 0, res = num('0x3603') || 0, fi = fuelIcon(fuel, cap, res);
+  dlg(`<h2>Paliwo</h2><div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:6px 0">${hopper(fi, 68, 58)}<div class="num" style="margin:0">${f1(fuel, 0)}<small style="font-size:16px"> kg</small></div></div>
+   <input type="range" min="0" max="${cap || 100}" value="${fuel}" disabled aria-label="Poziom paliwa"><div class="rng"><span>0</span><span>${f1(cap, 0)} kg</span></div>
+   <div class="r2"><span class="k">rezerwa</span><b>${f1(res, 0)} kg</b></div>
+   <p class="k" style="margin-top:10px">Zmiana poziomu paliwa z aplikacji nie jest jeszcze obsługiwana: panel nie ma zmierzonego kodowania zapisu dla tego parametru (<code>0x3601</code>).</p>
+   <div class="acts"><button class="btn sec" id="dc">Zamknij</button></div>`); $('#dc').onclick = closeDlg;
 }
 function modeChips(s) {
   if (!s.mode) return ''; const cur = num(s.mode);
@@ -131,19 +156,33 @@ function moduleView() {
    <div class="row" data-act="factory"><div class="l">Reset fabryczny</div><div class="v">›</div></div></div>`;
 }
 function logView() { return `<div class="card"><h3>Dziennik</h3><pre class="log">${esc((ST.log || []).join('\n') || 'Brak wpisów')}</pre></div>`; }
-function moreView() { if (ST.level >= 1 && ST.beep === undefined) { ST.beep = null; api('GET', '/api/params?pids=0x3506').then(r => { ST.beep = r.values ? Number(r.values['0x3506'] || r.values['0x3506'.toUpperCase()] || 0) : 0; lastKey = ''; draw(); }); } return `<div class="card rows"><h3>Menu</h3>${navItems().filter(n => !['home', 'kociol', 'palnik', 'cwu', 'pin'].includes(n.id)).map(n => `<div class="row" data-go="${n.id}"><div class="l"><img src="${IC(n.icon)}" width="22" height="22" alt="" style="vertical-align:middle;margin-right:8px">${esc(n.t)}</div><div class="v">›</div></div>`).join('')}${ST.level >= 1 ? `<div class="row" data-act="beep"><div class="l">Alarm dźwiękowy</div><div class="v">${ST.beep ? 'włączony' : 'wyłączony'}</div></div>` : ''}</div>`; }
+function moreView() {
+  if (ST.level >= 1 && ST.beep === undefined) { ST.beep = null; api('GET', '/api/params?pids=0x3506').then(r => { ST.beep = r.values ? Number(r.values['0x3506'] || 0) : 0; lastKey = ''; draw(); }); }
+  const items = navItems().filter(n => !['home', 'kociol', 'palnik', 'cwu', 'pin', 'co1', 'co2', 'co3', 'co4'].includes(n.id) || n.id === 'kociol' || n.id === 'palnik');
+  const row = n => `<div class="row" data-go="${n.id}"><div class="l"><img src="${IC(n.icon)}" width="22" height="22" alt="" style="vertical-align:middle;margin-right:8px">${esc(n.t)}</div><div class="v">›</div></div>`;
+  const sep = t => `<div class="sep"><span>${t}</span></div>`;
+  const NAMES = { 1: 'POZIOM 1 — INSTALATOR', 2: 'POZIOM 2', 3: 'POZIOM 3' };
+  let html = `<div class="card rows"><h3>Dostęp</h3><div class="row" data-act="mode"><div class="l">Tryb pracy modułu</div><div class="v">${ST.mode === 'full' ? 'pełna kontrola' : 'tylko odczyt'}</div></div><div class="row" data-act="pin"><div class="l">Poziom PIN</div><div class="v">${ST.level}</div></div></div><div class="card rows" style="margin-top:12px"><h3>Menu</h3>`;
+  for (let lv = 0; lv <= 3; lv++) { const g = items.filter(n => (n.lv || 0) === lv); if (!g.length) continue; if (lv >= 1) html += sep(NAMES[lv]); html += g.map(row).join(''); }
+  html += `${ST.level >= 1 ? `<div class="row" data-act="beep"><div class="l">Alarm dźwiękowy</div><div class="v">${ST.beep ? 'włączony' : 'wyłączony'}</div></div>` : ''}${row({ id: 'module', t: 'Moduł ESP', icon: 101 })}</div>`;
+  return html;
+}
 
 function renderTop() {
   const t = $('#top'); const nav = ST.app ? navItems() : []; const cur = nav.find(n => n.id === ST.screen); const title = cur ? cur.t : ({ home: 'Pulpit', more: 'Więcej', log: 'Dziennik' }[ST.screen] || (ST.screen.startsWith('set:') ? 'Nastawy' : ST.screen.startsWith('sched:') ? 'Harmonogram' : ''));
+  $('#app').classList.toggle('home', ST.screen === 'home');
   const now = new Date(), hh = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'), dd = now.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
-  t.innerHTML = `<div class="tt"><h1>${esc(title)}</h1>${ST.screen === 'home' ? `<span class="date">${esc(dd)} · ${hh}</span>` : ''}</div>` + `<span class="sp"></span><span class="chip ${ST.wsOk ? '' : 'bad'}" title="Połączenie"><i></i><span class="hid">${ST.wsOk ? 'na żywo' : 'offline'}</span></span><span class="chip ${ST.mode === 'full' ? 'warn' : ''}" data-act="mode"><i></i>${ST.mode === 'full' ? '🔓 Pełna kontrola' : '🔒 Tylko odczyt'}</span><span class="chip" data-act="pin">PIN ${ST.level}</span>`;
+    if (ST.screen === 'home') {                          // AppBar wg przewodnika: status polaczenia + nazwa, pogoda, zegar i data, ikona alarmu (tylko gdy aktywny)
+    const wx = num('0x215F'), al = (ST.alarms || []).find(x => x.active);
+    t.innerHTML = `<div class="ab"><button class="conn" data-go="module"><i class="cd ${ST.wsOk ? 'on' : ''}"></i>${esc((ST.info && ST.info.name) || 'TeklaPellet')}</button><span class="sp"></span>${wx !== undefined ? `<div class="wx"><img src="${IC(num('0x3729') === 1 ? 180 : 181)}" alt="pora roku"><div><b>${f1(wx)}°</b><small>${f1(num('0x3721'))}°</small></div></div>` : ''}<div class="clk"><b>${hh}</b><small>${esc(dd)}</small></div>${al ? `<button class="alb" data-go="alarms" aria-label="Alarm"><img src="${IC(78)}" alt=""></button>` : ''}</div>`;
+  } else t.innerHTML = `<div class="tt"><h1>${esc(title)}</h1>${ST.screen === 'home' ? `<span class="date">${esc(dd)} · ${hh}</span>` : ''}</div>` + `<span class="sp"></span><span class="chip ${ST.wsOk ? '' : 'bad'}" title="Połączenie"><i></i><span class="hid">${ST.wsOk ? 'na żywo' : 'offline'}</span></span><span class="chip ${ST.mode === 'full' ? 'warn' : ''}" data-act="mode"><i></i>${ST.mode === 'full' ? '🔓 Pełna kontrola' : '🔒 Tylko odczyt'}</span><span class="chip" data-act="pin">PIN ${ST.level}</span>`;
   $('#side').innerHTML = `<div class="brand"><i></i><span>TeklaPellet</span></div><a data-go="home" class="${ST.screen === 'home' ? 'on' : ''}"><span>Pulpit</span></a>` + nav.filter(n => n.id !== 'pin').map(n => `<a data-go="${n.id}" class="${ST.screen === n.id ? 'on' : ''}"><img src="${IC(n.icon)}" width="22" height="22" alt=""><span>${esc(n.t)}</span></a>`).join('');
   $('#tabs').innerHTML = TABS.map(x => `<a data-go="${x[0]}" class="${ST.screen === x[0] ? 'on' : ''}"><b>${x[2]}${x[0] === 'alarms' && (ST.alarms || []).length ? `<em class="bdg">${ST.alarms.length}</em>` : ''}</b>${x[1]}</a>`).join('');
 }
 let lastKey = '';
 function draw(live) {
   if (!ST.model || !ST.app) return; const s = ST.screen; let html;
-  if (s === 'home') html = homeView(); else if (ST.app.screens[s]) html = screenView(s); else if (s.startsWith('set:')) { if (live) return; html = listView(s.slice(4)); }
+  if (s === 'home') html = homeView(); else if (s === 'circuits') html = circuitsView(); else if (ST.app.screens[s]) html = screenView(s); else if (s.startsWith('set:')) { if (live) return; html = listView(s.slice(4)); }
   else if (s.startsWith('sched:')) { if (live) return; html = schedView(s.slice(6)); } else if (s === 'config') { if (live) return; html = configView(); } else if (s === 'alarms') html = alarmsView(); else if (s === 'info') html = infoView();
   else if (s === 'module') html = moduleView(); else if (s === 'log') html = logView(); else if (s === 'stats') html = statsView(); else if (s === 'network') html = networkView(); else if (s === 'outtest') html = outtestView(); else html = moreView();
   const m = $('#main'); if (html !== lastKey) { const top = m.scrollTop; m.innerHTML = html; m.scrollTop = top; lastKey = html; }
@@ -201,6 +240,7 @@ async function moduleAct(a) {
 }
 // ---------- zdarzenia
 document.addEventListener('click', async e => {
+  const fu = e.target.closest('[data-fuel]'); if (fu) return fuelDialog();
   const a = e.target.closest('[data-go]'); if (a) { if (!$('#dlg').hidden && a.closest('#dlg')) return; if (a.dataset.go === 'pin') return doPin(); return go(a.dataset.go); }
   const c = e.target.closest('[data-act]'); if (c) { const k = c.dataset.act; return k === 'mode' ? doMode() : k === 'pin' ? doPin() : moduleAct(k); }
   const r = e.target.closest('[data-row]'); if (r && ST.screen.startsWith('set:')) return editParam(ST.model.lists[ST.screen.slice(4)][Number(r.dataset.row)]);
