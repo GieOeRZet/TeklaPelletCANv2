@@ -66,3 +66,12 @@ Nie potrzeba żadnego innego repozytorium. W `analiza/` są: plik firmware stero
 
 ## 11. Znane luki (stan 2026‑11‑26)
 Zapis harmonogramów/nastaw/konfiguracji niesprawdzony na kotle · test wyjść (sterowanie) nieznany: nie wiadomo, czy kocioł sam wraca do Auto · okres odpytywania i tempo animacji panelu niezmierzone · widgety ekranu PALNIK/KASKADA bez pozycji · ekran INTERNET częściowo · historia alarmów (odczyt) niezaimplementowana · czas (RTC) nieustawiany · **nic nie było uruchomione na prawdziwym kotle ani na telefonie**. Pełna lista: `analiza/NewEstyma/BACKLOG.md`, `AUDYT_BINARKA_VS_MODEL.md`.
+
+## 12. Webowy instalator pierwszego wgrania ESP32-C6
+Dla pierwszego flashowania nie trzeba używać osobnej aplikacji ani lokalnego esptool. Repo zawiera instalator przeglądarkowy w `web_installer/index.html`, oparty o Web Serial + `esptool-js`. Dokumentacja: `docs/WEB_INSTALLER.md`.
+
+Instalator pobiera aktualny `tekla_pellet_flash.bin` z wydania `installer-latest`, wykonuje pełne kasowanie flash i zapis obrazu **od `0x000000`**. Jest to ścieżka do pierwszego, czystego wgrania obrazu zawierającego bootloader + tablicę partycji + firmware. Po takim flashowaniu NVS jest wyczyszczone, więc moduł przechodzi pierwszą konfigurację.
+
+Workflow `.github/workflows/firmware-installer.yml` buduje obraz i publikuje go jako `installer-latest`. Workflow `.github/workflows/pages-installer.yml` publikuje stronę instalatora przez GitHub Pages. Strona wymaga aktualnego Chrome/Edge z Web Serial i USB do ESP32-C6.
+
+**Odnotowana zmiana repo:** dodano `web_installer/index.html`, `docs/WEB_INSTALLER.md`, `.github/workflows/firmware-installer.yml` oraz `.github/workflows/pages-installer.yml`. Nie zmienia to protokołu CAN, API ESP ani zasad bezpieczeństwa zapisu do kotła.
