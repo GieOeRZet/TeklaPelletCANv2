@@ -78,13 +78,13 @@ fun TeklaApp() {
                 containerColor = Bg,
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
-                    NavigationBar(containerColor = Color(0xFF101014)) {
+                    if (screen == "home") HomeTiles(ui) else NavigationBar(containerColor = Color(0xFF101014)) {
                         for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) } }, label = { Text(t, fontSize = 10.sp) },
                             colors = NavigationBarItemDefaults.colors(selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2, unselectedIconColor = Mut, unselectedTextColor = Mut))
                     }
                 },
             ) { pad ->
-                Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.padding(pad).fillMaxSize().then(if (screen == "home") Modifier else Modifier.verticalScroll(rememberScrollState())).padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     key(screen) { Body(ui, screen) }
                 }
             }
@@ -100,8 +100,15 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
         screen.startsWith("set:") -> "Nastawy"; screen.startsWith("sched:") -> "Harmonogram"
         else -> ui.m.screens[screen]?.title ?: ui.m.menu.firstOrNull { ui.m.routeOf(it) == screen }?.title ?: screen
     }
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
     Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(title, color = Txt, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f), maxLines = 1)
+        if (screen == "home") {
+            Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(java.text.SimpleDateFormat("HH:mm", java.util.Locale("pl")).format(now), color = Acc2, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
+                Text(java.text.SimpleDateFormat("EEE, d MMM", java.util.Locale("pl")).format(now), color = Mut, fontSize = 13.sp, maxLines = 1)
+            }
+        } else Text(title, color = Txt, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f), maxLines = 1)
         Chip(if (demo) "demo" else if (conn) "na żywo" else "offline", if (demo) Warn else if (conn) Okc else Bad) { ui.go("appset") }
         Chip(if (ui.full) "pełna" else "odczyt", if (ui.full) Warn else Okc) { ui.open(Dlg.Mode) }
         Chip("PIN ${ui.level}", Mut) { ui.open(Dlg.Pin) }
@@ -191,50 +198,50 @@ fun BarView(ui: Ui, cells: List<Cell>) {
 
 @Composable
 fun HomeView(ui: Ui) {
-    val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0; val on = ui.n("0x2005") != 0.0
+    // Pulpit jak w panelu: obraz kotła, duża temperatura, stan, zadana, temperatura zewnętrzna; dolna belka kafli w HomeTiles.
+    val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0
+    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        BoilerImage(ui)
+        BigValue(f1(t), "°C")
+        Text(ui.m.statusTables["burner"]?.getOrNull(bs) ?: "?", color = Acc2, fontSize = 24.sp, fontWeight = FontWeight.SemiBold)
+        Text("zadana ${f1(set, 0)}°C", color = Mut, fontSize = 14.sp, modifier = Modifier.padding(top = 4.dp))
+        Row(Modifier.padding(top = 14.dp).background(Panel, RoundedCornerShape(14.dp)).border(1.dp, Line, RoundedCornerShape(14.dp)).padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(f1(ui.n("0x215F")) + " °C", color = Txt, fontSize = 24.sp, fontWeight = FontWeight.Light)
+            Ic(if (ui.n("0x3729")?.toInt() == 1) 180 else 181, 30.dp)
+        }
+    }
+}
+
+@Composable
+fun HomeTiles(ui: Ui) {
+    val bs = ui.n("0x2007")?.toInt() ?: 0; val on = ui.n("0x2005") != 0.0
     val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0
     val (dots, empty) = fuelDots(fuel, cap, res)
     val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
-    val nco = ui.n("0x2105")?.toInt() ?: 0
-    Card("Kocioł") {
-        BoilerImage(ui)
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            BigValue(f1(t), "°C")
-            Text(ui.m.statusTables["burner"]?.getOrNull(bs) ?: "?", color = Acc2, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.padding(top = 8.dp)) {
-                Text("${f1(set, 0)}°C", color = Acc2, fontWeight = FontWeight.Bold, modifier = Modifier.background(Panel2, RoundedCornerShape(6.dp)).border(1.dp, Line, RoundedCornerShape(6.dp)).padding(horizontal = 9.dp, vertical = 3.dp))
-                Ic(prog, 35.dp)
-            }
+    val nco = ui.n("0x2105")?.toInt() ?: 0; val cwu = (ui.n("0x2106") ?: 0.0) != 0.0
+    @Composable fun RowScope.Tile(go: String?, bar: Color, content: @Composable BoxScope.() -> Unit) {
+        Box(Modifier.weight(1f).height(76.dp).background(if (go == null && bar == Color.Unspecified) Color.Transparent else Panel, RoundedCornerShape(12.dp)).border(1.dp, Line, RoundedCornerShape(12.dp)).then(if (go != null) Modifier.clickable { ui.go(go) } else Modifier), contentAlignment = Alignment.Center) {
+            if (bar != Color.Unspecified) Box(Modifier.align(Alignment.TopCenter).padding(top = 5.dp).size(width = 30.dp, height = 4.dp).background(bar, RoundedCornerShape(2.dp)))
+            content()
         }
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Card("Pogoda", Modifier.weight(1f)) {
-            Text(f1(ui.n("0x215F")) + " °C", color = Txt, fontSize = 26.sp, fontWeight = FontWeight.Light)
-            Spacer(Modifier.height(8.dp)); Text("Średnia ${f1(ui.n("0x3721"))} °C", color = Mut, fontSize = 13.sp)
-            Row(verticalAlignment = Alignment.CenterVertically) { Text("Pora roku ", color = Mut, fontSize = 13.sp); Ic(if (ui.n("0x3729")?.toInt() == 1) 180 else 181, 26.dp) }
-        }
-        Card("Paliwo", Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Canvas(Modifier.size(60.dp, 74.dp)) {
-                    val sc = size.width / 84f
-                    drawRoundRect(if (empty) Acc else Mut, Offset(2f * sc, 2f * sc), Size(80f * sc, 100f * sc), androidx.compose.ui.geometry.CornerRadius(8f * sc), style = Stroke(2f * sc))
-                    for (r in 0 until 6) for (c in 0 until 4) {
-                        val idx = (5 - r) * 4 + c; val ctr = Offset((14 + c * 18) * sc, (16 + r * 14) * sc)
-                        if (idx < dots) drawCircle(Acc2, 5f * sc, ctr) else drawCircle(Line, 5f * sc, ctr, style = Stroke(1f * sc))
-                    }
+    val off = Color(0xFF3A3A42)
+    Row(Modifier.fillMaxWidth().background(Bg).navigationBarsPadding().padding(horizontal = 8.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Tile("more", off) { Ic(77, 38.dp) }
+        Tile(null, off) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(top = 10.dp)) {
+                Text(if (empty) "E" else "${f1(fuel, 0)} kg", color = if (empty) Acc else Txt, fontSize = if (empty) 18.sp else 11.sp, fontWeight = FontWeight.SemiBold)
+                Canvas(Modifier.size(24.dp)) {
+                    val sc = size.width / 28f
+                    for (r in 0 until 6) for (c in 0 until 4) { val idx = (5 - r) * 4 + c; val ctr = Offset((5 + c * 6) * sc, (5 + r * 5) * sc); if (idx < dots) drawCircle(Acc2, 1.9f * sc, ctr) else drawCircle(Mut, 1.9f * sc, ctr, style = Stroke(0.5f * sc)) }
                 }
-                Column { Text(if (empty) "E" else "${f1(fuel, 0)} kg", color = if (empty) Acc else Txt, fontSize = 20.sp, fontWeight = FontWeight.Light); Text("z ${f1(cap, 0)}", color = Mut, fontSize = 12.sp) }
             }
         }
+        Tile("palnik", if (bs in 1..8) Color(0xFFF2C200) else off) { Ic(85, 34.dp) }
+        if (nco >= 1) Tile("co1", if ((ui.n("0x2064") ?: 0.0) > 0) Color.White else off) { Ic(86, 34.dp); Text("$nco", color = Acc2, fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.TopEnd).padding(top = 12.dp, end = 8.dp)) } else Tile(null, Color.Unspecified) {}
+        if (cwu) Tile("cwu", if ((ui.n("0x2014") ?: 0.0) > 0) Color.White else off) { Ic(88, 34.dp) } else Tile(null, Color.Unspecified) {}
+        Tile("kociol", if (on) Color(0xFF7AD03A) else off) { Ic(prog, 36.dp) }
     }
-    Card("Diody") {
-        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Led("Zasilanie", on, Color(0xFF7AD03A)); Led("Palnik", bs in 1..8, Color(0xFFF2C200))
-            if (nco >= 1) Led("CO 1", (ui.n("0x2064") ?: 0.0) > 0, Color.White); if (nco >= 2) Led("CO 2", (ui.n("0x2065") ?: 0.0) > 0, Color.White)
-            if ((ui.n("0x2106") ?: 0.0) != 0.0) Led("CWU", (ui.n("0x2014") ?: 0.0) > 0, Color.White)
-        }
-    }
-    Card("Pompy") { BarView(ui, listOf(Cell("pump", "0x2277", emptyList(), null, false, false), Cell("pump", "0x2299", emptyList(), null, false, false), Cell("pump", "0x2278", emptyList(), null, false, false))) }
 }
 
 @Composable
