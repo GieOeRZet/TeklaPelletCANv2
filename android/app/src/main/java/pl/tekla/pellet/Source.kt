@@ -133,6 +133,7 @@ class RemoteSource(host: String, private val scope: CoroutineScope, private var 
     override val fullMode = MutableStateFlow(true)
     private var job: Job? = null
     private var timeSynced = false
+    private var lastTimeAttempt = 0L
     private var svcPw: String? = null
     override val serviceUnlocked: Boolean get() = svcPw != null
     private fun base() = (if (host.startsWith("http")) host else "http://$host").trimEnd('/')
@@ -153,7 +154,7 @@ class RemoteSource(host: String, private val scope: CoroutineScope, private var 
             var lastSave = 0L; var downSince = 0L
             while (isActive) {
                 val ok = poll()
-                if (ok) { downSince = 0; if (!timeSynced) { timeSynced = syncPhoneTime() } } else { timeSynced = false
+                if (ok) { downSince = 0; if (!timeSynced && System.currentTimeMillis() - lastTimeAttempt > 60000L) { lastTimeAttempt = System.currentTimeMillis(); timeSynced = syncPhoneTime() } } else { timeSynced = false
                     if (downSince == 0L) downSince = System.currentTimeMillis()
                     if (deviceId.isNotEmpty() && System.currentTimeMillis() - downSince > 8000) Discovery.hostFor(deviceId)?.let { if (it != host) { host = it; Ctl.deviceMoved(deviceId, it) } }   // adres moze sie zmienic (DHCP): znajdz po id
                 }
