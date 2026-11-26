@@ -20,15 +20,13 @@ jobs:
         run: |
           python3 tools/gen_esp_tables.py
           git diff --exit-code -- esp/components/tekla_core/gen ui/gen
-      - name: Testy rdzenia (natywne) + paczka UI
+      - name: Testy rdzenia (natywne)
         run: sh esp/components/tekla_core/test/run.sh
   idf-build:
     runs-on: ubuntu-latest
     container: espressif/idf:v5.4.1
     steps:
       - uses: actions/checkout@v4
-      - name: Paczka UI
-        run: python3 tools/pack_ui.py ui/ui_pack.bin
       - name: Kompilacja ESP-IDF (esp32c6)
         shell: bash
         run: |
