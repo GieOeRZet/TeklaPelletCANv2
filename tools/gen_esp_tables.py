@@ -39,7 +39,7 @@ open(os.path.join(GEN, "model_levels.inc"), "w", encoding="utf-8").write("// GEN
 rs = m.get("real_panel_screens", {})
 bb = rs.get("bottom_bar_static_2026_11_25", {})
 ui = {"firmware_sha256": m.get("firmware_sha256"),
-      "pids": {p: [v["name_en"], v["type"], v["mode"], v["min"], v["max"]] for p, v in items.items()},
+      "pids": {p: [v["name_en"], v["type"], v["mode"], v["min"], v["max"], (v.get("format") or {}).get("scale") or 1] for p, v in items.items()},
       "lists": m["lists"]["items"] if isinstance(m["lists"], dict) and "items" in m["lists"] else m["lists"],
       "outputs": bb.get("pary_test_stan", {}).get("pary", []),
       "status_tables": rs.get("status_tables_from_binary_2026_11_25", {}),
