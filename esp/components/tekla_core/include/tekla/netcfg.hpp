@@ -9,7 +9,7 @@ inline bool parse_ipv4(const char* s, uint32_t* out) {
   unsigned a, b, c, d; char x; if (!s || sscanf(s, "%u.%u.%u.%u%c", &a, &b, &c, &d, &x) != 4) return false;
   if (a > 255 || b > 255 || c > 255 || d > 255) return false; *out = (a << 24) | (b << 16) | (c << 8) | d; return true;
 }
-inline void format_ipv4(uint32_t v, char* out, size_t cap) { snprintf(out, cap, "%u.%u.%u.%u", (v >> 24) & 255, (v >> 16) & 255, (v >> 8) & 255, v & 255); }
+inline void format_ipv4(uint32_t v, char* out, size_t cap) { snprintf(out, cap, "%u.%u.%u.%u", (unsigned)((v >> 24) & 255), (unsigned)((v >> 16) & 255), (unsigned)((v >> 8) & 255), (unsigned)(v & 255)); }
 inline bool mask_ok(uint32_t m) { if (!m || m > 0xFFFFFFFCu) return false; uint32_t inv = ~m; return (inv & (inv + 1)) == 0; }   // ciagle jedynki, prefiks 1..30
 // Staly adres: maska poprawna, IP i brama w jednej podsieci, ani adres sieci/rozgloszeniowy, nie loopback/multicast, brama != IP.
 inline bool static_ip_ok(uint32_t ip, uint32_t mask, uint32_t gw) {
