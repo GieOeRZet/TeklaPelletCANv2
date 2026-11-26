@@ -37,9 +37,9 @@ static const char* werr(WriteErr e, const char** st) {
 }
 static double decode_raw(const PidEntry* e, uint32_t raw) { double v = e->type == TT_S16 ? (int16_t)(raw & 0xFFFF) : e->type == TT_U16 ? (raw & 0xFFFF) : e->type == TT_U8 ? (raw & 0xFF) : raw; return e->enc == WE_SCALED ? v * e->scale : v; }
 // ---- WebSocket
-struct Cli { int fd; bool auth; uint8_t mask; }; static Cli C[8];
+struct Cli { int fd; bool auth; uint8_t mask; int client; }; static Cli C[8];
 static uint8_t screen_mask(const char* n) { if (!strcmp(n, "kociol")) return LS_KOCIOL; if (!strcmp(n, "palnik")) return LS_PALNIK; if (n[0] == 'c' && n[1] == 'o' && n[2] >= '1' && n[2] <= '4') return LS_CO; if (!strcmp(n, "cwu")) return LS_CWU; if (!strcmp(n, "bufor")) return LS_BUFOR; if (!strcmp(n, "solary")) return LS_SOLAR; if (!strcmp(n, "magazyn")) return LS_MAGAZYN; return 0; }
-static Cli* cli(int fd) { for (auto& c : C) if (c.fd == fd) return &c; for (auto& c : C) if (!c.fd) { c = {fd, false, 0}; return &c; } return nullptr; }
+static Cli* cli(int fd) { for (auto& c : C) if (c.fd == fd) return &c; for (auto& c : C) if (!c.fd) { c = {fd, false, 0, -1}; return &c; } return nullptr; }
 static void update_mask() { uint8_t m = 0; for (auto& c : C) if (c.fd && c.auth) m |= c.mask; bus::set_screen_mask(m); }
 static void ws_send(int fd, const char* s) { httpd_ws_frame_t f{}; f.type = HTTPD_WS_TYPE_TEXT; f.payload = (uint8_t*)s; f.len = strlen(s); httpd_ws_send_frame_async(g_srv, fd, &f); }
 static esp_err_t h_ws(httpd_req_t* r) {
@@ -48,7 +48,7 @@ static esp_err_t h_ws(httpd_req_t* r) {
   uint8_t buf[513]; f.payload = buf; if (httpd_ws_recv_frame(r, &f, f.len) != ESP_OK) return ESP_FAIL; buf[f.len] = 0;
   cJSON* j = cJSON_Parse((char*)buf); if (!j) return ESP_OK; int fd = httpd_req_to_sockfd(r); Cli* c = cli(fd); const cJSON* t = cJSON_GetObjectItem(j, "t");
   if (c && t && cJSON_IsString(t)) {
-    if (!strcmp(t->valuestring, "auth")) { const cJSON* tk = cJSON_GetObjectItem(j, "token"); c->auth = tk && cJSON_IsString(tk) && auth::find(tk->valuestring); ws_send(fd, c->auth ? "{\"t\":\"hello\"}" : "{\"t\":\"err\"}");
+    if (!strcmp(t->valuestring, "auth")) { const cJSON* tk = cJSON_GetObjectItem(j, "token"); auth::Session* as = (tk && cJSON_IsString(tk)) ? auth::find(tk->valuestring) : nullptr; c->auth = as != nullptr; c->client = as ? as->client : -1; ws_send(fd, c->auth ? "{\"t\":\"hello\"}" : "{\"t\":\"err\"}");
       if (c->auth) { LiveItem it[64]; char out[1400]; size_t n = bus::snapshot(it, 64); if (n && tekla::json_live(it, n, out, sizeof out)) ws_send(fd, out); } }
     else if (c->auth && !strcmp(t->valuestring, "sub")) { const cJSON* a = cJSON_GetObjectItem(j, "sets"); uint8_t m = 0; cJSON* e; cJSON_ArrayForEach(e, a) if (cJSON_IsString(e)) m |= screen_mask(e->valuestring); c->mask = m; update_mask(); }
   }
@@ -88,8 +88,8 @@ static esp_err_t h_param_put(httpd_req_t* r) { NEED_SESSION; unsigned pid = 0; i
   double shown = decode_raw(e, back); char b[64]; snprintf(b, sizeof b, "{\"ok\":true,\"v\":%g}", shown); ws_broadcast_param((uint16_t)pid, shown); return jsend(r, "200 OK", b); }
 static esp_err_t h_alarms(httpd_req_t* r) { NEED_SESSION; (void)S; return jsend(r, "200 OK", "{\"ok\":true,\"alarms\":[]}"); }          // TODO: historia alarmow (rejestry 0x4011-0x404B)
 // ---- modul: Wi-Fi, haslo, restart, reset, dziennik, siec
-static char g_log[12][72]; static int g_logn;
-static void logx(const char* m) { snprintf(g_log[g_logn++ % 12], sizeof g_log[0], "%ds %s", (int)(esp_timer_get_time() / 1000000), m); }
+static char g_log[64][96]; static int g_logn;
+static void logx(const char* m) { snprintf(g_log[g_logn++ % 64], sizeof g_log[0], "%ds %s", (int)(esp_timer_get_time() / 1000000), m); }
 #define NEED_SERVICE if (!auth::service_ok(S)) return jerr(r, "403 Forbidden", "service_locked")
 static void restart_later(void*) { vTaskDelay(pdMS_TO_TICKS(800)); esp_restart(); }
 static const cJSON* jstr(const cJSON* j, const char* k) { const cJSON* x = j ? cJSON_GetObjectItem(j, k) : nullptr; return x && cJSON_IsString(x) ? x : nullptr; }
@@ -125,7 +125,8 @@ static esp_err_t h_recovery_set(httpd_req_t* r) { NEED_SESSION; NEED_SERVICE; cJ
 static esp_err_t h_restart(httpd_req_t* r) { NEED_SESSION; NEED_SERVICE; logx("restart"); jsend(r, "200 OK", "{\"ok\":true}"); xTaskCreate(restart_later, "rst", 2048, nullptr, 5, nullptr); return ESP_OK; }
 static esp_err_t h_factory(httpd_req_t* r) { NEED_SESSION; NEED_SERVICE; cJSON* j = body_json(r); const cJSON* c = jstr(j, "confirm"); bool ok = c && !strcmp(c->valuestring, "RESET"); cJSON_Delete(j); if (!ok) return jerr(r, "400 Bad Request", "confirm_required");
   auth::factory_reset(); jsend(r, "200 OK", "{\"ok\":true}"); xTaskCreate(restart_later, "rst", 2048, nullptr, 5, nullptr); return ESP_OK; }
-static esp_err_t h_log(httpd_req_t* r) { NEED_SESSION; (void)S; static char out[1000]; size_t k = snprintf(out, sizeof out, "{\"ok\":true,\"lines\":["); int n = g_logn < 12 ? g_logn : 12; for (int i = 0; i < n; i++) k += snprintf(out + k, sizeof out - k, "%s\"%s\"", i ? "," : "", g_log[(g_logn - n + i) % 12]); snprintf(out + k, sizeof out - k, "]}"); return jsend(r, "200 OK", out); }
+static esp_err_t h_log(httpd_req_t* r) { NEED_SESSION; (void)S; static char out[7000]; size_t k = snprintf(out, sizeof out, "{\"ok\":true,\"lines\":["); int n = g_logn < 64 ? g_logn : 64; for (int i = 0; i < n; i++) k += snprintf(out + k, sizeof out - k, "%s\"%s\"", i ? "," : "", g_log[(g_logn - n + i) % 64]); snprintf(out + k, sizeof out - k, "]}"); return jsend(r, "200 OK", out); }
+static esp_err_t h_log_export(httpd_req_t* r) { NEED_SESSION; httpd_resp_set_type(r, "text/plain; charset=utf-8"); httpd_resp_set_hdr(r, "Content-Disposition", "attachment; filename=teklapellet.log"); int n = g_logn < 64 ? g_logn : 64; for (int i = 0; i < n; i++) { if (httpd_resp_sendstr_chunk(r, g_log[(g_logn - n + i) % 64]) != ESP_OK || httpd_resp_sendstr_chunk(r, "\n") != ESP_OK) return ESP_FAIL; } return httpd_resp_sendstr_chunk(r, nullptr); }
 static esp_err_t h_network(httpd_req_t* r) { NEED_SESSION; (void)S; char b[260]; snprintf(b, sizeof b, "{\"ok\":true,\"nodes\":[{\"node\":%d,\"name\":\"Kocioł\",\"state\":\"%s\",\"age_s\":%d},{\"node\":%d,\"name\":\"TeklaPellet (ten moduł)\",\"state\":\"pracuje\"}]}", cfg::kBoilerNode, bus::can_ok() ? "pracuje" : "brak odpowiedzi", (int)(bus::last_reply_age_ms() / 1000), cfg::kNodeId); return jsend(r, "200 OK", b); }
 #define NEED_DEV if (!auth::dev_ok(S)) return jerr(r, "403 Forbidden", "dev_locked")
 static esp_err_t h_dev(httpd_req_t* r) { NEED_SESSION; char url[160]; ota::beta_get_url(url, sizeof url); char b[300]; snprintf(b, sizeof b, "{\"ok\":true,\"configured\":%s,\"unlocked\":%s,\"beta_url\":\"%s\"}", auth::dev_configured() ? "true" : "false", auth::dev_ok(S) ? "true" : "false", auth::dev_ok(S) ? url : ""); return jsend(r, "200 OK", b); }
@@ -146,7 +147,7 @@ bool web::start() {
   auto reg = [&](const char* u, httpd_method_t m, esp_err_t (*h)(httpd_req_t*), bool ws = false) { httpd_uri_t x{}; x.uri = u; x.method = m; x.handler = h; x.is_websocket = ws; httpd_register_uri_handler(g_srv, &x); };
   reg("/ws", HTTP_GET, h_ws, true); reg("/api/login", HTTP_POST, h_login); reg("/api/setup", HTTP_POST, h_setup); reg("/api/mode", HTTP_POST, h_mode); reg("/api/level", HTTP_POST, h_level); reg("/api/level", HTTP_DELETE, h_level);
   reg("/api/info", HTTP_GET, h_info); reg("/api/state", HTTP_GET, h_state); reg("/api/params", HTTP_GET, h_params); reg("/api/param/*", HTTP_PUT, h_param_put); reg("/api/alarms", HTTP_GET, h_alarms);
-  reg("/api/wifi", HTTP_GET, h_wifi); reg("/api/wifi", HTTP_POST, h_wifi); reg("/api/wifi/scan", HTTP_GET, h_wifi_scan); reg("/api/password", HTTP_POST, h_password); reg("/api/recover", HTTP_POST, h_recover); reg("/api/recovery", HTTP_POST, h_recovery_set); reg("/api/restart", HTTP_POST, h_restart); reg("/api/factory_reset", HTTP_POST, h_factory); reg("/api/log", HTTP_GET, h_log); reg("/api/network", HTTP_GET, h_network);
+  reg("/api/log/export", HTTP_GET, h_log_export); reg("/api/wifi", HTTP_GET, h_wifi); reg("/api/wifi", HTTP_POST, h_wifi); reg("/api/wifi/scan", HTTP_GET, h_wifi_scan); reg("/api/password", HTTP_POST, h_password); reg("/api/recover", HTTP_POST, h_recover); reg("/api/recovery", HTTP_POST, h_recovery_set); reg("/api/restart", HTTP_POST, h_restart); reg("/api/factory_reset", HTTP_POST, h_factory); reg("/api/log", HTTP_GET, h_log); reg("/api/network", HTTP_GET, h_network);
   reg("/api/ota/fw", HTTP_POST, h_ota_fw); reg("/api/identity", HTTP_GET, h_identity); reg("/api/pair", HTTP_POST, h_pair); reg("/api/service/unlock", HTTP_POST, h_unlock);
   reg("/api/clients", HTTP_GET, h_clients); reg("/api/clients", HTTP_DELETE, h_clients); reg("/api/clients/*", HTTP_DELETE, h_client_del); reg("/api/device", HTTP_POST, h_device);
   reg("/api/ip", HTTP_GET, h_ip); reg("/api/ip", HTTP_POST, h_ip); reg("/api/net/confirm", HTTP_POST, h_net_confirm); reg("/api/dev", HTTP_GET, h_dev); reg("/api/dev/unlock", HTTP_POST, h_dev_unlock); reg("/api/dev/set", HTTP_POST, h_dev_set); reg("/api/dev/beta", HTTP_GET, h_beta); reg("/api/dev/beta/update", HTTP_POST, h_beta_update); reg("/api/dev/beta/status", HTTP_GET, h_beta_status); reg("/api/dev/beta/url", HTTP_POST, h_beta_url);
