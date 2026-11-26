@@ -530,22 +530,22 @@ fun LevelSep(t: String) { Row(Modifier.fillMaxWidth().padding(top = 14.dp, botto
 @Composable
 fun MoreView(ui: Ui) {
     val items = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { m -> ui.m.routeOf(m)?.let { it to m } }.filter { it.first !in listOf("cwu", "co1", "co2", "co3", "co4") }
-    Card("Dostęp") {
-        RowItem("Tryb pracy modułu", if (ui.full) "pełna kontrola" else "tylko odczyt") { ui.open(Dlg.Mode) }
-        RowItem("Poziom PIN", ui.level.toString()) { ui.open(Dlg.Pin) }
-    }
-    Card("Menu") {
-        val names = mapOf(1 to "POZIOM 1 — INSTALATOR", 2 to "POZIOM 2", 3 to "POZIOM 3")
-        for (lv in 0..3) {
-            val g = items.filter { it.second.levelMin == lv }; if (g.isEmpty()) continue; if (lv >= 1) LevelSep(names.getValue(lv))
-            for ((r, m) in g) Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go(r) }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) { Ic(m.icon, 22.dp); Spacer(Modifier.width(10.dp)); Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
+    val names = mapOf(1 to "POZIOM 1 — INSTALATOR", 2 to "POZIOM 2", 3 to "POZIOM 3")
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (Ctl.devices.isEmpty()) {
+            GlowCard(Modifier.fillMaxWidth(), Warn, null) { Row(verticalAlignment=Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("BRAK MODUŁU",color=Warn,fontSize=10.sp,fontWeight=FontWeight.Bold,letterSpacing=.8.sp); Text("Dodaj moduł TeklaPellet",color=Txt,fontSize=16.sp,fontWeight=FontWeight.Medium); Text("Wykrywanie mDNS, adres ręczny lub Bluetooth.",color=Mut,fontSize=11.sp) }; Button({ui.go("appset")}){Text("Dodaj")} } }
+        } else { Card("URZĄDZENIE") { RowItem("Aktywny moduł",Ctl.activeName()){ui.go("appset")}; RowItem("Moduły",Ctl.devices.size.toString()){ui.go("appset")} } }
+        Card("MENU KOTŁA") {
+            for (lv in 0..3) { val g=items.filter{it.second.levelMin==lv}; if(g.isEmpty()) continue; if(lv>=1) LevelSep(names.getValue(lv)); for((r,m) in g) Row(Modifier.fillMaxWidth().heightIn(min=52.dp).clickable{ui.go(r)}.padding(horizontal=4.dp),verticalAlignment=Alignment.CenterVertically){Ic(m.icon,24.dp);Spacer(Modifier.width(12.dp));Text(m.title,color=Txt,fontSize=15.sp,modifier=Modifier.weight(1f));if(m.levelMin>0)Text("PIN "+m.levelMin,color=Mut,fontSize=10.sp);Text("›",color=Mut,fontSize=22.sp)} }
         }
-        if (ui.level >= 1) BeepRow(ui)
-        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go("module") }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) { Text("Moduł ESP (Wi-Fi, hasło, aktualizacja)", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
-        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go("appset") }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) { Text("Ustawienia aplikacji (demo / ESP)", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
+        if(ui.level>=1){Card("SERWIS"){BeepRow(ui)}}
+        Card("USTAWIENIA APLIKACJI I MODUŁU") {
+            Row(Modifier.fillMaxWidth().heightIn(min=52.dp).clickable{ui.go("appset")}.padding(horizontal=4.dp),verticalAlignment=Alignment.CenterVertically){Text("Dodaj / przełącz moduł",color=Txt,fontSize=15.sp,modifier=Modifier.weight(1f));Text("›",color=Mut,fontSize=22.sp)}
+            Row(Modifier.fillMaxWidth().heightIn(min=52.dp).clickable{ui.go("module")}.padding(horizontal=4.dp),verticalAlignment=Alignment.CenterVertically){Text("Konfiguracja modułu ESP",color=Txt,fontSize=15.sp,modifier=Modifier.weight(1f));Text("Wi‑Fi · CAN · OTA ›",color=Mut,fontSize=11.sp)}
+            Row(Modifier.fillMaxWidth().heightIn(min=52.dp).clickable{ui.open(Dlg.Pin)}.padding(horizontal=4.dp),verticalAlignment=Alignment.CenterVertically){Text("Poziom dostępu kotła",color=Txt,fontSize=15.sp,modifier=Modifier.weight(1f));Text("PIN "+ui.level,color=Mut,fontSize=11.sp)}
+        }
     }
 }
-
 @Composable
 fun Dialogs(ui: Ui, d: Dlg, close: () -> Unit) {
     val scope = rememberCoroutineScope(); var err by remember(d) { mutableStateOf("") }
