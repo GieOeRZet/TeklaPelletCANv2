@@ -56,6 +56,15 @@ static bool submit(bool wr, uint16_t pid, uint32_t raw, uint32_t* out) {
 }
 bool read(uint16_t pid, uint32_t* raw) { return submit(false, pid, 0, raw); }
 bool write(uint16_t pid, uint32_t raw) { return submit(true, pid, raw, nullptr); }
+bool sync_time(uint32_t epoch, uint32_t* confirmed) {
+  // Estyma: 0x372F włącza automatyczną synchronizację RTC z Compatibility timestamp 0x2165.
+  // 0x2165 jest komendą u32, więc nie przechodzi przez zwykły guard WE_*.
+  if (!submit(true, 0x372F, 1, nullptr)) return false;
+  uint32_t rb = 0;
+  if (!submit(true, 0x2165, epoch, &rb)) return false;
+  if (confirmed) *confirmed = rb;
+  return rb == epoch;
+}
 void set_screen_mask(uint8_t m) { g_mask = m | LS_BASE; }
 void rest_all_sets(uint32_t ttl_ms) { g_rest_until = esp_timer_get_time() + (int64_t)ttl_ms * 1000; }
 size_t changes(LiveItem* out, size_t cap) { size_t n = 0; xSemaphoreTake(g_mu, portMAX_DELAY); for (size_t i = 0; i < kLiveCount && n < cap; i++) if (g_dirty[i]) { out[n++] = {kLive[i].pid, g_val[i]}; g_dirty[i] = false; } xSemaphoreGive(g_mu); return n; }
