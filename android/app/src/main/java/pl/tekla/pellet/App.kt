@@ -82,7 +82,7 @@ fun TeklaApp() {
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
                     NavigationBar(containerColor = Color(0xFF101014)) {
-                        for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { BadgedBox(badge = { if (id == "alarms" && alarmCount > 0) Badge(containerColor = Acc, contentColor = Color.Black) { Text("$alarmCount") } }) { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) } } }, label = { Text(t, fontSize = 10.sp) },
+                        for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { BadgedBox(badge = { if (id == "alarms" && alarmCount > 0) Badge(containerColor = Acc, contentColor = Color.Black) { Text("$alarmCount") } }) { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) } } }, label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
                             colors = NavigationBarItemDefaults.colors(selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2, unselectedIconColor = Mut, unselectedTextColor = Mut))
                     }
                 },
@@ -108,9 +108,9 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
     Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Column(Modifier.weight(1f)) {
             Text(title, color = Txt, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-            if (screen == "home") Text(java.text.SimpleDateFormat("EEEE, d MMMM · HH:mm", java.util.Locale("pl")).format(now), color = Mut, fontSize = 12.sp, maxLines = 1)
+            if (screen == "home") Text(java.text.SimpleDateFormat("EEE, d MMM · HH:mm", java.util.Locale("pl")).format(now), color = Mut, fontSize = 12.sp, maxLines = 1)
         }
-        Chip(if (demo) "demo" else if (conn) "na żywo" else "offline", if (demo) Warn else if (conn) Okc else Bad) { ui.go("appset") }
+        Chip("", if (demo) Warn else if (conn) Okc else Bad) { ui.go("appset") }
         Chip(if (ui.full) "Pełna kontrola" else "Tylko odczyt", if (ui.full) Warn else Okc) { ui.open(Dlg.Mode) }
         Chip("PIN ${ui.level}", Mut) { ui.open(Dlg.Pin) }
     }
@@ -119,7 +119,7 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
 @Composable
 fun Chip(t: String, dot: Color, click: () -> Unit) {
     Row(Modifier.clip(RoundedCornerShape(20.dp)).border(1.dp, Line, RoundedCornerShape(20.dp)).background(Panel).clickable(onClick = click).padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(7.dp).background(dot, RoundedCornerShape(4.dp))); Spacer(Modifier.width(6.dp)); Text(t, color = Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+        Box(Modifier.size(7.dp).background(dot, RoundedCornerShape(4.dp))); if (t.isNotEmpty()) { Spacer(Modifier.width(6.dp)); Text(t, color = Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1) }
     }
 }
 
@@ -243,7 +243,7 @@ fun HomeView(ui: Ui) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Row(verticalAlignment = Alignment.Top) { Text(f1(t), color = Txt, fontSize = 38.sp, fontWeight = FontWeight.Light); Text("°C", color = Acc, fontSize = 14.sp, modifier = Modifier.padding(start = 2.dp, top = 4.dp)) }
                     Text(ui.m.statusTables["burner"]?.getOrNull(bs) ?: "?", color = Acc2, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    Text("zadana ${f1(set, 0)} °C · " + if (on) "włączony" else "wyłączony", color = Mut, fontSize = 10.sp, textAlign = TextAlign.Center)
+                    Text("zadana ${f1(set, 0)} °C", color = Mut, fontSize = 11.sp, textAlign = TextAlign.Center)
                 }
             }
             Column(Modifier.weight(1.05f)) {
