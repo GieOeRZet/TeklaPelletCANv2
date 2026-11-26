@@ -4,6 +4,7 @@ on:
   push:
     paths: ["esp/**", "ui/**", "tools/**", "data/**", "android/**", ".github/workflows/ci.yml"]
   workflow_dispatch:
+concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }
 jobs:
   host-tests:
     runs-on: ubuntu-latest
@@ -70,7 +71,7 @@ jobs:
           git config user.name "ci"; git config user.email "ci@users.noreply.github.com"
           git add -f docs/zrzuty_android
           git commit -m "CI: zrzuty ekranow Androida [skip ci]" || exit 0
-          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 5; done
   android-build:
     runs-on: ubuntu-latest
     steps:
