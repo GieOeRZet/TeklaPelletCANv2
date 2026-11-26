@@ -166,7 +166,7 @@ fun BoilerImage(ui: Ui) {
 fun BarView(ui: Ui, cells: List<Cell>) {
     if (cells.isEmpty()) return
     val frame = LocalFrame.current
-    Row(Modifier.fillMaxWidth().padding(top = 12.dp).background(Panel2, RoundedCornerShape(12.dp)).border(1.dp, Line, RoundedCornerShape(12.dp)).padding(10.dp).heightIn(min = 58.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+    Row(Modifier.fillMaxWidth().padding(top = 12.dp).background(Panel2, RoundedCornerShape(12.dp)).border(1.dp, Line, RoundedCornerShape(12.dp)).padding(10.dp).heightIn(min = 66.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
         for (c in cells) {
             val s = ui.n(c.p)?.toInt() ?: 0
             if (s == 0) continue    // stan 0 = ikona niewidoczna (jak w panelu)
