@@ -23,6 +23,11 @@ Stan: zgodne z `esp/main/web.cpp` (firmware 0.2, **API wersja 2**). Skompilowane
 - `GET /api/info` → `{ok, id, name, fw, api, node, can, uptime, client}` (`client:true` gdy token sparowanego klienta).
 - Nie ma `/api/mode` ani `/api/level`. Każdy autoryzowany klient ma dostęp do pełnego zapisu, który nadal podlega modelowi PID i read-back.
 
+## 5. Synchronizacja czasu
+- `GET /api/time` → `{ok, boiler_timestamp, available}`. Odczytuje aktualnie dostępny parametr kompatybilności czasu `0x2165` z kotła.
+- `POST /api/time` `{epoch}` → moduł wysyła do kotła dedykowany tor synchronizacji: włącza `0x372F=1`, następnie wysyła `0x2165` jako u32 Unix timestamp i sprawdza odpowiedź zapisu. Zwraca `{ok, epoch, boiler_timestamp, synced}`.
+- Android jest źródłem aktualnego czasu; ESP nie wymyśla czasu i nie używa PIN-ów Estyma. Uwaga: obecny dowód RE potwierdza aktualizację RTC panela przez tor `0x2165 + 0x372F`; fizyczne potwierdzenie na kotle pozostaje TESTED dopiero po próbie sprzętowej.
+
 ## 5. Dane z kotła
 - `GET /api/state` → `{ok, v:{"0x2001":66.9, ...}}` (ostatnie znane wartości „na żywo”; jednostki wyświetlane, stany wyjść jako 0/1/2). Domyślnie tylko zestaw podstawowy (+ zestawy zamówione przez klientów WebSocket); **`GET /api/state?all=1`** włącza na 20 s odpytywanie wszystkich zestawów (używa integracja Home Assistant).
 - `GET /api/params?list=<klucz>` (np. `0x00|KOCIOL|inst1`; klucze list w `data/device_model.json` → `lists`) lub `GET /api/params?pids=0x2209,0x220A,...` (do ok. 40) → `{ok, values:{"0x2003":65,...}}` (odczyt z kotła przez SDO; brakujące PID-y pomijane).
