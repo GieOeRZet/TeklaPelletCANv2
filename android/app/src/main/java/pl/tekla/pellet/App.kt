@@ -235,7 +235,8 @@ fun Ix(d: IxData) {
     }
 }
 
-fun barIx(ui: Ui, c: Cell, id: String): IxData {
+fun barIx(ui: Ui, c: Cell, id: String): IxData? {
+    if (ui.n(c.p) == null) return null     // wyjście nie istnieje (kocioł nie zwraca danych) - bez wskaźnika
     val v = ui.n(c.p)?.toInt() ?: 0; val on = v != 0
     return when (c.k) {
         "mixer" -> IxData("Mieszacz", if (v == 1) "Z" else if (v == 2) "O" else "", on, if (v == 1) CCLOSE else COPEN)
@@ -290,7 +291,7 @@ fun SysTile(ui: Ui, id: String, modifier: Modifier) {
     val s = ui.m.screens.getValue(id)
     val active = (id.startsWith("co") || id == "cwu") && (ui.n(s.mode)?.toInt() ?: 0) > 0
     val mi = s.mode?.let { m -> ui.m.programModes.firstOrNull { it.v == (ui.n(m)?.toInt() ?: -1) }?.icon }
-    Tile(tileTitle(id, s), mi, if (active) Color(0xFFE8E8EE) else null, modifier, { ui.go(id) }, s.bar.map { barIx(ui, it, id) }) {
+    Tile(tileTitle(id, s), mi, if (active) Color(0xFFE8E8EE) else null, modifier, { ui.go(id) }, s.bar.mapNotNull { barIx(ui, it, id) }) {
         if (s.state != null) Text(ui.m.statusTables[s.state]?.getOrNull(ui.n(s.stateP ?: s.big)?.toInt() ?: 0) ?: "?", color = Txt, fontSize = 20.sp, fontWeight = FontWeight.Medium)
         else if (s.big != null) BigNum(f1(ui.n(s.big)), (if (s.bigUnit == "°C") "°" else s.bigUnit) + (if (s.pill != null) " / ${f1(ui.n(s.pill), 0)}°" else ""))
     }
@@ -310,7 +311,7 @@ fun HopperIcon(dots: Int, empty: Boolean, w: androidx.compose.ui.unit.Dp = 40.dp
             drawText(r, topLeft = Offset(20f * sc - r.size.width / 2f, 24f * sc - r.size.height / 2f))
         } else for (r in 0 until 6) for (c in 0 until 4) {
             val idx = (5 - r) * 4 + c; val ctr = Offset((9.5f + c * 7f) * sc, (9f + r * 6.4f) * sc)
-            if (idx < dots) { drawCircle(Acc2.copy(alpha = 0.3f), 3.6f * sc, ctr); drawCircle(Acc2, 2.2f * sc, ctr) } else drawCircle(Color(0xFF2B2B33), 2.2f * sc, ctr)
+            if (idx < dots) { drawCircle(Acc2.copy(alpha = 0.3f), 4.1f * sc, ctr); drawCircle(Acc2, 2.8f * sc, ctr) }
         }
     }
 }
@@ -368,7 +369,7 @@ fun HomeView(ui: Ui) {
     val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0; val on = ui.n("0x2005") != 0.0
     val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
     val frac = (((t ?: 20.0) - 20.0) / 70.0).coerceIn(0.0, 1.0).toFloat(); val run = bs in 1..8
-    val kix = ui.m.screens.getValue("palnik").bar.map { barIx(ui, it, "palnik") } + ui.m.screens.getValue("kociol").bar.filter { it.k != "anim" }.map { barIx(ui, it, "kociol") }
+    val kix = ui.m.screens.getValue("palnik").bar.mapNotNull { barIx(ui, it, "palnik") } + ui.m.screens.getValue("kociol").bar.filter { it.k != "anim" }.mapNotNull { barIx(ui, it, "kociol") }
     val entries = visibleTileIds(ui) + listOf("fuel", "power"); val rows = (entries.size + 1) / 2
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val tileH = ((maxHeight - 430.dp) / rows - 10.dp).coerceIn(114.dp, 160.dp)

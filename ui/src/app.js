@@ -55,6 +55,7 @@ const modeIcon = v => (ST.app.program_modes.find(m => m.v === Math.round(v)) || 
 const PC = { on: '#4fe38a', burn: '#ffb066', open: '#ff5d5d', close: '#5ab4ff' };
 function ix(label, val, on, col, extra) { return `<span class="ix ${on ? 'on' : ''}" style="--c:${col}"><i></i>${esc(label)}${val ? ` <em>${esc(val)}</em>` : ''}</span>`; }
 function barPill(c, id) {
+  if (num(c.p) === undefined) return '';                       // wyjscie nie istnieje (kociol nie zwraca danych) - bez wskaznika
   const v = num(c.p) || 0, on = v !== 0;
   if (c.k === 'mixer') return ix('Mieszacz', v === 1 ? 'Z' : v === 2 ? 'O' : '', on, v === 1 ? PC.close : PC.open);
   if (c.k === 'pump') return ix(c.l || 'Pompa', '', on, PC.on);
@@ -64,7 +65,7 @@ function barPill(c, id) {
 }
 function hopper(fi, w = 40, h = 48) {
   // zbiornik paliwa: wypelnienie rzedami kropek w pionie, od dolu (6 rzedow x 4 kolumny; liczba zapalonych wg promili pojemnosci); przy rezerwie litera E
-  const dots = Array.from({ length: 24 }, (_, i) => { const r = Math.floor(i / 4), c = i % 4, idx = (5 - r) * 4 + c; const lit = idx < fi.dots; return `<circle cx="${9.5 + c * 7}" cy="${9 + r * 6.4}" r="2.2" fill="${lit ? '#ffb066' : '#2b2b33'}"${lit ? ' style="filter:drop-shadow(0 0 2px #ffb066aa)"' : ''}/>`; }).join('');
+  const dots = Array.from({ length: 24 }, (_, i) => { const r = Math.floor(i / 4), c = i % 4, idx = (5 - r) * 4 + c; if (idx >= fi.dots) return ''; return `<circle cx="${9.5 + c * 7}" cy="${9 + r * 6.4}" r="2.8" fill="#ffb066" style="filter:drop-shadow(0 0 2px #ffb06688)"/>`; }).join('');
   return `<svg viewBox="0 0 40 48" width="${w}" height="${h}" aria-hidden="true"><rect x="3" y="2" width="34" height="44" rx="6" fill="#17171c" stroke="#7d7d8a" stroke-width="1.5"/>${fi.E ? '<text x="20" y="31" text-anchor="middle" font-size="22" font-weight="800" fill="#ffb066">E</text>' : dots}</svg>`;
 }
 function tileTitle(id, sc) { return /^co\d$/.test(id) ? 'CO ' + id.slice(2) : id === 'cwu' ? 'CWU' : sc.t; }
