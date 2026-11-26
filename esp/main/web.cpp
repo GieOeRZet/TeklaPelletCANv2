@@ -81,7 +81,8 @@ static esp_err_t h_param_put(httpd_req_t* r) { NEED_SESSION; unsigned pid = 0; i
   uint32_t back; if (!bus::read((uint16_t)pid, &back) || (e->type == TT_U8 ? (back & 0xFF) != (w.raw & 0xFF) : e->type == TT_U32 ? back != w.raw : (back & 0xFFFF) != (w.raw & 0xFFFF))) return jerr(r, "502 Bad Gateway", "verify_failed");   // odczyt zwrotny po zapisie
   double shown = decode_raw(e, back); char b[64]; snprintf(b, sizeof b, "{\"ok\":true,\"v\":%g}", shown); ws_broadcast_param((uint16_t)pid, shown); return jsend(r, "200 OK", b); }
 static esp_err_t h_alarms(httpd_req_t* r) { NEED_SESSION; (void)S; return jsend(r, "200 OK", "{\"ok\":true,\"alarms\":[]}"); }          // TODO: historia alarmow (rejestry 0x4011-0x404B)
-static void logx(const char* m);\nstatic esp_err_t h_time(httpd_req_t* r) {
+static void logx(const char* m);
+static esp_err_t h_time(httpd_req_t* r) {
   NEED_SESSION;
   if (r->method == HTTP_POST) {
     cJSON* j = body_json(r);
