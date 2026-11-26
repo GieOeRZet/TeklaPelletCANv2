@@ -99,7 +99,7 @@ private fun PinField(label: String, v: String, set: (String) -> Unit) = Outlined
 fun BleSetupCard(ui: Ui) {
     val scope = rememberCoroutineScope(); val ctx = Ctl.ctx; val devs by Ble.devices.collectAsState(); val clip = LocalClipboardManager.current
     var scanning by remember { mutableStateOf(false) }; var sel by remember { mutableStateOf<BleDev?>(null) }; var info by remember { mutableStateOf<JSONObject?>(null) }
-    var ssid by remember { mutableStateOf("") }; var wpw by remember { mutableStateOf("") }; var pw by remember { mutableStateOf("") }; var p1 by remember { mutableStateOf("") }; var p2 by remember { mutableStateOf("") }; var p3 by remember { mutableStateOf("") }
+    var ssid by remember { mutableStateOf("") }; var wpw by remember { mutableStateOf("") }; var pw by remember { mutableStateOf("") }
     var useRec by remember { mutableStateOf(false) }; var rec by remember { mutableStateOf("") }; var msg by remember { mutableStateOf("") }; var bad by remember { mutableStateOf(false) }; var busy by remember { mutableStateOf(false) }
     var newCode by remember { mutableStateOf<String?>(null) }; var nets by remember { mutableStateOf<List<String>>(emptyList()) }
     fun scan() { scanning = Ble.startScan(ctx); if (!scanning) { msg = "Włącz Bluetooth w telefonie."; bad = true } else { msg = ""; nets = phoneSsids(ctx) } }
@@ -129,21 +129,20 @@ fun BleSetupCard(ui: Ui) {
             OutlinedTextField(ssid, { ssid = it }, label = { Text("Nazwa sieci (SSID)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             OutlinedTextField(wpw, { wpw = it }, label = { Text("Hasło Wi-Fi") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
             if (setup) {
-                Text("Hasło urządzenia i PIN-y poziomów (jak w panelu) ustawiasz teraz; zapamiętaj je.", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
+                Text("Hasło urządzenia służy wyłącznie do konfiguracji modułu. Poziomy dostępu kotła ustawiasz w aplikacji.", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
                 OutlinedTextField(pw, { pw = it }, label = { Text("Hasło urządzenia (min. 8 znaków)") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
-                PinField("PIN poziomu 1", p1) { p1 = it }; PinField("PIN poziomu 2", p2) { p2 = it }; PinField("PIN poziomu 3", p3) { p3 = it }
             } else {
                 if (useRec) { OutlinedTextField(rec, { rec = it.uppercase() }, label = { Text("Kod odzyskiwania") }, singleLine = true, modifier = Modifier.fillMaxWidth()); OutlinedTextField(pw, { pw = it }, label = { Text("Nowe hasło urządzenia") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth()) }
                 else OutlinedTextField(pw, { pw = it }, label = { Text("Hasło urządzenia") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
                 TextButton({ useRec = !useRec }) { Text(if (useRec) "Mam hasło" else "Nie pamiętam hasła (kod odzyskiwania)") }
             }
-            val ready = !busy && ssid.isNotBlank() && pw.length >= (if (setup || useRec) 8 else 1) && (!setup || (p1.length >= 4 && p2.length >= 4 && p3.length >= 4)) && (!useRec || rec.isNotBlank())
+            val ready = !busy && ssid.isNotBlank() && pw.length >= (if (setup || useRec) 8 else 1) && (!useRec || rec.isNotBlank())
             Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button({
                     busy = true; bad = false; msg = "Wysyłam konfigurację…"; val d = sel!!; val code = if (setup) newRecoveryCode() else null
                     scope.launch {
                         val j = JSONObject().put("ssid", ssid).put("wifi_pass", wpw)
-                        if (setup) j.put("password", pw).put("pin1", p1).put("pin2", p2).put("pin3", p3).put("recovery", code) else if (useRec) j.put("recovery", rec.trim()).put("new_password", pw) else j.put("password", pw)
+                        if (setup) j.put("password", pw).put("recovery", code) else if (useRec) j.put("recovery", rec.trim()).put("new_password", pw) else j.put("password", pw)
                         val s = Ble.Session(ctx, d.address); var e = s.connect(); var st = -1
                         if (e == null) { val r = s.provision(j); st = r.first; e = r.second }
                         s.close(); if (e == null) e = bleStateMsg(st)
