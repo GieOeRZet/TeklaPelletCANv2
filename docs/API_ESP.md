@@ -54,7 +54,7 @@ Wymagają wcześniejszego **odblokowania serwisowego** `POST /api/service/unlock
 
 ## 10. Odzyskiwanie zapomnianego hasła (bez fizycznego dostępu)
 - **Kod odzyskiwania**: 20 znaków (`XXXX-XXXX-XXXX-XXXX-XXXX`, alfabet bez 0/O/1/I), **generuje klient** (aplikacja/strona serwisowa) przy pierwszej konfiguracji i pokazuje właścicielowi; w urządzeniu tylko hasz PBKDF2. Przekazywany w `POST /api/setup` jako `recovery` albo później `POST /api/recovery` `{code}` (odblokowanie serwisowe; nowy kod unieważnia poprzedni). `GET /api/identity` ma pole `recovery` (true/false).
-- `POST /api/recover` `{code, new}` (**bez tokenu**) → `{ok}`: ustawia nowe hasło (≥ 8 znaków), zrywa sesje z hasła, tokeny klientów zostają. Limit prób jak dla haseł (429 `locked`); `403 bad_code`, `409 no_recovery` (urządzenie bez kodu: wtedy zostaje reset fabryczny z przycisku/UART). Kod w BLE: patrz pkt 12.
+- `POST /api/recover` `{code, new}` (**bez tokenu**) → `{ok}`: ustawia nowe hasło (≥ 8 znaków), zrywa sesje z hasła, tokeny klientów zostają. Limit prób jak dla haseł (429 `locked`); `403 bad_code`, `409 no_recovery` (urządzenie bez ustawionego kodu: odzyskanie możliwe tylko przez ponowne wgranie firmware przez UART). Kod w BLE: patrz pkt 12.
 - Kod jest równoważny hasłu: przechowuj go jak hasło. Reset fabryczny kasuje także kod.
 
 ## 11. Błędy

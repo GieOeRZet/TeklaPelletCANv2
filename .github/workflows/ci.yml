@@ -2,7 +2,7 @@ name: CI
 # Oszczednie: tylko zmiany w kodzie/modelu (paths) albo reczny start. Kompilacja ESP-IDF jak w starym projekcie (kontener espressif/idf).
 on:
   push:
-    paths: ["esp/**", "ui/**", "tools/**", "data/**", "android/**", "analiza/analiza_archiwum/FW2213TK-2026-11-22/data/ui_model/device_model.json", ".github/workflows/ci.yml"]
+    paths: ["esp/**", "ui/**", "tools/**", "data/**", "android/**", "ha/**", "analiza/analiza_archiwum/FW2213TK-2026-11-22/data/ui_model/device_model.json", ".github/workflows/ci.yml"]
   workflow_dispatch:
 concurrency:
   group: ci-${{ github.ref }}
@@ -20,6 +20,12 @@ jobs:
         run: |
           python3 tools/gen_esp_tables.py
           git diff --exit-code -- esp/components/tekla_core/gen ui/gen
+      - name: Integracja HA - kompilacja Pythona, katalog PID aktualny, skladnia karty
+        run: |
+          python3 -m compileall -q ha/custom_components/teklapelletcanv2
+          python3 tools/gen_ha_catalog.py
+          git diff --exit-code -- ha/custom_components/teklapelletcanv2/catalog.json
+          node --check ha/custom_components/teklapelletcanv2/www/teklapelletcan-card.js
       - name: Testy rdzenia (natywne)
         run: sh esp/components/tekla_core/test/run.sh
   idf-build:
