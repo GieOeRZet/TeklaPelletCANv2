@@ -38,7 +38,7 @@ object Ctl {
     /** Dodaje (lub aktualizuje po id) sparowany modul i przelacza na niego. */
     fun addPaired(p: Paired) { devices.removeAll { it.id == p.id }; devices.add(p); DeviceStore.save(ctx, devices); connectTo(p) }
     fun activate(id: String) { devices.firstOrNull { it.id == id }?.let { connectTo(it) } }
-    fun forget(id: String) { devices.removeAll { it.id == id }; DeviceStore.save(ctx, devices); if (activeId == id) useDemo() }
+    fun forget(id: String) { devices.removeAll { it.id == id }; DeviceStore.save(ctx, devices); if (activeId == id) { if (devices.isNotEmpty()) activate(devices.first().id) else useDemo() } }
     fun deviceMoved(id: String, host: String) { devices.firstOrNull { it.id == id }?.let { it.host = host; DeviceStore.save(ctx, devices) } }
     fun activeName(): String = devices.firstOrNull { it.id == activeId }?.name ?: "TeklaPellet"
     fun notify(msg: String) { scope.launch { android.widget.Toast.makeText(ctx, msg, android.widget.Toast.LENGTH_LONG).show() } }
