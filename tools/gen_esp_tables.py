@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Generator tablic dla ESP z data/device_model.json (zrodlo prawdy; NIE edytowac wynikow recznie).
-Wyjscie: esp/main/gen/model_pids.inc (tablica PID: typ, tryb, zakres, kodowanie zapisu) oraz ui/gen/model.min.json (dane dla strony: PID-y, listy NASTAW, stany wyjsc).
+Wyjscie: esp/components/tekla_core/gen/model_pids.inc, model_levels.inc (tablica PID: typ, tryb, zakres, kodowanie zapisu) oraz ui/gen/model.min.json (dane dla strony: PID-y, listy NASTAW, stany wyjsc).
 Uzycie: python3 tools/gen_esp_tables.py   (z katalogu repo)"""
 import json, os, re
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
@@ -26,8 +26,15 @@ for p in sorted(items, key=lambda x: int(x, 16)):
     v = items[p]; e, sc = enc(v.get("panel_write"))
     if p.lower() in BLOCK: e = "WE_BLOCKED"
     rows.append("  {0x%04X, %s, %s, %dLL, %dLL, %s, %sf}, /* %s */" % (int(p, 16), TY.get(v["type"], "TT_U32"), MO.get(v["mode"], "PM_LIVE"), int(v["min"]), int(v["max"]), e, repr(sc), v["name_en"].replace("*/", "* /")))
-os.makedirs(os.path.join(ROOT, "esp", "main", "gen"), exist_ok=True)
-open(os.path.join(ROOT, "esp", "main", "gen", "model_pids.inc"), "w", encoding="utf-8").write("\n".join(lines + rows) + "\n")
+GEN = os.path.join(ROOT, "esp", "components", "tekla_core", "gen")
+os.makedirs(GEN, exist_ok=True)
+open(os.path.join(GEN, "model_pids.inc"), "w", encoding="utf-8").write("\n".join(lines + rows) + "\n")
+# poziomy PIN (level_min) per PID z list NASTAW
+lv = {}
+for k, rowsl in (m["lists"]["items"].items() if isinstance(m["lists"], dict) else []):
+    for r in rowsl:
+        if r.get("pid") and r.get("level_min") is not None: lv[int(r["pid"], 16)] = min(lv.get(int(r["pid"], 16), 9), int(r["level_min"]))
+open(os.path.join(GEN, "model_levels.inc"), "w", encoding="utf-8").write("// GENEROWANE: {pid, level_min} z list NASTAW; PID bez wpisu = poziom 3\n" + "\n".join("  {0x%04X, %d}," % (p_, l) for p_, l in sorted(lv.items())) + "\n")
 # ---- dane dla strony
 rs = m.get("real_panel_screens", {})
 bb = rs.get("bottom_bar_static_2026_11_25", {})
