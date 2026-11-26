@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -37,18 +38,19 @@ import kotlin.math.min
 sealed class Dlg {
     object Pin : Dlg()
     object Mode : Dlg()
+    object Fuel : Dlg()
     class EditRow(val row: SetRow, val cur: Double?, val done: (Double) -> Unit) : Dlg()
     class EditCfg(val row: CfgRow) : Dlg()
 }
 
-class Ui(val src: DataSource, val v: Map<String, Double>, val level: Int, val full: Boolean, val go: (String) -> Unit, val open: (Dlg) -> Unit, val toast: (String) -> Unit) {
+class Ui(val src: DataSource, val v: Map<String, Double>, val level: Int, val full: Boolean, val go: (String) -> Unit, val open: (Dlg) -> Unit, val toast: (String) -> Unit, val alarmActive: Boolean = false) {
     val m get() = Ctl.model
     fun n(p: String?): Double? = if (p == null) null else v[p]
 }
 
 fun f1(x: Double?, d: Int = 1): String = if (x == null || x.isNaN()) "--" else if (d == 0) Math.round(x).toString() else String.format(java.util.Locale.US, "%.${d}f", x)
 val PROGICON = listOf(133, 135, 122, 128, 120)
-val TABS = listOf(Triple("home", "Pulpit", "⌂"), Triple("co1", "Ogrzewanie", "▥"), Triple("sched:co1", "Harmonogram", "▦"), Triple("alarms", "Alarmy", "🔔"), Triple("more", "Menu", "≡"))
+val TABS = listOf(Triple("home", "Pulpit", "⌂"), Triple("circuits", "Obwody", "▥"), Triple("sched:co1", "Harmonogram", "▦"), Triple("more", "Menu", "≡"))
 
 fun fuelDots(fuel: Double, cap: Double, res: Double): Pair<Int, Boolean> {
     if (cap <= 0) return 0 to false
@@ -70,11 +72,11 @@ fun TeklaApp() {
         LaunchedEffect(Unit) { while (true) { delay(130); frame++ } }
         val stack = remember { mutableStateListOf("home").also { l -> Ctl.startScreen?.let { if (it != "home") l.add(it) } } }
         var dlg by remember { mutableStateOf<Dlg?>(null) }
-        var alarmCount by remember { mutableIntStateOf(0) }
-        LaunchedEffect(src) { while (true) { alarmCount = src.alarms().size; delay(15000) } }
+        var alarmActive by remember { mutableStateOf(false) }
+        LaunchedEffect(src) { while (true) { alarmActive = src.alarms().any { it.state == "AKTYWNY" }; delay(15000) } }
         fun go(s: String) { if (s == "home") { stack.clear(); stack.add("home") } else if (stack.last() != s) stack.add(s) }
         BackHandler(stack.size > 1) { stack.removeAt(stack.lastIndex) }
-        val ui = Ui(src, vals, level, full, ::go, { dlg = it }, { Toast.makeText(ctx, it, Toast.LENGTH_SHORT).show() })
+        val ui = Ui(src, vals, level, full, ::go, { dlg = it }, { Toast.makeText(ctx, it, Toast.LENGTH_SHORT).show() }, alarmActive)
         val screen = stack.last()
         CompositionLocalProvider(LocalFrame provides frame) {
             Scaffold(
@@ -82,12 +84,12 @@ fun TeklaApp() {
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
                     NavigationBar(containerColor = Color(0xFF101014)) {
-                        for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { BadgedBox(badge = { if (id == "alarms" && alarmCount > 0) Badge(containerColor = Acc, contentColor = Color.Black) { Text("$alarmCount") } }) { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) } } }, label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
+                        for ((id, t, ic) in TABS) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) } }, label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
                             colors = NavigationBarItemDefaults.colors(selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2, unselectedIconColor = Mut, unselectedTextColor = Mut))
                     }
                 },
             ) { pad ->
-                Column(Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(Modifier.padding(pad).fillMaxSize().then(if (screen == "home") Modifier else Modifier.verticalScroll(rememberScrollState())).padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     key(screen) { Body(ui, screen) }
                 }
             }
@@ -105,6 +107,25 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
     }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
+    if (screen == "home") {
+        val wx = ui.n("0x215F")
+        Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.weight(1f).clickable { ui.go("appset") }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.size(7.dp).background(if (demo) Warn else if (conn) Okc else Bad, RoundedCornerShape(4.dp)))
+                Text(if (demo) "TeklaPellet (demo)" else Ctl.host, color = Txt, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            }
+            if (wx != null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Ic(if (ui.n("0x3729")?.toInt() == 1) 180 else 181, 24.dp)
+                Column { Text(f1(wx) + "°", color = Txt, fontSize = 12.sp, fontWeight = FontWeight.SemiBold); Text(f1(ui.n("0x3721")) + "°", color = Mut, fontSize = 11.sp) }
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(java.text.SimpleDateFormat("HH:mm", java.util.Locale("pl")).format(now), color = Acc2, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                Text(java.text.SimpleDateFormat("EEE, d MMM", java.util.Locale("pl")).format(now), color = Mut, fontSize = 10.5.sp)
+            }
+            if (ui.alarmActive) Box(Modifier.clickable { ui.go("alarms") }.padding(4.dp)) { Ic(78, 22.dp) }
+        }
+        return
+    }
     Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal = 14.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         Column(Modifier.weight(1f)) {
             Text(title, color = Txt, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
@@ -154,6 +175,7 @@ fun Body(ui: Ui, screen: String) {
         screen == "info" -> InfoView(ui)
         screen == "stats" -> ListView(ui, "0x11|STATYSTYKI|inst1", readOnly = true)
         screen == "network" -> NetworkView(ui)
+        screen == "circuits" -> CircuitsView(ui)
         screen == "module" -> ModuleView(ui)
         screen == "log" -> LogView(ui)
         screen == "outtest" -> OutTestView(ui)
@@ -197,129 +219,153 @@ fun BarView(ui: Ui, cells: List<Cell>) {
     }
 }
 
+class IxData(val label: String, val value: String, val on: Boolean, val color: Color)
+val CCLOSE = Color(0xFF5AB4FF); val COPEN = Color(0xFFFF5D5D)
+
+/** Delikatny wskaźnik wyjścia: mała kropka (świeci kolorem funkcji gdy aktywne, inaczej ledwie widoczna) + drobna etykieta. Mieszacz: O (otwieranie, czerwony) / Z (zamykanie, niebieski). */
 @Composable
-fun Dot(on: Boolean, c: Color = Okc) {
-    Box(Modifier.size(10.dp).background(if (on) c else Color(0xFF2A2A30), RoundedCornerShape(5.dp)).border(1.dp, if (on) c else Color(0xFF3A3A42), RoundedCornerShape(5.dp)))
+fun Ix(d: IxData) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+        Box(Modifier.size(6.dp).drawBehind { if (d.on) drawCircle(d.color.copy(alpha = 0.35f), radius = size.minDimension * 0.95f); drawCircle(if (d.on) d.color else Color(0xFF2A2A32)) })
+        Text(d.label, color = if (d.on) Color(0xFFB4B4BE) else Color(0xFF5D5D68), fontSize = 10.5.sp, maxLines = 1, softWrap = false)
+        if (d.value.isNotEmpty()) Text(d.value, color = d.color, fontSize = 10.5.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+    }
 }
 
-/** Wskaźnik: etykieta + dioda (świeci wg stanu wyjścia, przygaszona gdy wyłączone). Mieszacz: 1 = zamykanie (niebieska), 2 = otwieranie (czerwona). */
-@Composable
-fun Ind(ui: Ui, label: String, pid: String, kind: String = "on") {
-    val v = ui.n(pid)?.toInt() ?: 0
-    val c = when (kind) { "mix" -> if (v == 1) Color(0xFF4D9BFF) else Color(0xFFFF4D4D); "burn" -> Color(0xFFF2C200); else -> Okc }
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) { Dot(v != 0, c); Text(label, color = Mut, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) }
+fun barIx(ui: Ui, c: Cell, id: String): IxData {
+    val v = ui.n(c.p)?.toInt() ?: 0; val on = v != 0
+    return when (c.k) {
+        "mixer" -> IxData("Mieszacz", if (v == 1) "Z" else if (v == 2) "O" else "", on, if (v == 1) CCLOSE else COPEN)
+        "pump" -> IxData(c.l ?: "Pompa", "", on, Okc)
+        "grate" -> IxData("Ruszt", if (v == 1) "◀" else if (on) "▶" else "", on, Okc)
+        else -> {
+            var value = ""
+            if (c.n != null && on) { val x = ui.n(c.n) ?: 0.0; value = if (c.hm) { val mi = Math.round(x).toInt(); "${mi / 60}:${(mi % 60).toString().padStart(2, '0')}" } else if (c.nd) f1(x, 1) + " s" else if (x != 0.0) Math.round(x).toString() + "%" else "" }
+            IxData(c.l ?: "Wyjście", value, on, if (id == "palnik") Acc2 else Okc)
+        }
+    }
 }
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun IxRow(items: List<IxData>) { FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(3.dp)) { for (d in items) Ix(d) } }
 
 @Composable
 fun KvRow(l: String, v: String) {
-    Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) { Text(l, color = Mut, fontSize = 13.sp, modifier = Modifier.weight(1f)); Text(v, color = Txt, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1) }
+    Row(Modifier.fillMaxWidth().padding(top = 6.dp), horizontalArrangement = Arrangement.SpaceBetween) { Text(l, color = Mut, fontSize = 12.5.sp, modifier = Modifier.weight(1f)); Text(v, color = Txt, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1) }
+}
+
+val CardShape = RoundedCornerShape(18.dp)
+val CardBrush = Brush.verticalGradient(listOf(Color(0xFF17171C), Color(0xFF121216)))
+
+/** Karta/kafel z cienką linią LED przy górnej krawędzi (kolor stanu; gdy null - wygaszona). */
+@Composable
+fun GlowCard(modifier: Modifier, led: Color?, click: (() -> Unit)?, content: @Composable ColumnScope.() -> Unit) {
+    Box(modifier.clip(CardShape).background(CardBrush).border(1.dp, Line, CardShape).then(if (click != null) Modifier.clickable(onClick = click) else Modifier)) {
+        Box(Modifier.align(Alignment.TopCenter).fillMaxWidth(0.64f).height(2.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, led ?: Color(0xFF2A2A32), Color.Transparent))))
+        Column(Modifier.fillMaxWidth().padding(horizontal = 13.dp, vertical = 11.dp), content = content)
+    }
 }
 
 @Composable
-fun HomeCard(title: String, big: String, unit: String, modifier: Modifier, go: String, ui: Ui, content: @Composable ColumnScope.() -> Unit) {
-    Column(modifier.background(Panel, RoundedCornerShape(16.dp)).border(1.dp, Line, RoundedCornerShape(16.dp)).clickable { ui.go(go) }.padding(12.dp)) {
-        Text(title.uppercase(), color = Mut, fontSize = 11.sp, letterSpacing = 0.9.sp, fontWeight = FontWeight.SemiBold)
-        Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.padding(top = 4.dp)) { Text(big, color = Txt, fontSize = 24.sp, fontWeight = FontWeight.Light); if (unit.isNotEmpty()) Text(unit, color = Mut, fontSize = 12.sp, modifier = Modifier.padding(start = 3.dp, bottom = 3.dp)) }
-        content()
+fun Tile(title: String, modeIcon: Int?, led: Color?, modifier: Modifier, go: () -> Unit, ixs: List<IxData>, value: @Composable () -> Unit) {
+    GlowCard(modifier.heightIn(min = 92.dp), led, go) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(title.uppercase(), color = Mut, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.4.sp, modifier = Modifier.weight(1f)); if (modeIcon != null) Ic(modeIcon, 17.dp) }
+        Spacer(Modifier.height(4.dp)); value(); Spacer(Modifier.weight(1f, fill = false).heightIn(min = 6.dp)); if (ixs.isNotEmpty()) IxRow(ixs)
     }
+}
+
+@Composable
+fun BigNum(big: String, small: String = "", size: Int = 26) {
+    Row(verticalAlignment = Alignment.Bottom) { Text(big, color = Txt, fontSize = size.sp, fontWeight = FontWeight.Light, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum")); if (small.isNotEmpty()) Text(small, color = Mut, fontSize = 12.sp, modifier = Modifier.padding(start = 3.dp, bottom = 3.dp)) }
+}
+
+fun tileTitle(id: String, s: ScreenDef) = if (id.startsWith("co") && id.length == 3) "CO ${id.last()}" else if (id == "cwu") "CWU" else s.title
+
+@Composable
+fun SysTile(ui: Ui, id: String, modifier: Modifier) {
+    val s = ui.m.screens.getValue(id)
+    val active = (id.startsWith("co") || id == "cwu") && (ui.n(s.mode)?.toInt() ?: 0) > 0
+    val mi = s.mode?.let { m -> ui.m.programModes.firstOrNull { it.v == (ui.n(m)?.toInt() ?: -1) }?.icon }
+    Tile(tileTitle(id, s), mi, if (active) Color(0xFFE8E8EE) else null, modifier, { ui.go(id) }, s.bar.map { barIx(ui, it, id) }) {
+        if (s.state != null) Text(ui.m.statusTables[s.state]?.getOrNull(ui.n(s.stateP ?: s.big)?.toInt() ?: 0) ?: "?", color = Txt, fontSize = 20.sp, fontWeight = FontWeight.Medium)
+        else if (s.big != null) BigNum(f1(ui.n(s.big)), (if (s.bigUnit == "°C") "°" else s.bigUnit) + (if (s.pill != null) " / ${f1(ui.n(s.pill), 0)}°" else ""))
+    }
+}
+
+@Composable
+fun HopperIcon(dots: Int, empty: Boolean, w: androidx.compose.ui.unit.Dp = 34.dp, h: androidx.compose.ui.unit.Dp = 29.dp) {
+    Canvas(Modifier.size(w, h)) {
+        val sc = size.width / 34f
+        val path = androidx.compose.ui.graphics.Path().apply { moveTo(3f * sc, 1f * sc); lineTo(31f * sc, 1f * sc); lineTo(24f * sc, 23f * sc); lineTo(24f * sc, 28f * sc); lineTo(10f * sc, 28f * sc); lineTo(10f * sc, 23f * sc); close() }
+        drawPath(path, Color(0xFF94A3B8), style = Stroke(1.4f * sc))
+        if (!empty) for (r in 0 until 6) for (c in 0 until 4) { val idx = (5 - r) * 4 + c; val ctr = Offset((9 + c * 5.4f) * sc, (6 + r * 3.6f) * sc); if (idx < dots) drawCircle(Acc2, 1.35f * sc, ctr) else drawCircle(Color(0xFF475569), 1.35f * sc, ctr, style = Stroke(0.4f * sc)) }
+    }
+}
+
+@Composable
+fun FuelTile(ui: Ui, modifier: Modifier) {
+    val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0; val (dots, empty) = fuelDots(fuel, cap, res)
+    Tile("Paliwo", null, if (empty) Acc2 else null, modifier, { ui.open(Dlg.Fuel) }, listOf(IxData(if (empty) "rezerwa" else "z ${f1(cap, 0)} kg", "", empty, Acc2))) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) { HopperIcon(dots, empty); BigNum(f1(fuel, 0), "kg") }
+    }
+}
+
+@Composable
+fun PowerTile(ui: Ui, modifier: Modifier) {
+    val on = ui.n("0x2005") != 0.0; val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
+    Tile("Zasilanie", prog, if (on) Okc else null, modifier, { ui.go("kociol") }, listOf(IxData("Kocioł", "", on, Okc))) { Text(if (on) "Włączone" else "Wyłączone", color = Txt, fontSize = 19.sp, fontWeight = FontWeight.Medium) }
+}
+
+@Composable
+fun TileGrid(ui: Ui, entries: List<String>) {
+    for (pair in entries.chunked(2)) {
+        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            for (id in pair) { val m = Modifier.weight(1f).fillMaxHeight(); when (id) { "fuel" -> FuelTile(ui, m); "power" -> PowerTile(ui, m); else -> SysTile(ui, id, m) } }
+            if (pair.size == 1) Spacer(Modifier.weight(1f))
+        }
+    }
+}
+
+fun visibleTileIds(ui: Ui): List<String> = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { ui.m.routeOf(it) }.filter { it != "kociol" && it != "palnik" && ui.m.screens.containsKey(it) }
+
+@Composable
+fun CircuitsView(ui: Ui) {
+    val ids = visibleTileIds(ui).filter { (it.startsWith("co") && it.length == 3) || it == "cwu" }
+    if (ids.isEmpty()) Text("Brak skonfigurowanych obwodów", color = Mut) else TileGrid(ui, ids)
 }
 
 @Composable
 fun HomeView(ui: Ui) {
-    // Pulpit: łuk z temperaturą kotła + wartości obok, karty CO / CWU / Palnik / Kocioł ze wskaźnikami (dioda), ostatni alarm.
+    // Pulpit: karta kotła (łuk z temperaturą, metryki, delikatne wskaźniki wyjść palnika) + siatka kompaktowych kafli (CO, CWU, inne wg konfiguracji, Paliwo, Zasilanie), bez przewijania.
     val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0; val on = ui.n("0x2005") != 0.0
-    val nco = ui.n("0x2105")?.toInt() ?: 0; val cwu = (ui.n("0x2106") ?: 0.0) != 0.0
-    val frac = (((t ?: 20.0) - 20.0) / 70.0).coerceIn(0.0, 1.0).toFloat()
-    var alarms by remember { mutableStateOf<List<AlarmRow>>(emptyList()) }; LaunchedEffect(Unit) { alarms = ui.src.alarms() }
-    fun mode(p: String) = ui.m.programModes.firstOrNull { it.v == (ui.n(p)?.toInt() ?: -1) }?.label ?: "--"
-    Card(null, Modifier.clickable { ui.go("kociol") }) {
+    val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
+    val frac = (((t ?: 20.0) - 20.0) / 70.0).coerceIn(0.0, 1.0).toFloat(); val run = bs in 1..8
+    val kix = ui.m.screens.getValue("palnik").bar.map { barIx(ui, it, "palnik") } + ui.m.screens.getValue("kociol").bar.filter { it.k != "anim" }.map { barIx(ui, it, "kociol") }
+    GlowCard(Modifier.fillMaxWidth(), if (run) Warn else null, { ui.go("kociol") }) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.weight(0.95f).aspectRatio(1f), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize().padding(6.dp)) {
-                    val sw = size.width * 0.065f; val d = size.minDimension - sw
+                    val sw = size.width * 0.06f; val d = size.minDimension - sw
                     drawArc(Line, 135f, 270f, false, Offset(sw / 2, sw / 2), Size(d, d), style = Stroke(sw, cap = androidx.compose.ui.graphics.StrokeCap.Round))
                     drawArc(Brush.sweepGradient(listOf(Warn, Acc, Warn)), 135f, 270f * frac.coerceAtLeast(0.01f), false, Offset(sw / 2, sw / 2), Size(d, d), style = Stroke(sw, cap = androidx.compose.ui.graphics.StrokeCap.Round))
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(verticalAlignment = Alignment.Top) { Text(f1(t), color = Txt, fontSize = 38.sp, fontWeight = FontWeight.Light); Text("°C", color = Acc, fontSize = 14.sp, modifier = Modifier.padding(start = 2.dp, top = 4.dp)) }
-                    Text(ui.m.statusTables["burner"]?.getOrNull(bs) ?: "?", color = Acc2, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    Text("zadana ${f1(set, 0)} °C", color = Mut, fontSize = 11.sp, textAlign = TextAlign.Center)
+                    Row(verticalAlignment = Alignment.Top) { Text(f1(t), color = Txt, fontSize = 38.sp, fontWeight = FontWeight.Light, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum")); Text("°C", color = Acc, fontSize = 13.sp, modifier = Modifier.padding(start = 2.dp, top = 4.dp)) }
+                    Text(ui.m.statusTables["burner"]?.getOrNull(bs) ?: "?", color = Acc2, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Ic(prog, 15.dp); Text("zadana ${f1(set, 0)} °C", color = Mut, fontSize = 11.sp) }
                 }
             }
             Column(Modifier.weight(1.05f)) {
-                KvRow("Powrót", f1(ui.n("0x4000")) + " °C"); KvRow("Temp. palnika", f1(ui.n("0x226C")) + " °C"); KvRow("Temp. zewnętrzna", f1(ui.n("0x215F")) + " °C"); KvRow("Moc palnika", f1(ui.n("0x4005"), 0) + " %")
+                KvRow("Moc palnika", f1(ui.n("0x4005"), 0) + " %"); KvRow("Spalanie", f1(ui.n("0x3710"), 1) + " kg/h")
+                if ((ui.n("0x350A") ?: 0.0) != 0.0) KvRow("Powrót", f1(ui.n("0x4000"), 1) + " °C")
+                if ((ui.n("0x350D") ?: 0.0) != 0.0) KvRow("Ciśnienie", f1(ui.n("0x3333"), 0) + " mbar")
+                KvRow("Temp. palnika", f1(ui.n("0x226C"), 0) + " °C")
             }
         }
+        Spacer(Modifier.height(10.dp)); IxRow(kix)
     }
-    // karty całej instalacji wg konfiguracji (menu panelu z warunkami); klik -> ekran szczegółów
-    val ids = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { ui.m.routeOf(it) }.filter { it != "kociol" && ui.m.screens.containsKey(it) }
-    val coIds = ids.filter { it.startsWith("co") && it.length == 3 }
-    if (coIds.isNotEmpty()) HeatingCard(ui, coIds)
-    val entries = ids.filter { it !in coIds }.flatMap { if (it == "palnik") listOf(it, "fuel") else listOf(it) }
-    for (pair in entries.chunked(2)) {
-        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            for (id in pair) { if (id == "fuel") FuelCard(ui, Modifier.weight(1f).fillMaxHeight()) else SysCard(ui, ui.m.screens.getValue(id), Modifier.weight(1f).fillMaxHeight()) }
-            if (pair.size == 1) Spacer(Modifier.weight(1f))
-        }
-    }
-    val act = alarms.firstOrNull { it.state == "AKTYWNY" }
-    if (act != null) Column(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(16.dp)).border(1.dp, Color(0xFF5A2A2A), RoundedCornerShape(16.dp)).clickable { ui.go("alarms") }.padding(14.dp)) {
-        Text("ALARM AKTYWNY", color = Mut, fontSize = 11.sp, letterSpacing = 0.9.sp, fontWeight = FontWeight.SemiBold)
-        Row(Modifier.padding(top = 6.dp)) { Text("kod ${act.code}", color = Bad, fontSize = 18.sp, fontWeight = FontWeight.Bold); Text(" · ${act.text}", color = Txt, fontSize = 18.sp) }
-    }
-}
-
-/** Jedna karta "Ogrzewanie": wiersz na każdy skonfigurowany obwód CO (klik -> ekran obwodu). */
-@Composable
-fun HeatingCard(ui: Ui, ids: List<String>) {
-    Column(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(16.dp)).border(1.dp, Line, RoundedCornerShape(16.dp)).padding(12.dp)) {
-        Text("OGRZEWANIE", color = Mut, fontSize = 11.sp, letterSpacing = 0.9.sp, fontWeight = FontWeight.SemiBold)
-        for ((i, id) in ids.withIndex()) {
-            val s = ui.m.screens.getValue(id)
-            if (i > 0) HorizontalDivider(color = Line, modifier = Modifier.padding(top = 8.dp))
-            Row(Modifier.fillMaxWidth().clickable { ui.go(id) }.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Box(Modifier.size(22.dp).background(Panel2, RoundedCornerShape(11.dp)).border(1.dp, Line, RoundedCornerShape(11.dp)), contentAlignment = Alignment.Center) { Text(id.takeLast(1), color = Acc2, fontSize = 12.sp, fontWeight = FontWeight.Bold) }
-                Column(Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(f1(ui.n(s.big)), color = Txt, fontSize = 24.sp, fontWeight = FontWeight.Light); Text("°C", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(start = 3.dp, bottom = 3.dp))
-                        Spacer(Modifier.weight(1f))
-                        Text("zadana ${f1(ui.n(s.pill), 0)} · " + (ui.m.programModes.firstOrNull { it.v == (ui.n(s.mode)?.toInt() ?: -1) }?.label ?: "--"), color = Mut, fontSize = 13.sp, maxLines = 1)
-                    }
-                    Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) { for (c in s.bar) Ind(ui, c.l ?: "Wyjście", c.p, if (c.k == "mixer") "mix" else "on") }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun FuelCard(ui: Ui, modifier: Modifier) {
-    val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0
-    HomeCard("Paliwo", f1(fuel, 0), "kg z ${f1(cap, 0)}", modifier, "magazyn", ui) {
-        Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(8.dp).background(Line, RoundedCornerShape(4.dp))) { Box(Modifier.fillMaxWidth(if (cap > 0) (fuel / cap).coerceIn(0.03, 1.0).toFloat() else 0f).fillMaxHeight().background(Brush.horizontalGradient(listOf(Acc, Warn)), RoundedCornerShape(4.dp))) }
-        KvRow("rezerwa", f1(ui.n("0x3603"), 0) + " kg")
-    }
-}
-
-/** Karta elementu instalacji z definicji ekranu (app.json): wartość/stan, do 2 wierszy, wskaźniki-diody wyjść. */
-@Composable
-fun SysCard(ui: Ui, s: ScreenDef, modifier: Modifier) {
-    val big = if (s.state != null) (ui.m.statusTables[s.state]?.getOrNull(ui.n(s.stateP ?: s.big)?.toInt() ?: 0) ?: "?") else if (s.big != null) f1(ui.n(s.big)) else ""
-    val unit = if (s.state == null) s.bigUnit else ""
-    HomeCard(s.title, big, unit, modifier, s.id, ui) {
-        var n = 0
-        if (s.pill != null) { KvRow("zadana", f1(ui.n(s.pill), 1) + " °C"); n++ }
-        if (s.mode != null) { KvRow("tryb", ui.m.programModes.firstOrNull { it.v == (ui.n(s.mode)?.toInt() ?: -1) }?.label ?: "--"); n++ }
-        for (k in s.kv) { if (n >= 2) break; if (k.cond == null || (ui.n(k.cond) ?: 0.0) != 0.0) { KvRow(k.label, f1(ui.n(k.pid), k.dec) + " " + k.unit); n++ } }
-        if (s.bar.isNotEmpty()) {
-            Spacer(Modifier.weight(1f, fill = false).heightIn(min = 10.dp))
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                for (row in s.bar.chunked(2)) Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    for (c in row) Ind(ui, c.l ?: "Wyjście", c.p, if (c.k == "mixer") "mix" else if (s.id == "palnik") "burn" else "on")
-                }
-            }
-        }
-    }
+    TileGrid(ui, visibleTileIds(ui) + listOf("fuel", "power"))
 }
 
 @Composable
@@ -445,13 +491,24 @@ fun OutTestView(ui: Ui) {
 }
 
 @Composable
+fun LevelSep(t: String) { Row(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) { HorizontalDivider(Modifier.weight(1f), color = Line); Text(t, color = Mut, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp); HorizontalDivider(Modifier.weight(1f), color = Line) } }
+
+@Composable
 fun MoreView(ui: Ui) {
-    val items = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { m -> ui.m.routeOf(m)?.let { it to m } }.filter { it.first !in listOf("kociol", "palnik", "cwu") }
-    Card("Więcej") {
-        for ((r, m) in items) Row(Modifier.fillMaxWidth().clickable { ui.go(r) }.padding(vertical = 11.dp, horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) { Ic(m.icon, 22.dp); Spacer(Modifier.width(10.dp)); Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
+    val items = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { m -> ui.m.routeOf(m)?.let { it to m } }.filter { it.first !in listOf("cwu", "co1", "co2", "co3", "co4") }
+    Card("Dostęp") {
+        RowItem("Tryb pracy modułu", if (ui.full) "pełna kontrola" else "tylko odczyt") { ui.open(Dlg.Mode) }
+        RowItem("Poziom PIN", ui.level.toString()) { ui.open(Dlg.Pin) }
+    }
+    Card("Menu") {
+        val names = mapOf(1 to "POZIOM 1 — INSTALATOR", 2 to "POZIOM 2", 3 to "POZIOM 3")
+        for (lv in 0..3) {
+            val g = items.filter { it.second.levelMin == lv }; if (g.isEmpty()) continue; if (lv >= 1) LevelSep(names.getValue(lv))
+            for ((r, m) in g) Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go(r) }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) { Ic(m.icon, 22.dp); Spacer(Modifier.width(10.dp)); Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
+        }
         if (ui.level >= 1) BeepRow(ui)
-        Row(Modifier.fillMaxWidth().clickable { ui.go("module") }.padding(vertical = 11.dp, horizontal = 4.dp)) { Text("Moduł ESP (Wi-Fi, hasło, aktualizacja)", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
-        Row(Modifier.fillMaxWidth().clickable { ui.go("appset") }.padding(vertical = 11.dp, horizontal = 4.dp)) { Text("Ustawienia aplikacji (demo / ESP)", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
+        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go("module") }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) { Text("Moduł ESP (Wi-Fi, hasło, aktualizacja)", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
+        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go("appset") }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) { Text("Ustawienia aplikacji (demo / ESP)", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
     }
 }
 
@@ -481,6 +538,13 @@ fun Dialogs(ui: Ui, d: Dlg, close: () -> Unit) {
         is Dlg.Pin -> { var pin by remember { mutableStateOf("") }
             AlertDialog(onDismissRequest = close, title = { Text("PIN poziomu") }, text = { Column { OutlinedTextField(pin, { pin = it }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword)); if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
                 confirmButton = { TextButton({ scope.launch { val e = ui.src.unlock(pin); if (e == null) { ui.toast("Poziom ${ui.src.level.value}"); close() } else err = e } }) { Text("OK") } }, dismissButton = { TextButton(close) { Text("Anuluj") } }) }
+        is Dlg.Fuel -> { val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0; val (dots, empty) = fuelDots(fuel, cap, res)
+            AlertDialog(onDismissRequest = close, title = { Text("Paliwo") }, text = { Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) { HopperIcon(dots, empty, 68.dp, 58.dp); BigNum(f1(fuel, 0), "kg", 40) }
+                LinearProgressIndicator(progress = { if (cap > 0) (fuel / cap).coerceIn(0.0, 1.0).toFloat() else 0f }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp), color = Acc2, trackColor = Line)
+                KvRow("pojemność", f1(cap, 0) + " kg"); KvRow("rezerwa", f1(res, 0) + " kg")
+                Text("Zmiana poziomu paliwa z aplikacji nie jest jeszcze obsługiwana: panel nie ma zmierzonego kodowania zapisu dla tego parametru (0x3601).", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 10.dp)) } },
+                confirmButton = { TextButton(close) { Text("Zamknij") } }) }
         is Dlg.Mode -> { var pw by remember { mutableStateOf("") }; val to = !ui.full
             AlertDialog(onDismissRequest = close, title = { Text(if (to) "Włączyć pełną kontrolę?" else "Przełączyć na tylko odczyt?") }, text = { Column { if (!ui.src.isDemo) OutlinedTextField(pw, { pw = it }, label = { Text("Hasło urządzenia") }, singleLine = true, visualTransformation = PasswordVisualTransformation()); if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
                 confirmButton = { TextButton({ scope.launch { val e = ui.src.setFullMode(to, pw); if (e == null) { ui.toast(if (to) "Pełna kontrola" else "Tylko odczyt"); close() } else err = e } }) { Text("OK") } }, dismissButton = { TextButton(close) { Text("Anuluj") } }) }
