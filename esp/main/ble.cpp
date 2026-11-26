@@ -18,6 +18,7 @@
 #include "store/config/ble_store_config.h"
 #include <cstdio>
 #include <cstring>
+extern "C" void ble_store_config_init(void);   // implementacja w NimBLE (store/config), brak w naglowku
 namespace ble {
 static const char* TAG = "ble";
 // UUID (zapis zwykly): usluga 8f1c0001-5a7e-4c1b-9d2a-7e6b2f0a1001, INFO ...0002 (odczyt), PROV ...0003 (zapis, wymaga szyfrowania lacza)
