@@ -54,7 +54,15 @@ class Ui(val src: DataSource, val v: Map<String, Double>, val level: Int, val fu
 
 fun f1(x: Double?, d: Int = 1): String = if (x == null || x.isNaN()) "--" else if (d == 0) Math.round(x).toString() else String.format(java.util.Locale.US, "%.${d}f", x)
 val PROGICON = listOf(133, 135, 122, 128, 120)
-fun navTabs(v: Map<String, Double>): List<Triple<String, String, String>> {\n    val out = mutableListOf(Triple("kociol", "Kocioł", "60"), Triple("palnik", "Palnik", "61"))\n    val co = (v["0x2105"] ?: 1.0).toInt().coerceIn(0, 4)\n    if (co >= 1) out += Triple("co1", if (co >= 2) "CO1" else "CO", "62")\n    if (co >= 2) out += Triple("co2", "CO2", "63")\n    if ((v["0x2106"] ?: 0.0) != 0.0) out += Triple("cwu", "CWU", "66")\n    out += Triple("more", "Menu", "≡")\n    return out\n}
+fun navTabs(v: Map<String, Double>): List<Triple<String, String, String>> {
+    val out = mutableListOf(Triple("kociol", "Kocioł", "60"), Triple("palnik", "Palnik", "61"))
+    val co = (v["0x2105"] ?: 1.0).toInt().coerceIn(0, 4)
+    if (co >= 1) out += Triple("co1", if (co >= 2) "CO1" else "CO", "62")
+    if (co >= 2) out += Triple("co2", "CO2", "63")
+    if ((v["0x2106"] ?: 0.0) != 0.0) out += Triple("cwu", "CWU", "66")
+    out += Triple("more", "Menu", "≡")
+    return out
+}
 
 fun fuelDots(fuel: Double, cap: Double, res: Double): Pair<Int, Boolean> {
     if (cap <= 0) return 0 to false
