@@ -46,5 +46,14 @@ NVS 24 kB · otadata 8 kB · phy 4 kB · **ota_0 i ota_1 po 0x1E0000 (1,875 MB)*
 - Po flashu plan testu właściciela: BLE provisioning Android → Wi-Fi → mDNS → `/api/identity` → `/api/pair` → REST/WebSocket. Następnie dopiero odczyt CAN z prawdziwego kotła.
 - Stan: zmiany kodu przygotowane; wynik CI i faktyczny rozmiar obrazu z bieżącego builda należy potwierdzić po zakończeniu workflow. Sprzęt nadal nie był testowany.
 
+## Aktualizacja 2026-11-26 — kierunek firmware po decyzji właściciela
+
+- Poziomy dostępu/PIN 1-3 zostały wycofane z docelowego przepływu zapisu.
+- ESP jest traktowany jako aktywny sterownik/bramka: odczyt i zapis są dwustronne, a zapis nadal przechodzi przez model PID, znane kodowanie, zakres i odczyt zwrotny.
+- Logi rozszerzono do 64 wpisów w pamięci roboczej i dodano eksport tekstowy przez /api/log/export.
+- /api/clients zwraca stan connected dla klientów aktywnie autoryzowanych przez WebSocket oraz łączną liczbę aktywnych połączeń.
+- Dodano docs/AGENT_CONTINUITY.md jako obowiązkową instrukcję ciągłości pracy.
+- Status tej zmiany: CI PASS dopiero po wykonaniu workflow; sprzęt nadal NOT TESTED.
+
 ## Przejęcie projektu
 Stan i zasady przejęcia z 2026-11-26 są zapisane w `docs/PRZEJECIE_PROJEKTU_2026-11-26.md`. Dokument rozróżnia TESTED/CONFIRMED, CI PASS, EMULATED, MOCK, INFERENCE i OPEN oraz wskazuje kolejność dalszych prac.
