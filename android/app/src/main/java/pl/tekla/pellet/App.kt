@@ -325,16 +325,21 @@ fun FuelTile(ui: Ui, modifier: Modifier) {
 }
 
 @Composable
-fun PowerTile(ui: Ui, modifier: Modifier) {
+fun PowerTile(ui: Ui, modifier: Modifier, wide: Boolean = false) {
     val on = ui.n("0x2005") != 0.0; val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
+    if (wide) { GlowCard(modifier, if (on) Okc else null, { ui.go("kociol") }) {   // samotny kafel w ostatnim wierszu: jedna kompaktowa linia
+        Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.weight(1f)) { Text("ZASILANIE", color = Mut, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.4.sp); Text(if (on) "Włączone" else "Wyłączone", color = Txt, fontSize = 19.sp, fontWeight = FontWeight.Medium) }
+            Ix(IxData("Kocioł", "", on, Okc)); Ic(prog, 22.dp)
+        } }; return }
     Tile("Zasilanie", prog, if (on) Okc else null, modifier, { ui.go("kociol") }, listOf(IxData("Kocioł", "", on, Okc))) { Text(if (on) "Włączone" else "Wyłączone", color = Txt, fontSize = 19.sp, fontWeight = FontWeight.Medium) }
 }
 
 @Composable
 fun TileGrid(ui: Ui, entries: List<String>, rowH: androidx.compose.ui.unit.Dp = 116.dp) {
     for (pair in entries.chunked(2)) {
-        Row(Modifier.height(rowH), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            for (id in pair) { val m = if (pair.size == 1) Modifier.fillMaxWidth().fillMaxHeight() else Modifier.weight(1f).fillMaxHeight(); when (id) { "fuel" -> FuelTile(ui, m); "power" -> PowerTile(ui, m); else -> SysTile(ui, id, m) } }
+        Row(Modifier.height(if (pair.size == 1) 78.dp else rowH), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            for (id in pair) { val m = if (pair.size == 1) Modifier.fillMaxWidth().fillMaxHeight() else Modifier.weight(1f).fillMaxHeight(); when (id) { "fuel" -> FuelTile(ui, m); "power" -> PowerTile(ui, m, pair.size == 1); else -> SysTile(ui, id, m) } }
         }
     }
 }
@@ -372,7 +377,7 @@ fun HomeView(ui: Ui) {
     val kix = ui.m.screens.getValue("palnik").bar.mapNotNull { barIx(ui, it, "palnik") } + ui.m.screens.getValue("kociol").bar.filter { it.k != "anim" }.mapNotNull { barIx(ui, it, "kociol") }
     val entries = visibleTileIds(ui) + listOf("fuel", "power"); val rows = (entries.size + 1) / 2
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val tileH = ((maxHeight - 430.dp) / rows - 10.dp).coerceIn(114.dp, 160.dp)
+        val tileH = ((maxHeight - 430.dp) / rows - 10.dp).coerceIn(124.dp, 160.dp)
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             GlowCard(Modifier.fillMaxWidth(), if (run) Warn else null, { ui.go("kociol") }) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -631,7 +636,7 @@ fun LogView(ui: Ui) {
 fun ModuleView(ui: Ui) {
     val scope = rememberCoroutineScope(); var wifi by remember { mutableStateOf("…") }; var nets by remember { mutableStateOf<List<Pair<String, Int>>?>(null) }
     var ask by remember { mutableStateOf<String?>(null) }; var ssid by remember { mutableStateOf("") }; var txt by remember { mutableStateOf("") }; var err by remember { mutableStateOf("") }
-    var otaKind by remember { mutableStateOf("fw") }; var unlocked by remember { mutableStateOf(ui.src.serviceUnlocked) }; var cl by remember { mutableStateOf<List<Pair<Int, String>>>(emptyList()) }; var recCode by remember { mutableStateOf("") }; var recSaved by remember { mutableStateOf(false) }
+    var otaKind by remember { mutableStateOf("fw") }; var unlocked by remember { mutableStateOf(ui.src.serviceUnlocked) }; var cl by remember { mutableStateOf<List<Pair<Int, String>>>(emptyList()) }; var recCode by remember { mutableStateOf("") }; var recSaved by remember { mutableStateOf(false) }; var ipi by remember { mutableStateOf<IpInfo?>(null) }; var ipBusy by remember { mutableStateOf(false) }
     val clip = androidx.compose.ui.platform.LocalClipboardManager.current
     val picker = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) scope.launch { val data = withContext(kotlinx.coroutines.Dispatchers.IO) { Ctl.ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() } }; if (data == null) ui.toast("Nie można odczytać pliku") else { val e = ui.src.ota(otaKind, data); ui.toast(e ?: "Wgrano" ) } }
@@ -640,6 +645,7 @@ fun ModuleView(ui: Ui) {
     Card("Moduł ESP") {
         RowItem("Operacje serwisowe", if (unlocked) "odblokowane ✓" else "odblokuj ›") { txt = ""; err = ""; ask = "unlock" }
         RowItem("Nazwa urządzenia", "zmień ›") { txt = ""; err = ""; ask = "name" }
+        RowItem("Adres IP (DHCP / stały)", "ustaw ›") { scope.launch { ipi = ui.src.ipInfo(); if (ipi == null && !unlocked) ui.toast("Najpierw odblokuj operacje serwisowe") else if (ipi != null) { err = ""; ask = "ip" } } }
         RowItem("Wi-Fi (z wykrywaniem sieci)", wifi) { scope.launch { val n = ui.src.wifiScan(); if (n.isEmpty() && !unlocked) ui.toast("Najpierw odblokuj operacje serwisowe") else { nets = n; ask = "scan" } } }
         RowItem("Hasło urządzenia", "zmień ›") { txt = ""; err = ""; ask = "pw" }
         RowItem("Aktualizacja: firmware", "wgraj ›") { otaKind = "fw"; picker.launch("*/*") }
@@ -655,6 +661,14 @@ fun ModuleView(ui: Ui) {
     when (ask) {
         "unlock", "name" -> AlertDialog(onDismissRequest = { ask = null }, title = { Text(if (ask == "unlock") "Hasło urządzenia" else "Nowa nazwa urządzenia (max 23 znaki)") }, text = { Column { OutlinedTextField(txt, { txt = it }, singleLine = true, visualTransformation = if (ask == "unlock") PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None); if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
             confirmButton = { TextButton({ scope.launch { val a = ask; val e = if (a == "unlock") ui.src.serviceUnlock(txt) else ui.src.setDeviceName(txt.trim()); if (e == null) { if (a == "unlock") unlocked = true; ui.toast(if (a == "unlock") "Odblokowano" else "Zapisano"); ask = null } else err = e } }) { Text("OK") } }, dismissButton = { TextButton({ ask = null }) { Text("Anuluj") } })
+        "ip" -> { val cur = ipi!!; var dh by remember { mutableStateOf(cur.dhcp) }; var a by remember { mutableStateOf(cur.ip) }; var m by remember { mutableStateOf(cur.mask) }; var g by remember { mutableStateOf(cur.gw) }; var d1 by remember { mutableStateOf(cur.dns1) }; var d2 by remember { mutableStateOf(cur.dns2) }
+            AlertDialog(onDismissRequest = { if (!ipBusy) ask = null }, title = { Text("Adres IP modułu") }, text = { Column {
+                Row(verticalAlignment = Alignment.CenterVertically) { Text("Automatycznie (DHCP)", color = Txt, modifier = Modifier.weight(1f)); Switch(dh, { dh = it }) }
+                if (!dh) for ((l, v, set) in listOf(Triple("Adres IP", a, { x: String -> a = x }), Triple("Maska", m, { x: String -> m = x }), Triple("Brama", g, { x: String -> g = x }), Triple("DNS 1", d1, { x: String -> d1 = x }), Triple("DNS 2 (opcjonalnie)", d2, { x: String -> d2 = x })))
+                    OutlinedTextField(v, set, label = { Text(l) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Text("Po zmianie aplikacja połączy się z nowym adresem i potwierdzi go (do 60 s). Bez potwierdzenia moduł wraca do poprzednich ustawień.", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
+                if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
+                confirmButton = { TextButton({ ipBusy = true; err = ""; scope.launch { val e = ui.src.ipApply(IpInfo(dh, a.trim(), m.trim(), g.trim(), d1.trim(), d2.trim())); ipBusy = false; if (e == null) { ui.toast("Adres zmieniony i potwierdzony"); ask = null } else err = e } }, enabled = !ipBusy) { Text(if (ipBusy) "Zmieniam…" else "Zastosuj") } }, dismissButton = { TextButton({ ask = null }, enabled = !ipBusy) { Text("Anuluj") } }) }
         "clients" -> AlertDialog(onDismissRequest = { ask = null }, title = { Text("Sparowani klienci") }, text = { Column { for ((i, n) in cl) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(n, color = Txt, modifier = Modifier.weight(1f)); TextButton({ scope.launch { val e = ui.src.revokeClient(i); if (e == null) cl = ui.src.clients() else ui.toast(e) } }) { Text("Usuń", color = Bad) } }; if (cl.isEmpty()) Text("Brak") } }, confirmButton = {}, dismissButton = { TextButton({ ask = null }) { Text("Zamknij") } })
         "recovery" -> AlertDialog(onDismissRequest = { ask = null }, title = { Text("Kod odzyskiwania hasła") }, text = { Column {
             Text(recCode, color = Acc2, fontSize = 20.sp, fontWeight = FontWeight.Bold)

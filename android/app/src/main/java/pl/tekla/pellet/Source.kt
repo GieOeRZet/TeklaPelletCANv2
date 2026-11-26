@@ -11,6 +11,7 @@ import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 import kotlin.math.sin
 
+class IpInfo(val dhcp: Boolean, val ip: String, val mask: String, val gw: String, val dns1: String, val dns2: String)
 class AlarmRow(val n: Int, val code: Int, val text: String, val state: String)
 class NodeRow(val node: Int, val name: String, val state: String)
 
@@ -40,6 +41,8 @@ interface DataSource {
     suspend fun revokeClient(i: Int): String?
     suspend fun setDeviceName(name: String): String?
     suspend fun setRecovery(code: String): String?
+    suspend fun ipInfo(): IpInfo?
+    suspend fun ipApply(i: IpInfo): String?                      // zmiana adresu IP z potwierdzeniem z nowego adresu (inaczej modul wraca do starych ustawien)
     suspend fun ota(kind: String, data: ByteArray): String?          // kind: "fw" | "ui"
     fun close()
 }
@@ -97,6 +100,8 @@ class DemoSource(private val model: AppModel, private val scope: CoroutineScope)
     override suspend fun revokeClient(i: Int): String? = null
     override suspend fun setDeviceName(name: String): String? = null
     override suspend fun setRecovery(code: String): String? = null
+    override suspend fun ipInfo() = IpInfo(true, "192.168.1.50", "255.255.255.0", "192.168.1.1", "192.168.1.1", "")
+    override suspend fun ipApply(i: IpInfo): String? = null
     override suspend fun ota(kind: String, data: ByteArray): String? = "Aktualizacja niedostępna w trybie demo"
     override fun close() { job?.cancel() }
 }
@@ -196,6 +201,27 @@ class RemoteSource(host: String, private val scope: CoroutineScope, private var 
     override suspend fun revokeClient(i: Int): String? = svcCall("DELETE", "/api/clients/$i")
     override suspend fun setDeviceName(name: String): String? = svcCall("POST", "/api/device", JSONObject().put("name", name))
     override suspend fun setRecovery(code: String): String? = svcCall("POST", "/api/recovery", JSONObject().put("code", code))
+    override suspend fun ipInfo(): IpInfo? {
+        if (svc() != null) return null; val j = call("GET", "/api/ip"); if (!j.optBoolean("ok")) return null
+        val c = j.optJSONObject("current"); val sv = j.optJSONObject("saved")
+        return IpInfo(sv?.optBoolean("dhcp", true) ?: true, c?.optString("ip") ?: "", c?.optString("mask") ?: "", c?.optString("gw") ?: "", c?.optString("dns1") ?: "", c?.optString("dns2") ?: "")
+    }
+    /** Zmiana IP: POST /api/ip, potem w 60 s potwierdzenie z NOWEGO adresu (staly: podany; DHCP: adres znaleziony w mDNS po id). Bez potwierdzenia modul sam wraca do poprzednich ustawien. */
+    override suspend fun ipApply(i: IpInfo): String? {
+        svc()?.let { return it }
+        val body = JSONObject().put("dhcp", i.dhcp); if (!i.dhcp) body.put("ip", i.ip).put("mask", i.mask).put("gw", i.gw).put("dns1", i.dns1).put("dns2", i.dns2)
+        val j = call("POST", "/api/ip", body); if (!j.optBoolean("ok")) return if (j.optString("code") == "bad_ip") "Niepoprawny adres (maska, brama w tej samej podsieci, nie adres sieci/rozgłoszeniowy)." else err(j)
+        val old = host; val newIp = j.optString("new_ip").ifEmpty { if (i.dhcp) "" else i.ip }
+        val end = System.currentTimeMillis() + 55000
+        while (System.currentTimeMillis() < end) {
+            delay(2500)
+            for (h in listOfNotNull(newIp.ifEmpty { null }, if (deviceId.isNotEmpty()) Discovery.hostFor(deviceId) else null, old).distinct()) {
+                host = h; val r = call("POST", "/api/net/confirm")
+                if (r.optBoolean("ok")) { if (deviceId.isNotEmpty()) Ctl.deviceMoved(deviceId, h); return null }
+            }
+        }
+        host = old; return "Nie udało się potwierdzić nowego adresu w 60 s - moduł wraca do poprzednich ustawień."
+    }
     override suspend fun log(): List<String> = call("GET", "/api/log").optJSONArray("lines")?.strs() ?: emptyList()
     override suspend fun ota(kind: String, data: ByteArray): String? = withContext(Dispatchers.IO) {
         svc()?.let { return@withContext it }
