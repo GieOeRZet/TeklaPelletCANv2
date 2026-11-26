@@ -65,6 +65,8 @@ footer{color:#68727e;text-align:center;font-size:13px;margin-top:20px}a{color:#f
 <script src="https://unpkg.com/esptool-js@0.7.1/bundle.js"></script>
 <script>
 const RELEASE="https://github.com/GieOeRZet/TeklaPelletCANv2/releases/download/installer-latest/tekla_pellet_flash.bin";
+const MANIFEST="https://github.com/GieOeRZet/TeklaPelletCANv2/releases/download/installer-latest/manifest.json";
+const MAX_FLASH=4*1024*1024;
 const $=id=>document.getElementById(id);
 const status=(s,cls="")=>{$("status").textContent=s;$("status").className=cls};
 let selectedFile=null;
@@ -88,10 +90,28 @@ await transport.disconnect();
 status("✓ Gotowe. ESP32-C6 uruchamia nowy firmware od 0x0.","ok");
 }catch(e){try{await transport.disconnect()}catch(_){}throw e}
 }
+async function sha256(data){const h=await crypto.subtle.digest("SHA-256",data);return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,"0")).join("")}
 async function install(){
 $("install").disabled=true;$("local").disabled=true;
-try{status("Pobieranie najnowszego obrazu…");const r=await fetch(RELEASE+"?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("Nie udało się pobrać najnowszego firmware (HTTP "+r.status+").");const data=new Uint8Array(await r.arrayBuffer());if(data.length<1024*1024)throw new Error("Pobrany obraz jest podejrzanie mały.");await flash(data,"najnowszy firmware")}catch(e){status("Błąd: "+(e?.message||e),"err")}finally{$("install").disabled=false;$("local").disabled=!selectedFile}
+try{
+status("Pobieranie manifestu instalatora…");
+const mr=await fetch(MANIFEST+"?t="+Date.now(),{cache:"no-store"});
+if(!mr.ok)throw new Error("Nie udało się pobrać manifestu instalatora (HTTP "+mr.status+").");
+const manifest=await mr.json();
+if(manifest.project!=="TeklaPelletCANv2"||manifest.chip!=="ESP32-C6"||manifest.address!=="0x000000"||manifest.erase_all!==true)throw new Error("Manifest instalatora ma niezgodny projekt, układ lub adres flash.");
+if(!Number.isInteger(manifest.size)||manifest.size<1024*1024||manifest.size>MAX_FLASH)throw new Error("Rozmiar obrazu w manifeście jest nieprawidłowy.");
+status("Pobieranie obrazu "+(manifest.commit||"")+"…");
+const r=await fetch(RELEASE+"?t="+Date.now(),{cache:"no-store"});
+if(!r.ok)throw new Error("Nie udało się pobrać najnowszego firmware (HTTP "+r.status+").");
+const data=new Uint8Array(await r.arrayBuffer());
+if(data.length!==manifest.size)throw new Error("Rozmiar obrazu nie zgadza się z manifestem.");
+const digest=await sha256(data);
+if(digest.toLowerCase()!==String(manifest.sha256).toLowerCase())throw new Error("SHA-256 obrazu nie zgadza się z manifestem — flash przerwany.");
+status("Zweryfikowano obraz. "+(data.length/1024/1024).toFixed(2)+" MiB, SHA-256 OK.","ok");
+await flash(data,"zweryfikowany firmware");
+}catch(e){status("Błąd: "+(e?.message||e),"err")}finally{$("install").disabled=false;$("local").disabled=!selectedFile}
 }
+
 $("install").addEventListener("click",install);
 $("local").addEventListener("click",async()=>{$("install").disabled=true;$("local").disabled=true;try{await flash(new Uint8Array(await selectedFile.arrayBuffer()),selectedFile.name)}catch(e){status("Błąd: "+(e?.message||e),"err")}finally{$("install").disabled=false;$("local").disabled=!selectedFile});
 </script>
