@@ -23,7 +23,7 @@ class SetRow(
 
 class Cond(val pid: String, val op: String, val v: Int)
 class MenuRow(val title: String, val target: String?, val levelMin: Int, val cond: List<Cond>, val icon: Int)
-class Cell(val k: String, val p: String, val fr: List<Int>, val n: String?, val nd: Boolean, val hm: Boolean)
+class Cell(val k: String, val p: String, val fr: List<Int>, val n: String?, val nd: Boolean, val hm: Boolean, val l: String? = null)
 class Kv(val label: String, val pid: String, val unit: String, val dec: Int, val cond: String?)
 class ScreenDef(
     val id: String, val title: String, val list: String, val big: String?, val bigUnit: String, val state: String?, val stateP: String?,
@@ -47,7 +47,7 @@ class AppModel(ctx: Context) {
             ScreenDef(id, o.getString("t"), o.getString("list"), big?.getString(0)?.let { normPid(it) }, big?.getString(1) ?: "", o.str("state"), o.str("stateP")?.let { normPid(it) },
                 o.str("pill")?.let { normPid(it) }, o.str("status")?.let { normPid(it) }, o.str("mode")?.let { normPid(it) }, o.str("sched"), o.optBoolean("image", false),
                 o.getJSONArray("kv").let { a -> (0 until a.length()).map { i -> val r = a.getJSONArray(i); Kv(r.getString(0), normPid(r.getString(1)), r.getString(2), r.getInt(3), if (r.length() > 4) normPid(r.getString(4)) else null) } },
-                o.getJSONArray("bar").objs().map { c -> Cell(c.getString("k"), normPid(c.getString("p")), c.optJSONArray("fr")?.ints() ?: emptyList(), c.str("n")?.let { normPid(it) }, c.optInt("nd", 0) == 1, c.optInt("hm", 0) == 1) })
+                o.getJSONArray("bar").objs().map { c -> Cell(c.getString("k"), normPid(c.getString("p")), c.optJSONArray("fr")?.ints() ?: emptyList(), c.str("n")?.let { normPid(it) }, c.optInt("nd", 0) == 1, c.optInt("hm", 0) == 1, c.str("l")) })
         }
     }
     val statusTables: Map<String, List<String>> = app.getJSONObject("status").let { s -> s.keys().asSequence().associateWith { s.getJSONArray(it).strs() } }
@@ -89,6 +89,6 @@ class AppModel(ctx: Context) {
     fun routeOf(m: MenuRow): String? = when (m.target) {
         "KOCIOL" -> "kociol"; "PALNIK" -> "palnik"; "OGRZEWANIE" -> "co" + m.title.last(); "CWU" -> "cwu"; "SOLARY" -> "solary"; "BUFOR" -> "bufor"
         "KASKADA" -> "kaskada"; "MAGAZYN" -> "magazyn"; "ALARMY" -> "alarms"; "INFO" -> "info"; "KONFIGURACJA" -> "config"; "TEST_WYJSC" -> "outtest"
-        "STATYSTYKI" -> "stats"; "SIEC" -> "network"; else -> null
+        "STATYSTYKI" -> "stats"; "SIEC" -> "network"; "INTERNET" -> "module"; else -> null
     }
 }

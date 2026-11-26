@@ -129,7 +129,7 @@ function moduleView() {
    <div class="row" data-act="factory"><div class="l">Reset fabryczny</div><div class="v">›</div></div></div>`;
 }
 function logView() { return `<div class="card"><h3>Dziennik</h3><pre class="log">${esc((ST.log || []).join('\n') || 'Brak wpisów')}</pre></div>`; }
-function moreView() { return `<div class="card rows"><h3>Więcej</h3>${navItems().filter(n => !['home', 'kociol', 'palnik', 'cwu', 'pin'].includes(n.id)).map(n => `<div class="row" data-go="${n.id}"><div class="l"><img src="${IC(n.icon)}" width="22" height="22" alt="" style="vertical-align:middle;margin-right:8px">${esc(n.t)}</div><div class="v">›</div></div>`).join('')}</div>`; }
+function moreView() { if (ST.level >= 1 && ST.beep === undefined) { ST.beep = null; api('GET', '/api/params?pids=0x3506').then(r => { ST.beep = r.values ? Number(r.values['0x3506'] || r.values['0x3506'.toUpperCase()] || 0) : 0; lastKey = ''; draw(); }); } return `<div class="card rows"><h3>Menu</h3>${navItems().filter(n => !['home', 'kociol', 'palnik', 'cwu', 'pin'].includes(n.id)).map(n => `<div class="row" data-go="${n.id}"><div class="l"><img src="${IC(n.icon)}" width="22" height="22" alt="" style="vertical-align:middle;margin-right:8px">${esc(n.t)}</div><div class="v">›</div></div>`).join('')}${ST.level >= 1 ? `<div class="row" data-act="beep"><div class="l">Alarm dźwiękowy</div><div class="v">${ST.beep ? 'włączony' : 'wyłączony'}</div></div>` : ''}</div>`; }
 
 function renderTop() {
   const t = $('#top'); const nav = ST.app ? navItems() : []; const cur = nav.find(n => n.id === ST.screen); const title = cur ? cur.t : ({ home: 'Pulpit', more: 'Więcej', log: 'Dziennik' }[ST.screen] || (ST.screen.startsWith('set:') ? 'Nastawy' : ST.screen.startsWith('sched:') ? 'Harmonogram' : ''));
@@ -188,6 +188,7 @@ function editCfg(r) {
   $('#rg').oninput = () => { $('#nv').textContent = $('#rg').value; }; $('#dc').onclick = closeDlg; $('#dk').onclick = () => save(Number($('#rg').value));
 }
 async function moduleAct(a) {
+  if (a === 'beep') { const x = await writeParam('0x3506', ST.beep ? 0 : 1); if (x.ok) { ST.beep = x.v ? 1 : 0; lastKey = ''; draw(); toast('Zapisano'); } else toast(ERR[x.code] || 'Błąd'); return; }
   if (a === 'wifi') { const r = await api('GET', '/api/wifi/scan'); const nets = r.networks || []; dlg(`<h2>Wi-Fi</h2>${nets.map((n, i) => `<div class="opt" data-n="${i}">${esc(n.ssid)} <span style="margin-left:auto;color:var(--mut)">${n.rssi} dBm</span></div>`).join('') || '<div class="opt">Brak sieci</div>'}<div class="acts"><button class="btn sec" id="dc">Zamknij</button></div>`); $('#dc').onclick = closeDlg;
     document.querySelectorAll('#dlg .opt[data-n]').forEach(el => el.onclick = () => askText('Hasło sieci ' + nets[Number(el.dataset.n)].ssid, 'Hasło Wi-Fi', async (v, err) => { const x = await api('POST', '/api/wifi', { ssid: nets[Number(el.dataset.n)].ssid, pass: v }); if (x.ok) { closeDlg(); toast('Zapisano, moduł połączy się z siecią'); } else err(ERR[x.code] || 'Błąd'); })); }
   if (a === 'password') askText('Nowe hasło (min. 8 znaków)', 'Nowe hasło', async (v, err) => { const x = await api('POST', '/api/password', { new: v }); if (x.ok) { closeDlg(); toast('Hasło zmienione'); } else err(ERR[x.code] || 'Błąd'); });

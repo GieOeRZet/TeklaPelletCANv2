@@ -232,7 +232,7 @@ fun HomeView(ui: Ui) {
     val frac = (((t ?: 20.0) - 20.0) / 70.0).coerceIn(0.0, 1.0).toFloat()
     var alarms by remember { mutableStateOf<List<AlarmRow>>(emptyList()) }; LaunchedEffect(Unit) { alarms = ui.src.alarms() }
     fun mode(p: String) = ui.m.programModes.firstOrNull { it.v == (ui.n(p)?.toInt() ?: -1) }?.label ?: "--"
-    Card(null) {
+    Card(null, Modifier.clickable { ui.go("kociol") }) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.weight(0.95f).aspectRatio(1f), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize().padding(6.dp)) {
@@ -251,35 +251,49 @@ fun HomeView(ui: Ui) {
             }
         }
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        if (nco >= 1) HomeCard("Ogrzewanie 1", f1(ui.n("0x4001")), "°C", Modifier.weight(1f), "co1", ui) {
-            KvRow("zadana", f1(ui.n("0x22F5"), 1) + " °C"); KvRow("tryb", mode("0x2064"))
-            Row(Modifier.padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) { Ind(ui, "Pompa", "0x2299"); Ind(ui, "Mieszacz", "0x22B9", "mix") }
-        }
-        if (cwu) HomeCard("Ciepła woda", f1(ui.n("0x2110")), "°C", Modifier.weight(1f), "cwu", ui) {
-            KvRow("zadana", f1(ui.n("0x201A"), 1) + " °C"); KvRow("tryb", mode("0x2014"))
-            Row(Modifier.padding(top = 10.dp)) { Ind(ui, "Pompa", "0x2278") }
+    // karty całej instalacji wg konfiguracji (menu panelu z warunkami); klik -> ekran szczegółów
+    val ids = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { ui.m.routeOf(it) }.filter { it != "kociol" && ui.m.screens.containsKey(it) }
+    val entries = ids.flatMap { if (it == "palnik") listOf(it, "fuel") else listOf(it) }
+    for (pair in entries.chunked(2)) {
+        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            for (id in pair) { if (id == "fuel") FuelCard(ui, Modifier.weight(1f).fillMaxHeight()) else SysCard(ui, ui.m.screens.getValue(id), Modifier.weight(1f).fillMaxHeight()) }
+            if (pair.size == 1) Spacer(Modifier.weight(1f))
         }
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        HomeCard("Palnik", ui.m.statusTables["burner"]?.getOrNull(bs) ?: "?", "", Modifier.weight(1f), "palnik", ui) {
-            KvRow("jasność płomienia", f1(ui.n("0x2250"), 0) + " %")
-            Column(Modifier.padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { Ind(ui, "Dmuchawa", "0x2254", "burn"); Ind(ui, "Podajnik", "0x2252", "burn") }
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { Ind(ui, "Zapalarka", "0x2253", "burn"); Ind(ui, "Ruszt", "0x2276") }
+    val act = alarms.firstOrNull { it.state == "AKTYWNY" }
+    if (act != null) Column(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(16.dp)).border(1.dp, Color(0xFF5A2A2A), RoundedCornerShape(16.dp)).clickable { ui.go("alarms") }.padding(14.dp)) {
+        Text("ALARM AKTYWNY", color = Mut, fontSize = 11.sp, letterSpacing = 0.9.sp, fontWeight = FontWeight.SemiBold)
+        Row(Modifier.padding(top = 6.dp)) { Text("kod ${act.code}", color = Bad, fontSize = 18.sp, fontWeight = FontWeight.Bold); Text(" · ${act.text}", color = Txt, fontSize = 18.sp) }
+    }
+}
+
+@Composable
+fun FuelCard(ui: Ui, modifier: Modifier) {
+    val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0
+    HomeCard("Paliwo", f1(fuel, 0), "kg z ${f1(cap, 0)}", modifier, "magazyn", ui) {
+        Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(8.dp).background(Line, RoundedCornerShape(4.dp))) { Box(Modifier.fillMaxWidth(if (cap > 0) (fuel / cap).coerceIn(0.03, 1.0).toFloat() else 0f).fillMaxHeight().background(Brush.horizontalGradient(listOf(Acc, Warn)), RoundedCornerShape(4.dp))) }
+        KvRow("rezerwa", f1(ui.n("0x3603"), 0) + " kg")
+    }
+}
+
+/** Karta elementu instalacji z definicji ekranu (app.json): wartość/stan, do 2 wierszy, wskaźniki-diody wyjść. */
+@Composable
+fun SysCard(ui: Ui, s: ScreenDef, modifier: Modifier) {
+    val big = if (s.state != null) (ui.m.statusTables[s.state]?.getOrNull(ui.n(s.stateP ?: s.big)?.toInt() ?: 0) ?: "?") else if (s.big != null) f1(ui.n(s.big)) else ""
+    val unit = if (s.state == null) s.bigUnit else ""
+    HomeCard(s.title, big, unit, modifier, s.id, ui) {
+        var n = 0
+        if (s.pill != null) { KvRow("zadana", f1(ui.n(s.pill), 1) + " °C"); n++ }
+        if (s.mode != null) { KvRow("tryb", ui.m.programModes.firstOrNull { it.v == (ui.n(s.mode)?.toInt() ?: -1) }?.label ?: "--"); n++ }
+        for (k in s.kv) { if (n >= 2) break; if (k.cond == null || (ui.n(k.cond) ?: 0.0) != 0.0) { KvRow(k.label, f1(ui.n(k.pid), k.dec) + " " + k.unit); n++ } }
+        if (s.bar.isNotEmpty()) {
+            Spacer(Modifier.weight(1f, fill = false).heightIn(min = 10.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                for (row in s.bar.chunked(2)) Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    for (c in row) Ind(ui, c.l ?: "Wyjście", c.p, if (c.k == "mixer") "mix" else if (s.id == "palnik") "burn" else "on")
+                }
             }
         }
-        val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0
-        HomeCard("Paliwo", f1(fuel, 0), "kg z ${f1(cap, 0)}", Modifier.weight(1f), "magazyn", ui) {
-            Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(8.dp).background(Line, RoundedCornerShape(4.dp))) { Box(Modifier.fillMaxWidth(if (cap > 0) (fuel / cap).coerceIn(0.03, 1.0).toFloat() else 0f).fillMaxHeight().background(Brush.horizontalGradient(listOf(Acc, Warn)), RoundedCornerShape(4.dp))) }
-            KvRow("rezerwa", f1(ui.n("0x3603"), 0) + " kg")
-        }
-    }
-    Column(Modifier.fillMaxWidth().background(Panel, RoundedCornerShape(16.dp)).border(1.dp, Color(0xFF5A2A2A), RoundedCornerShape(16.dp)).clickable { ui.go("alarms") }.padding(14.dp)) {
-        Text("OSTATNI ALARM", color = Mut, fontSize = 11.sp, letterSpacing = 0.9.sp, fontWeight = FontWeight.SemiBold)
-        val a = alarms.firstOrNull()
-        if (a == null) Text("Brak alarmów", color = Txt, fontSize = 18.sp, modifier = Modifier.padding(top = 6.dp))
-        else { Row(Modifier.padding(top = 6.dp)) { Text("kod ${a.code}", color = Bad, fontSize = 18.sp, fontWeight = FontWeight.Bold); Text(" · ${a.text}", color = Txt, fontSize = 18.sp) }; KvRow("w historii ${alarms.size} zdarzeń", if (a.state == "AKTYWNY") "AKTYWNY" else "nie aktywny") }
     }
 }
 
@@ -410,6 +424,7 @@ fun MoreView(ui: Ui) {
     val items = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { m -> ui.m.routeOf(m)?.let { it to m } }.filter { it.first !in listOf("kociol", "palnik", "cwu") }
     Card("Więcej") {
         for ((r, m) in items) Row(Modifier.fillMaxWidth().clickable { ui.go(r) }.padding(vertical = 11.dp, horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) { Ic(m.icon, 22.dp); Spacer(Modifier.width(10.dp)); Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
+        if (ui.level >= 1) BeepRow(ui)
         Row(Modifier.fillMaxWidth().clickable { ui.go("module") }.padding(vertical = 11.dp, horizontal = 4.dp)) { Text("Moduł ESP (Wi-Fi, hasło, aktualizacja)", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
         Row(Modifier.fillMaxWidth().clickable { ui.go("appset") }.padding(vertical = 11.dp, horizontal = 4.dp)) { Text("Ustawienia aplikacji (demo / ESP)", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut) }
     }
@@ -530,5 +545,16 @@ fun ModuleView(ui: Ui) {
             AlertDialog(onDismissRequest = { ask = null }, title = { Text(title) }, text = { Column { OutlinedTextField(txt, { txt = it }, singleLine = true, visualTransformation = PasswordVisualTransformation()); if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
                 confirmButton = { TextButton({ scope.launch { val a = ask; val e = when (a) { "wifipw" -> ui.src.wifiSave(ssid, txt); "pw" -> ui.src.changePassword(txt); "restart" -> ui.src.restart(txt); else -> ui.src.factoryReset(txt) }; if (e == null) { ui.toast("Wykonano"); ask = null } else err = e } }) { Text("OK") } }, dismissButton = { TextButton({ ask = null }) { Text("Anuluj") } })
         }
+    }
+}
+
+/** Wiersz menu panelu "Alarm dźwiękowy" (przełącznik, PID 0x3506, poziom 1). */
+@Composable
+fun BeepRow(ui: Ui) {
+    var on by remember { mutableStateOf<Boolean?>(null) }; val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) { on = ui.src.read(listOf("0x3506"))["0x3506"]?.let { it != 0.0 } }
+    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp, horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text("Alarm dźwiękowy", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f))
+        Switch(on == true, { v -> scope.launch { val e = ui.src.write("0x3506", if (v) 1.0 else 0.0); if (e == null) on = v else ui.toast(e) } }, enabled = on != null)
     }
 }
