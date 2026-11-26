@@ -124,3 +124,8 @@ Wlasciciel zlecil pelna autonomie; ponizej wartosci domyslne zamykajace punkty O
 - Czas: ESP synchronizuje zegar panelu z NTP tylko na zadanie uzytkownika (przycisk "ustaw czas panelu"); bez automatycznego zapisu (panel ma wlasny RTC, rozjazd ok. 2 min zaobserwowany).
 - Pogoda: prognoza (0x2161-0x2164) nie jest wyswietlana przez panel - nie implementowac w v1 (OPEN: czy kiedykolwiek).
 - Stan zapisu v1: wszystkie nastawy z poziomami PIN (decyzja wlasciciela); przed pierwszym zapisem na zywym kotle - dry-run w trybie `read-only` + odczyt zwrotny, jak w sekcji 5.
+
+### 13.6 Zakaz zapisu - decyzja wlasciciela (2026-11-26)
+- ESP v1 **nie zapisuje** 42 parametrow, ktorych panel nie pokazuje w zadnej liscie NASTAW (lista w `data/device_model.json` -> `firmware_row_table.rows_not_in_any_panel_list`): wymiennik (0x216B, 0x3121-0x3124), kominiarz 0x3750, spaliny/przeplyw (0x3701-0x3703, 0x3707, 0x362B, 0x215A/B), palnik i paliwo (0x3709, 0x370C-0x370F, 0x3727, 0x3748, 0x3705, 0x300E, 0x299F), drewno (0x3000, 0x3005-0x3007), powietrze wtorne i przedmuch (0x3008/9, 0x3713/4), ruszt (0x3010, 0x3012, 0x2151, 0x218A, 0x218C, 0x228E/F). Wlasciciel: dwa tryby sa nieaktywne - nie dotykac.
+- Egzekwowanie: generator oznacza je `WE_BLOCKED` w `esp/main/gen/model_pids.inc`; REST/WS odrzuca zapis (HTTP 403) niezaleznie od trybu i poziomu PIN. Odczyt dozwolony.
+- Zmiana tej listy tylko przez wlasciciela.

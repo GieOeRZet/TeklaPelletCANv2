@@ -16,12 +16,15 @@ def enc(pw):
     if e.startswith("przelacznik"): return "WE_SWITCH", 1.0
     return "WE_OTHER", 1.0
 items = m["pids"]["items"]
+BLOCK = {h["pid"].lower() for h in (m.get("firmware_row_table") or {}).get("rows_not_in_any_panel_list", []) if h.get("pid")}   # 42 parametry poza listami panelu: zapis ZABLOKOWANY (decyzja wlasciciela 2026-11-26)
 lines = ["// GENEROWANE przez tools/gen_esp_tables.py z data/device_model.json - nie edytowac recznie",
          "// {pid, typ, tryb, min, max, kodowanie zapisu, skala}",
+         "// WE_BLOCKED = zapis zabroniony (parametry poza listami panelu)",
          "// Odczyt stanu wyjsc: stan = (wartosc SDO & 0xFF) (patrz docs/ESP_API_V2.md 13.4)"]
 rows = []
 for p in sorted(items, key=lambda x: int(x, 16)):
     v = items[p]; e, sc = enc(v.get("panel_write"))
+    if p.lower() in BLOCK: e = "WE_BLOCKED"
     rows.append("  {0x%04X, %s, %s, %dLL, %dLL, %s, %sf}, /* %s */" % (int(p, 16), TY.get(v["type"], "TT_U32"), MO.get(v["mode"], "PM_LIVE"), int(v["min"]), int(v["max"]), e, repr(sc), v["name_en"].replace("*/", "* /")))
 os.makedirs(os.path.join(ROOT, "esp", "main", "gen"), exist_ok=True)
 open(os.path.join(ROOT, "esp", "main", "gen", "model_pids.inc"), "w", encoding="utf-8").write("\n".join(lines + rows) + "\n")
