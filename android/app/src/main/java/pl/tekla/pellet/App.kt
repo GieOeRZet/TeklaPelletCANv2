@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -350,7 +351,8 @@ fun Spark(hist: List<Float>, set: Float?, modifier: Modifier) {
     Canvas(modifier) {
         if (hist.size < 2) return@Canvas
         val lo = minOf(hist.min(), set ?: hist.min()) - 1f; val hi = maxOf(hist.max(), set ?: hist.max()) + 1f; val span = (hi - lo).coerceAtLeast(1f)
-        fun px(i: Int) = size.width * i / (hist.size - 1); fun py(v: Float) = size.height * (1f - (v - lo) / span)
+        fun px(i: Int): Float = size.width * i / (hist.size - 1)
+        fun py(v: Float): Float = size.height * (1f - (v - lo) / span)
         val line = androidx.compose.ui.graphics.Path().apply { moveTo(px(0), py(hist[0])); for (i in 1 until hist.size) lineTo(px(i), py(hist[i])) }
         val fill = androidx.compose.ui.graphics.Path().apply { addPath(line); lineTo(size.width, size.height); lineTo(0f, size.height); close() }
         drawPath(fill, Brush.verticalGradient(listOf(Acc.copy(alpha = 0.22f), Color.Transparent)))
