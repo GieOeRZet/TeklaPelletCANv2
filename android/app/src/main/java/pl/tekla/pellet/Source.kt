@@ -130,7 +130,7 @@ class RemoteSource(host: String, private val scope: CoroutineScope, private var 
     override val values: StateFlow<Map<String, Double>> = _values
     override val connected = MutableStateFlow(false)
     override val level = MutableStateFlow(0)
-    override val fullMode = MutableStateFlow(false)
+    override val fullMode = MutableStateFlow(true)
     private var job: Job? = null
     private var svcPw: String? = null
     override val serviceUnlocked: Boolean get() = svcPw != null
@@ -165,9 +165,9 @@ class RemoteSource(host: String, private val scope: CoroutineScope, private var 
     private suspend fun poll(): Boolean {
         val j = call("GET", "/api/state")
         if (!j.optBoolean("ok")) { connected.value = false; if (j.optString("code") == "unauthorized" && !authNotified) { authNotified = true; Ctl.notify("Moduł odwołał to połączenie - sparuj go ponownie w Ustawieniach.") }; return false }
-        connected.value = true; val v = j.optJSONObject("v") ?: return true; val m = HashMap(_values.value)
+        connected.value = true; fullMode.value = true; val v = j.optJSONObject("v") ?: return true; val m = HashMap(_values.value)
         for (k in v.keys()) m[normPid(k)] = v.getDouble(k); _values.value = m
-        val i = call("GET", "/api/info"); if (i.optBoolean("ok")) { fullMode.value = i.optString("mode") == "full"; level.value = i.optInt("level", level.value) }
+        
         return true
     }
     override suspend fun read(pids: List<String>): Map<String, Double> {
