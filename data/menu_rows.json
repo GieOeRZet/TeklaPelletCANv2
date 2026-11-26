@@ -1,0 +1,269 @@
+{
+ "evidence": "MEASURED (menu_tree.json, 36/36 kombinacji menu_rules_check)",
+ "rows": [
+  {
+   "row": 0,
+   "title": "Kociol",
+   "target": "KOCIOL",
+   "level_min": 0,
+   "cond": [],
+   "icon": 60,
+   "icon_sel": 83,
+   "embedded": null
+  },
+  {
+   "row": 1,
+   "title": "Palnik",
+   "target": "PALNIK",
+   "level_min": 0,
+   "cond": [],
+   "icon": 61,
+   "icon_sel": 85,
+   "embedded": null
+  },
+  {
+   "row": 2,
+   "title": "Ogrzewanie 1",
+   "target": "OGRZEWANIE",
+   "level_min": 0,
+   "cond": [
+    {
+     "pid": "0x2105",
+     "op": ">=",
+     "val": 1
+    }
+   ],
+   "icon": 62,
+   "icon_sel": 86,
+   "embedded": null
+  },
+  {
+   "row": 3,
+   "title": "Ogrzewanie 2",
+   "target": "OGRZEWANIE",
+   "level_min": 0,
+   "cond": [
+    {
+     "pid": "0x2105",
+     "op": ">=",
+     "val": 2
+    }
+   ],
+   "icon": 63,
+   "icon_sel": 86,
+   "embedded": null
+  },
+  {
+   "row": 4,
+   "title": "Ogrzewanie 3",
+   "target": "OGRZEWANIE",
+   "level_min": 0,
+   "cond": [
+    {
+     "pid": "0x2105",
+     "op": ">=",
+     "val": 3
+    }
+   ],
+   "icon": 64,
+   "icon_sel": 86,
+   "embedded": null
+  },
+  {
+   "row": 5,
+   "title": "Ogrzewanie 4",
+   "target": "OGRZEWANIE",
+   "level_min": 0,
+   "cond": [
+    {
+     "pid": "0x2105",
+     "op": ">=",
+     "val": 4
+    }
+   ],
+   "icon": 65,
+   "icon_sel": 86,
+   "embedded": null
+  },
+  {
+   "row": 6,
+   "title": "Ciepla woda",
+   "target": "CWU",
+   "level_min": 0,
+   "cond": [
+    {
+     "pid": "0x2106",
+     "op": "!=",
+     "val": 0
+    }
+   ],
+   "icon": 66,
+   "icon_sel": 88,
+   "embedded": null
+  },
+  {
+   "row": 7,
+   "title": "Solary",
+   "target": "SOLARY",
+   "level_min": 0,
+   "cond": [
+    {
+     "pid": "0x2108",
+     "op": "!=",
+     "val": 0
+    }
+   ],
+   "icon": 71,
+   "icon_sel": 87,
+   "embedded": null
+  },
+  {
+   "row": 8,
+   "title": "Bufor",
+   "target": "BUFOR",
+   "level_min": 0,
+   "cond": [
+    {
+     "pid": "0x2107",
+     "op": "!=",
+     "val": 0
+    }
+   ],
+   "icon": 67,
+   "icon_sel": 84,
+   "embedded": null
+  },
+  {
+   "row": 9,
+   "title": "Kaskada",
+   "target": "KASKADA",
+   "level_min": 0,
+   "cond": [
+    {
+     "pid": "0x350C",
+     "op": "!=",
+     "val": 0
+    }
+   ],
+   "icon": 70,
+   "icon_sel": 82,
+   "embedded": null
+  },
+  {
+   "row": 10,
+   "title": "Dodatkowy magazyn paliwa",
+   "target": "MAGAZYN",
+   "level_min": 0,
+   "cond": [
+    {
+     "pid": "0x3525",
+     "op": "!=",
+     "val": 0
+    }
+   ],
+   "icon": 69,
+   "icon_sel": 99,
+   "embedded": null
+  },
+  {
+   "row": 11,
+   "title": "Historia alarmow",
+   "target": "ALARMY",
+   "level_min": 0,
+   "cond": [],
+   "icon": 72,
+   "icon_sel": 78,
+   "embedded": null
+  },
+  {
+   "row": 12,
+   "title": "Informacje o programie",
+   "target": "INFO",
+   "level_min": 0,
+   "cond": [],
+   "icon": 74,
+   "icon_sel": 89,
+   "embedded": null
+  },
+  {
+   "row": 13,
+   "title": "Konfiguracja",
+   "target": "KONFIGURACJA",
+   "level_min": 0,
+   "cond": [],
+   "icon": 77,
+   "icon_sel": 159,
+   "embedded": null
+  },
+  {
+   "row": 14,
+   "title": "Poziom menu (PIN)",
+   "target": "DLG_PIN",
+   "level_min": 0,
+   "cond": [],
+   "icon": 76,
+   "icon_sel": 96,
+   "embedded": "PIN dialog"
+  },
+  {
+   "row": 15,
+   "title": "Jezyk (Language)",
+   "target": null,
+   "level_min": 1,
+   "cond": [],
+   "icon": 73,
+   "icon_sel": 90,
+   "embedded": "language_cycle (PID 0x0003, 8 jezykow)"
+  },
+  {
+   "row": 16,
+   "title": "Alarm dzwiekowy (przelacznik)",
+   "target": null,
+   "level_min": 1,
+   "cond": [],
+   "icon": 75,
+   "icon_sel": 97,
+   "embedded": "switch PID 0x3506"
+  },
+  {
+   "row": 17,
+   "title": "Test wyjsc",
+   "target": "TEST_WYJSC",
+   "level_min": 1,
+   "cond": [],
+   "icon": 78,
+   "icon_sel": 100,
+   "embedded": null
+  },
+  {
+   "row": 18,
+   "title": "Statystyki",
+   "target": "STATYSTYKI",
+   "level_min": 1,
+   "cond": [],
+   "icon": 79,
+   "icon_sel": 98,
+   "embedded": null
+  },
+  {
+   "row": 19,
+   "title": "Siec",
+   "target": "SIEC",
+   "level_min": 1,
+   "cond": [],
+   "icon": 80,
+   "icon_sel": 95,
+   "embedded": null
+  },
+  {
+   "row": 20,
+   "title": "Internet",
+   "target": "INTERNET",
+   "level_min": 1,
+   "cond": [],
+   "icon": 81,
+   "icon_sel": 101,
+   "embedded": null
+  }
+ ]
+}
