@@ -62,7 +62,8 @@ const srv = http.createServer(async (req, res) => {
     if (b.password !== 'demo') { fails.set(ip, { n: f.n + 1, t: Date.now() }); return json(res, 401, { ok: false, code: 'bad_password' }); }
     fails.delete(ip); const t = Math.random().toString(36).slice(2) + Date.now().toString(36); sessions.set(t, { level: 0 }); return json(res, 200, { ok: true, token: t, mode: S.mode, level: 0 });
   }
-  if (p === '/api/identity') return json(res, 200, { ok: true, id: DEV.id, name: DEV.name, model: 'TeklaPellet', fw: 'v0.2', api: 2, node: 95, setup_needed: false });
+  if (p === '/api/recover' && req.method === 'POST') { const b = await body(req); if (String(b.code || '') !== 'DEMO-DEMO-DEMO-DEMO-DEMO') return json(res, 403, { ok: false, code: 'bad_code' }); if (String(b.new || '').length < 8) return json(res, 400, { ok: false, code: 'bad_request' }); return json(res, 200, { ok: true }); }   // atrapa: haslo nie zmienia sie (zawsze demo)
+  if (p === '/api/identity') return json(res, 200, { ok: true, id: DEV.id, name: DEV.name, model: 'TeklaPellet', fw: 'v0.2', api: 2, node: 95, setup_needed: false, recovery: true });
   if (p === '/api/pair' && req.method === 'POST') {
     const b = await body(req), f = fails.get(ip) || { n: 0, t: 0 }; if (f.n >= 5 && Date.now() - f.t < 60000) return json(res, 429, { ok: false, code: 'locked' });
     if (!b.name || b.name.length > 23 || /["\\]/.test(b.name)) return json(res, 400, { ok: false, code: 'bad_name' });
@@ -94,7 +95,7 @@ const srv = http.createServer(async (req, res) => {
   if (p === '/api/wifi' && req.method === 'GET') return json(res, 200, { ok: true, ssid: 'DomowaSiec', connected: true });
   if (p === '/api/wifi' && req.method === 'POST') { if (!okSvc(tok)) return json(res, 403, { ok: false, code: 'service_locked' }); return json(res, 200, { ok: true, apply_s: 40 }); }
   if (p === '/api/log') return json(res, 200, { ok: true, lines: ['start modułu', 'CAN: kocioł odpowiada (węzeł 4)', 'Wi-Fi: połączono'] });
-  if ((p === '/api/restart' || p === '/api/factory_reset' || p === '/api/password') && req.method === 'POST') { if (!okSvc(tok)) return json(res, 403, { ok: false, code: 'service_locked' }); return json(res, 200, { ok: true }); }
+  if ((p === '/api/restart' || p === '/api/factory_reset' || p === '/api/password' || p === '/api/recovery') && req.method === 'POST') { if (!okSvc(tok)) return json(res, 403, { ok: false, code: 'service_locked' }); return json(res, 200, { ok: true }); }
   if (p === '/api/params') { const rows = model.lists[u.searchParams.get('list')] || []; const values = {}; for (const r of rows) if (r.pid) values[r.pid] = settings[r.pid.toLowerCase()]; return json(res, 200, { ok: true, values }); }
   if (p === '/api/alarms') return json(res, 200, { ok: true, alarms: [{ n: 1, code: 12, text: 'Przykładowy alarm (atrapa)', active: false, acked: true }] });
   if (p === '/api/mode' && req.method === 'POST') { const b = await body(req); if (b.password !== 'demo') return json(res, 403, { ok: false, code: 'bad_password' }); S.mode = b.mode === 'full' ? 'full' : 'readonly'; return json(res, 200, { ok: true, mode: S.mode }); }

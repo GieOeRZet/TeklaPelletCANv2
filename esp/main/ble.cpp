@@ -86,7 +86,7 @@ static void on_reset(int) { g_synced = false; }
 static void host_task(void*) { nimble_port_run(); nimble_port_freertos_deinit(); }
 static bool init_stack() {
   if (nimble_port_init() != ESP_OK) return false;
-  ble_hs_cfg.sync_cb = on_sync; ble_hs_cfg.reset_cb = on_reset; ble_hs_cfg.sm_io_cap = BLE_HS_IO_NO_INPUT_OUTPUT; ble_hs_cfg.sm_bonding = 0; ble_hs_cfg.sm_mitm = 0; ble_hs_cfg.sm_sc = 1;
+  ble_hs_cfg.sync_cb = on_sync; ble_hs_cfg.reset_cb = on_reset; ble_hs_cfg.sm_io_cap = BLE_HS_IO_NO_INPUT_OUTPUT; ble_hs_cfg.sm_bonding = 1; ble_hs_cfg.sm_our_key_dist = BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID; ble_hs_cfg.sm_their_key_dist = BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID; ble_hs_cfg.sm_mitm = 0; ble_hs_cfg.sm_sc = 1;
   ble_svc_gap_init(); ble_svc_gatt_init(); ble_store_config_init(); if (ble_gatts_count_cfg(SVCS) != 0 || ble_gatts_add_svcs(SVCS) != 0) return false;
   char nm[24]; snprintf(nm, sizeof nm, "TeklaPellet-%s", device::host() + 12); ble_svc_gap_device_name_set(nm); ble_att_set_preferred_mtu(256);
   nimble_port_freertos_init(host_task); return true;

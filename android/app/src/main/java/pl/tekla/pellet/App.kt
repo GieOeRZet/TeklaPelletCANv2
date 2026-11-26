@@ -115,7 +115,7 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
         Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(Modifier.weight(1f).clickable { ui.go("appset") }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(Modifier.size(7.dp).background(if (demo) Warn else if (conn) Okc else Bad, RoundedCornerShape(4.dp)))
-                Text(if (demo) "TeklaPellet (demo)" else Ctl.host, color = Txt, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                Text(if (demo) "TeklaPellet (demo)" else Ctl.activeName() + (if (!conn) " · offline" else ""), color = Txt, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
             }
             if (wx != null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Ic(if (ui.n("0x3729")?.toInt() == 1) 180 else 181, 24.dp)
@@ -552,25 +552,6 @@ fun MoreView(ui: Ui) {
 }
 
 @Composable
-fun AppSettings(ui: Ui) {
-    var host by remember { mutableStateOf(Ctl.host) }; var pw by remember { mutableStateOf("") }; var err by remember { mutableStateOf("") }; var busy by remember { mutableStateOf(false) }; val scope = rememberCoroutineScope()
-    Card("Źródło danych") {
-        Text(if (ui.src.isDemo) "Teraz: tryb demo - dane przykładowe, bez urządzenia. W Konfiguracji możesz ustawić obwody, CWU, bufor itp.; PIN-y demo: 1111 / 2222 / 3333." else "Teraz: połączono z urządzeniem ESP.", color = Mut, fontSize = 13.sp)
-        Spacer(Modifier.height(10.dp))
-        OutlinedButton({ Ctl.useDemo(); ui.go("home") }, Modifier.fillMaxWidth()) { Text("Użyj trybu demo", color = Txt) }
-    }
-    AppPinCard(ui)
-    Card("Połącz z urządzeniem ESP") {
-        OutlinedTextField(host, { host = it }, label = { Text("Adres (np. teklapellet.local lub 192.168.1.50)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(8.dp))
-        OutlinedTextField(pw, { pw = it }, label = { Text("Hasło urządzenia") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), modifier = Modifier.fillMaxWidth())
-        if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
-        Button({ busy = true; err = ""; scope.launch { val rs = RemoteSource(host.trim(), Ctl.scope); val e = rs.login(pw); busy = false; if (e == null) { Ctl.host = host.trim(); Ctl.use(rs); ui.go("home") } else { rs.close(); err = e } } }, Modifier.fillMaxWidth().padding(top = 10.dp), enabled = !busy && host.isNotBlank() && pw.isNotEmpty()) { Text(if (busy) "Łączenie…" else "Połącz") }
-        Text("Zapis do kotła wymaga trybu „pełna kontrola” (hasło) i PIN-u. Domyślnie urządzenie działa tylko do odczytu.", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
-    }
-}
-
-@Composable
 fun Dialogs(ui: Ui, d: Dlg, close: () -> Unit) {
     val scope = rememberCoroutineScope(); var err by remember(d) { mutableStateOf("") }
     when (d) {
@@ -650,23 +631,36 @@ fun LogView(ui: Ui) {
 fun ModuleView(ui: Ui) {
     val scope = rememberCoroutineScope(); var wifi by remember { mutableStateOf("…") }; var nets by remember { mutableStateOf<List<Pair<String, Int>>?>(null) }
     var ask by remember { mutableStateOf<String?>(null) }; var ssid by remember { mutableStateOf("") }; var txt by remember { mutableStateOf("") }; var err by remember { mutableStateOf("") }
-    var otaKind by remember { mutableStateOf("fw") }
+    var otaKind by remember { mutableStateOf("fw") }; var unlocked by remember { mutableStateOf(ui.src.serviceUnlocked) }; var cl by remember { mutableStateOf<List<Pair<Int, String>>>(emptyList()) }; var recCode by remember { mutableStateOf("") }; var recSaved by remember { mutableStateOf(false) }
+    val clip = androidx.compose.ui.platform.LocalClipboardManager.current
     val picker = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) scope.launch { val data = withContext(kotlinx.coroutines.Dispatchers.IO) { Ctl.ctx.contentResolver.openInputStream(uri)?.use { it.readBytes() } }; if (data == null) ui.toast("Nie można odczytać pliku") else { val e = ui.src.ota(otaKind, data); ui.toast(e ?: "Wgrano" ) } }
     }
     LaunchedEffect(Unit) { wifi = ui.src.wifiStatus() }
     Card("Moduł ESP") {
-        RowItem("Wi-Fi", wifi) { scope.launch { nets = ui.src.wifiScan(); ask = "scan" } }
+        RowItem("Operacje serwisowe", if (unlocked) "odblokowane ✓" else "odblokuj ›") { txt = ""; err = ""; ask = "unlock" }
+        RowItem("Nazwa urządzenia", "zmień ›") { txt = ""; err = ""; ask = "name" }
+        RowItem("Wi-Fi (z wykrywaniem sieci)", wifi) { scope.launch { val n = ui.src.wifiScan(); if (n.isEmpty() && !unlocked) ui.toast("Najpierw odblokuj operacje serwisowe") else { nets = n; ask = "scan" } } }
         RowItem("Hasło urządzenia", "zmień ›") { txt = ""; err = ""; ask = "pw" }
         RowItem("Aktualizacja: firmware", "wgraj ›") { otaKind = "fw"; picker.launch("*/*") }
         RowItem("Aktualizacja: paczka UI", "wgraj ›") { otaKind = "ui"; picker.launch("*/*") }
+        RowItem("Sparowani klienci", "›") { scope.launch { cl = ui.src.clients(); if (cl.isEmpty() && !unlocked) ui.toast("Najpierw odblokuj operacje serwisowe") else ask = "clients" } }
+        RowItem("Kod odzyskiwania hasła", "nowy ›") { recCode = newRecoveryCode(); recSaved = false; err = ""; ask = "recovery" }
         RowItem("Dziennik", "›") { ui.go("log") }
         RowItem("Sieć CAN (moduły)", "›") { ui.go("network") }
         RowItem("Restart modułu", "›") { txt = ""; err = ""; ask = "restart" }
         RowItem("Reset fabryczny", "›") { txt = ""; err = ""; ask = "factory" }
-        Text("Zapis (Wi-Fi, hasło, aktualizacje) wymaga trybu „pełna kontrola”; podpisy plików sprawdza urządzenie.", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
+        Text("Operacje serwisowe (Wi-Fi, hasło, nazwa, klienci, aktualizacje, restart) wymagają jednorazowego podania hasła urządzenia (ważne 5 min, aplikacja odnawia je w tle do zamknięcia). Podpisy plików sprawdza urządzenie.", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
     }
     when (ask) {
+        "unlock", "name" -> AlertDialog(onDismissRequest = { ask = null }, title = { Text(if (ask == "unlock") "Hasło urządzenia" else "Nowa nazwa urządzenia (max 23 znaki)") }, text = { Column { OutlinedTextField(txt, { txt = it }, singleLine = true, visualTransformation = if (ask == "unlock") PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None); if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
+            confirmButton = { TextButton({ scope.launch { val a = ask; val e = if (a == "unlock") ui.src.serviceUnlock(txt) else ui.src.setDeviceName(txt.trim()); if (e == null) { if (a == "unlock") unlocked = true; ui.toast(if (a == "unlock") "Odblokowano" else "Zapisano"); ask = null } else err = e } }) { Text("OK") } }, dismissButton = { TextButton({ ask = null }) { Text("Anuluj") } })
+        "clients" -> AlertDialog(onDismissRequest = { ask = null }, title = { Text("Sparowani klienci") }, text = { Column { for ((i, n) in cl) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(n, color = Txt, modifier = Modifier.weight(1f)); TextButton({ scope.launch { val e = ui.src.revokeClient(i); if (e == null) cl = ui.src.clients() else ui.toast(e) } }) { Text("Usuń", color = Bad) } }; if (cl.isEmpty()) Text("Brak") } }, confirmButton = {}, dismissButton = { TextButton({ ask = null }) { Text("Zamknij") } })
+        "recovery" -> AlertDialog(onDismissRequest = { ask = null }, title = { Text("Kod odzyskiwania hasła") }, text = { Column {
+            Text(recCode, color = Acc2, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(if (recSaved) "Zapisano w module. Zapisz ten kod w bezpiecznym miejscu - nie będzie już widoczny; poprzedni kod przestał działać." else "Nowy kod zastąpi poprzedni. Najpierw zapisz go w module, potem zanotuj. Pozwala ustawić nowe hasło bez fizycznego dostępu.", color = Mut, fontSize = 13.sp)
+            if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
+            confirmButton = { if (!recSaved) TextButton({ scope.launch { val e = ui.src.setRecovery(recCode); if (e == null) recSaved = true else err = e } }) { Text("Zapisz w module") } else TextButton({ clip.setText(androidx.compose.ui.text.AnnotatedString(recCode)) }) { Text("Kopiuj") } }, dismissButton = { TextButton({ ask = null }) { Text("Zamknij") } })
         "scan" -> AlertDialog(onDismissRequest = { ask = null }, title = { Text("Wi-Fi") }, text = { Column { for ((n, r) in nets ?: emptyList()) Row(Modifier.fillMaxWidth().clickable { ssid = n; txt = ""; err = ""; ask = "wifipw" }.padding(vertical = 10.dp)) { Text(n, modifier = Modifier.weight(1f)); Text("$r dBm", color = Mut) }; if (nets.isNullOrEmpty()) Text("Brak sieci") } }, confirmButton = {}, dismissButton = { TextButton({ ask = null }) { Text("Zamknij") } })
         "wifipw", "pw", "restart", "factory" -> {
             val title = when (ask) { "wifipw" -> "Hasło sieci $ssid"; "pw" -> "Nowe hasło (min. 8 znaków)"; "restart" -> "Restart - podaj hasło urządzenia"; else -> "Reset fabryczny kasuje hasło, sieć i ustawienia modułu. Podaj hasło" }

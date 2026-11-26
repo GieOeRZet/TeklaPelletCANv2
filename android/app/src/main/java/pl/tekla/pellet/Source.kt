@@ -34,6 +34,12 @@ interface DataSource {
     suspend fun restart(password: String): String?
     suspend fun factoryReset(password: String): String?
     suspend fun log(): List<String>
+    suspend fun serviceUnlock(password: String): String?          // odblokowanie operacji serwisowych modulu (haslo, 5 min)
+    val serviceUnlocked: Boolean
+    suspend fun clients(): List<Pair<Int, String>>
+    suspend fun revokeClient(i: Int): String?
+    suspend fun setDeviceName(name: String): String?
+    suspend fun setRecovery(code: String): String?
     suspend fun ota(kind: String, data: ByteArray): String?          // kind: "fw" | "ui"
     fun close()
 }
@@ -85,6 +91,12 @@ class DemoSource(private val model: AppModel, private val scope: CoroutineScope)
     override suspend fun restart(password: String): String? = null
     override suspend fun factoryReset(password: String): String? = null
     override suspend fun log() = listOf("start aplikacji (demo)", "dane przykładowe")
+    override suspend fun serviceUnlock(password: String): String? = null
+    override val serviceUnlocked = true
+    override suspend fun clients() = listOf(0 to "Ten telefon (demo)")
+    override suspend fun revokeClient(i: Int): String? = null
+    override suspend fun setDeviceName(name: String): String? = null
+    override suspend fun setRecovery(code: String): String? = null
     override suspend fun ota(kind: String, data: ByteArray): String? = "Aktualizacja niedostępna w trybie demo"
     override fun close() { job?.cancel() }
 }
@@ -96,39 +108,58 @@ val ERR = mapOf(
     "verify_failed" to "Odczyt zwrotny nie potwierdził zapisu.", "unauthorized" to "Sesja wygasła - połącz ponownie.",
 )
 
-/** Urzadzenie ESP: REST (docs/ESP_API_V2.md). Dane na zywo przez odpytywanie /api/state co 1 s. */
-class RemoteSource(private val host: String, private val scope: CoroutineScope) : DataSource {
+const val OFFLINE_MSG = "Moduł jest offline – zmiana niemożliwa. Pokazuję ostatnie znane wartości."
+
+/** Urzadzenie ESP: REST (docs/API_ESP.md). Autoryzacja tokenem klienta (POST /api/pair, raz). Dane na zywo przez odpytywanie /api/state co 1 s; ostatnie znane wartosci sa zapamietywane
+ *  (modul offline = widac ostatni stan, a proba zmiany daje komunikat). */
+class RemoteSource(host: String, private val scope: CoroutineScope, private var token: String? = null, val deviceId: String = "") : DataSource {
     override val isDemo = false
+    @Volatile var host: String = host; private set
     private val http = OkHttpClient.Builder().connectTimeout(4, TimeUnit.SECONDS).readTimeout(8, TimeUnit.SECONDS).build()
     private val json = "application/json".toMediaType()
-    private var token: String? = null
-    private val _values = MutableStateFlow<Map<String, Double>>(emptyMap())
+    private val _values = MutableStateFlow<Map<String, Double>>(if (deviceId.isNotEmpty()) DeviceStore.cacheGet(Ctl.ctx, deviceId) else emptyMap())
     override val values: StateFlow<Map<String, Double>> = _values
     override val connected = MutableStateFlow(false)
     override val level = MutableStateFlow(0)
     override val fullMode = MutableStateFlow(false)
     private var job: Job? = null
-    private val base = (if (host.startsWith("http")) host else "http://$host").trimEnd('/')
+    private var svcPw: String? = null
+    override val serviceUnlocked: Boolean get() = svcPw != null
+    private fun base() = (if (host.startsWith("http")) host else "http://$host").trimEnd('/')
 
-    private suspend fun call(method: String, path: String, body: JSONObject? = null): JSONObject = withContext(Dispatchers.IO) {
+    suspend fun call(method: String, path: String, body: JSONObject? = null): JSONObject = withContext(Dispatchers.IO) {
         try {
             val rb = if (method == "GET") null else (body?.toString() ?: "{}").toRequestBody(json)
-            val req = Request.Builder().url(base + path).method(method, rb).apply { token?.let { header("Authorization", "Bearer $it") } }.build()
+            val req = Request.Builder().url(base() + path).method(method, rb).apply { token?.let { header("Authorization", "Bearer $it") } }.build()
             http.newCall(req).execute().use { r -> val t = r.body?.string() ?: "{}"; try { JSONObject(t) } catch (e: Exception) { JSONObject().put("ok", false).put("code", "bad_response") } }
         } catch (e: Exception) { JSONObject().put("ok", false).put("code", "network").put("msg", e.message ?: "brak połączenia") }
     }
     private fun err(j: JSONObject): String = ERR[j.optString("code")] ?: (j.optString("msg").ifEmpty { "Błąd: " + j.optString("code") })
+    private fun offline(): String? = if (connected.value) null else OFFLINE_MSG.also { Ctl.notify(it) }
 
-    suspend fun login(password: String): String? {
-        val j = call("POST", "/api/login", JSONObject().put("password", password)); if (!j.optBoolean("ok")) return err(j)
-        token = j.getString("token"); fullMode.value = j.optString("mode") == "full"; level.value = j.optInt("level", 0); connected.value = true
-        job = scope.launch { while (isActive) { poll(); delay(1000) } }; return null
+    fun start() {
+        if (job != null) return
+        job = scope.launch {
+            var lastSave = 0L; var downSince = 0L
+            while (isActive) {
+                val ok = poll()
+                if (ok) downSince = 0 else {
+                    if (downSince == 0L) downSince = System.currentTimeMillis()
+                    if (deviceId.isNotEmpty() && System.currentTimeMillis() - downSince > 8000) Discovery.hostFor(deviceId)?.let { if (it != host) { host = it; Ctl.deviceMoved(deviceId, it) } }   // adres moze sie zmienic (DHCP): znajdz po id
+                }
+                if (deviceId.isNotEmpty() && ok && System.currentTimeMillis() - lastSave > 15000) { lastSave = System.currentTimeMillis(); DeviceStore.cachePut(Ctl.ctx, deviceId, _values.value) }
+                delay(1000)
+            }
+        }
     }
-    private suspend fun poll() {
-        val j = call("GET", "/api/state"); if (!j.optBoolean("ok")) { connected.value = false; return }
-        connected.value = true; val v = j.optJSONObject("v") ?: return; val m = HashMap(_values.value)
+    private var authNotified = false
+    private suspend fun poll(): Boolean {
+        val j = call("GET", "/api/state")
+        if (!j.optBoolean("ok")) { connected.value = false; if (j.optString("code") == "unauthorized" && !authNotified) { authNotified = true; Ctl.notify("Moduł odwołał to połączenie - sparuj go ponownie w Ustawieniach.") }; return false }
+        connected.value = true; val v = j.optJSONObject("v") ?: return true; val m = HashMap(_values.value)
         for (k in v.keys()) m[normPid(k)] = v.getDouble(k); _values.value = m
         val i = call("GET", "/api/info"); if (i.optBoolean("ok")) { fullMode.value = i.optString("mode") == "full"; level.value = i.optInt("level", level.value) }
+        return true
     }
     override suspend fun read(pids: List<String>): Map<String, Double> {
         val out = HashMap<String, Double>()
@@ -136,11 +167,13 @@ class RemoteSource(private val host: String, private val scope: CoroutineScope) 
         return out
     }
     override suspend fun write(pid: String, v: Double): String? {
+        offline()?.let { return it }
         val j = call("PUT", "/api/param/" + fmtPid(pid), JSONObject().put("value", v)); if (!j.optBoolean("ok")) return err(j)
         _values.value = HashMap(_values.value).also { it[fmtPid(pid)] = j.optDouble("v", v) }; return null
     }
-    override suspend fun unlock(pin: String): String? { val j = call("POST", "/api/level", JSONObject().put("pin", pin)); if (!j.optBoolean("ok")) return err(j); level.value = j.optInt("level"); return null }
+    override suspend fun unlock(pin: String): String? { offline()?.let { return it }; val j = call("POST", "/api/level", JSONObject().put("pin", pin)); if (!j.optBoolean("ok")) return err(j); level.value = j.optInt("level"); return null }
     override suspend fun setFullMode(full: Boolean, password: String): String? {
+        offline()?.let { return it }
         val j = call("POST", "/api/mode", JSONObject().put("mode", if (full) "full" else "readonly").put("password", password)); if (!j.optBoolean("ok")) return err(j)
         fullMode.value = j.optString("mode") == "full"; return null
     }
@@ -148,18 +181,52 @@ class RemoteSource(private val host: String, private val scope: CoroutineScope) 
         AlarmRow(it.optInt("n"), it.optInt("code"), it.optString("text"), if (it.optBoolean("active")) "AKTYWNY" else if (it.optBoolean("acked")) "potwierdzony" else "nowy")
     }
     override suspend fun network(): List<NodeRow> = (call("GET", "/api/network").optJSONArray("nodes")?.objs() ?: emptyList()).map { NodeRow(it.optInt("node"), it.optString("name"), it.optString("state")) }
-    override fun close() { job?.cancel() }
+    override fun close() { job?.cancel(); job = null }
+    // ---- operacje serwisowe: najpierw odblokowanie haslem (5 min); haslo trzymane tylko w pamieci procesu i odnawiane automatycznie
+    override suspend fun serviceUnlock(password: String): String? { offline()?.let { return it }; val j = call("POST", "/api/service/unlock", JSONObject().put("password", password)); if (!j.optBoolean("ok")) return err(j); svcPw = password; return null }
+    private suspend fun svc(): String? { offline()?.let { return it }; val pw = svcPw ?: return "Najpierw odblokuj operacje serwisowe hasłem urządzenia."; val j = call("POST", "/api/service/unlock", JSONObject().put("password", pw)); return if (j.optBoolean("ok")) null else { svcPw = null; err(j) } }
+    private suspend fun svcCall(method: String, path: String, body: JSONObject? = null): String? { svc()?.let { return it }; val j = call(method, path, body); return if (j.optBoolean("ok")) null else err(j) }
     override suspend fun wifiStatus(): String { val j = call("GET", "/api/wifi"); return if (j.optBoolean("ok")) j.optString("ssid", "--") + if (j.optBoolean("connected")) " ●" else " ○" else err(j) }
-    override suspend fun wifiScan(): List<Pair<String, Int>> = (call("GET", "/api/wifi/scan").optJSONArray("networks")?.objs() ?: emptyList()).map { it.optString("ssid") to it.optInt("rssi") }
-    override suspend fun wifiSave(ssid: String, pass: String): String? { val j = call("POST", "/api/wifi", JSONObject().put("ssid", ssid).put("pass", pass)); return if (j.optBoolean("ok")) null else err(j) }
-    override suspend fun changePassword(newPw: String): String? { val j = call("POST", "/api/password", JSONObject().put("new", newPw)); return if (j.optBoolean("ok")) null else err(j) }
-    override suspend fun restart(password: String): String? { val j = call("POST", "/api/restart", JSONObject().put("password", password)); return if (j.optBoolean("ok")) null else err(j) }
-    override suspend fun factoryReset(password: String): String? { val j = call("POST", "/api/factory_reset", JSONObject().put("password", password)); return if (j.optBoolean("ok")) null else err(j) }
+    override suspend fun wifiScan(): List<Pair<String, Int>> { if (svc() != null) return emptyList(); return (call("GET", "/api/wifi/scan").optJSONArray("networks")?.objs() ?: emptyList()).map { it.optString("ssid") to it.optInt("rssi") }.distinctBy { it.first } }
+    override suspend fun wifiSave(ssid: String, pass: String): String? = svcCall("POST", "/api/wifi", JSONObject().put("ssid", ssid).put("pass", pass))
+    override suspend fun changePassword(newPw: String): String? { val e = svcCall("POST", "/api/password", JSONObject().put("new", newPw)); if (e == null) svcPw = newPw; return e }
+    override suspend fun restart(password: String): String? { if (password.isNotEmpty()) svcPw = password; return svcCall("POST", "/api/restart") }
+    override suspend fun factoryReset(password: String): String? { if (password.isNotEmpty()) svcPw = password; return svcCall("POST", "/api/factory_reset", JSONObject().put("confirm", "RESET")) }
+    override suspend fun clients(): List<Pair<Int, String>> { if (svc() != null) return emptyList(); return (call("GET", "/api/clients").optJSONArray("clients")?.objs() ?: emptyList()).map { it.optInt("i") to it.optString("name") } }
+    override suspend fun revokeClient(i: Int): String? = svcCall("DELETE", "/api/clients/$i")
+    override suspend fun setDeviceName(name: String): String? = svcCall("POST", "/api/device", JSONObject().put("name", name))
+    override suspend fun setRecovery(code: String): String? = svcCall("POST", "/api/recovery", JSONObject().put("code", code))
     override suspend fun log(): List<String> = call("GET", "/api/log").optJSONArray("lines")?.strs() ?: emptyList()
     override suspend fun ota(kind: String, data: ByteArray): String? = withContext(Dispatchers.IO) {
+        svc()?.let { return@withContext it }
         try {
-            val req = Request.Builder().url("$base/api/ota/$kind").post(data.toRequestBody("application/octet-stream".toMediaType())).apply { token?.let { header("Authorization", "Bearer $it") } }.build()
-            http.newBuilder().readTimeout(120, TimeUnit.SECONDS).build().newCall(req).execute().use { r -> val j = try { JSONObject(r.body?.string() ?: "{}") } catch (e: Exception) { JSONObject() }; if (j.optBoolean("ok")) null else (ERR[j.optString("code")] ?: "Błąd: " + j.optString("code")) }
+            val req = Request.Builder().url("${base()}/api/ota/$kind").post(data.toRequestBody("application/octet-stream".toMediaType())).apply { token?.let { header("Authorization", "Bearer $it") } }.build()
+            http.newBuilder().readTimeout(120, TimeUnit.SECONDS).build().newCall(req).execute().use { r -> val j = try { JSONObject(r.body?.string() ?: "{}") } catch (e: Exception) { JSONObject() }; if (j.optBoolean("ok")) null else ERR[j.optString("code")] ?: ("Błąd: " + j.optString("code")) }
         } catch (e: Exception) { e.message ?: "brak połączenia" }
     }
 }
+
+/** Pierwsze parowanie: sprawdza tozsamosc (api == 2), potem POST /api/pair haslem -> staly token klienta. Zwraca sparowany modul albo komunikat bledu. */
+suspend fun pairDevice(host: String, password: String, clientName: String): Pair<Paired?, String?> {
+    val rs = RemoteSource(host, Ctl.scope)
+    try {
+        val id = rs.call("GET", "/api/identity"); if (!id.optBoolean("ok")) return null to "Nie znaleziono modułu pod adresem $host."
+        if (id.optInt("api") != 2) return null to "Niezgodna wersja API modułu (${id.optInt("api")}); zaktualizuj aplikację lub firmware."
+        if (id.optBoolean("setup_needed")) return null to "Moduł nie jest skonfigurowany - użyj „Nowy moduł (Bluetooth)” albo strony serwisowej."
+        val j = rs.call("POST", "/api/pair", JSONObject().put("password", password).put("name", clientName))
+        if (!j.optBoolean("ok")) return null to (ERR[j.optString("code")] ?: when (j.optString("code")) { "too_many_clients" -> "Moduł ma już 8 sparowanych klientów - usuń któregoś na stronie serwisowej."; else -> "Błąd parowania: " + j.optString("code") })
+        return Paired(id.getString("id"), id.optString("name", "TeklaPellet"), host, j.getString("token")) to null
+    } finally { rs.close() }
+}
+
+/** Zapomniane haslo: kod odzyskiwania + nowe haslo (bez fizycznego dostepu). */
+suspend fun recoverPassword(host: String, code: String, newPassword: String): String? {
+    val rs = RemoteSource(host, Ctl.scope); try {
+        val j = rs.call("POST", "/api/recover", JSONObject().put("code", code.trim().uppercase()).put("new", newPassword)); if (j.optBoolean("ok")) return null
+        return when (j.optString("code")) { "bad_code" -> "Błędny kod odzyskiwania."; "no_recovery" -> "Ten moduł nie ma ustawionego kodu odzyskiwania."; "locked" -> "Zbyt wiele prób - spróbuj za minutę."; "bad_request" -> "Nowe hasło musi mieć min. 8 znaków."; else -> rs.callMsg(j) }
+    } finally { rs.close() }
+}
+private fun RemoteSource.callMsg(j: JSONObject) = j.optString("msg").ifEmpty { "Błąd: " + j.optString("code") }
+
+/** Kod odzyskiwania generowany w aplikacji (20 znakow, ~100 bitow): XXXX-XXXX-XXXX-XXXX-XXXX. */
+fun newRecoveryCode(): String { val a = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; val r = java.security.SecureRandom(); return (0 until 20).map { a[r.nextInt(32)] }.chunked(4).joinToString("-") { it.joinToString("") } }
