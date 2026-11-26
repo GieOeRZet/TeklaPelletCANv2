@@ -48,9 +48,9 @@ Wymagają wcześniejszego **odblokowania serwisowego** `POST /api/service/unlock
 `GET /api/clients` → `{ok, clients:[{i,name}]}`; `DELETE /api/clients/{i}` (po numerze) lub `DELETE /api/clients` (wszystkich). Odwołany token przestaje działać natychmiast.
 
 ## 9. Aktualizacje firmware i konto DEV
-- **OTA z pliku**: `POST /api/ota/fw` (odblokowanie serwisowe), ciało = obraz `.bin` + **64 bajty podpisu ECDSA P‑256 (r||s) na końcu**; nowy slot uruchamia się po poprawnym podpisie, a **bez zdrowego startu w ok. 30 s (HTTP + CAN) następuje automatyczny powrót do poprzedniego** firmware. Podpisywanie: `tools/ota_sign.py`; klucz prywatny poza repo, publiczny w `esp/main/ota_pubkey.pem` (**w repo jest placeholder: do czasu wstawienia własnego klucza aktualizacje są odrzucane**).
+- **OTA z pliku** (jeden plik `.bin`, **bez klucza i bez podpisu**): `POST /api/ota/fw` (odblokowanie serwisowe), ciało = zwykły obraz `tekla_pellet.bin`. Moduł zapisuje go do nieaktywnego slotu, sprawdza format obrazu (nagłówek, suma, SHA‑256) i zgodność nazwy projektu z działającym firmware (422 `bad_pack` przy niezgodności), po czym restartuje się. **Bez zdrowego startu w ok. 30 s (HTTP + CAN) następuje automatyczny powrót do poprzedniego firmware.** Ochroną jest hasło (odblokowanie serwisowe / konto DEV), nie kryptograficzny podpis: kto zna hasło, może wgrać dowolne własne firmware tego projektu.
 - **Konto DEV** (osobne hasło, min. 8 znaków): `GET /api/dev` → `{ok, configured, unlocked, beta_url}`; `POST /api/dev/set` `{password}` (wymaga odblokowania serwisowego; gdy już ustawione, także odblokowanego DEV); `POST /api/dev/unlock` `{password}` (5 min).
-- **Kanał BETA** (po odblokowaniu DEV; pobieranie przez HTTPS z `beta_url`, domyślnie wydanie GitHub `beta`): `GET /api/dev/beta` → `{ok, version, current}`; `POST /api/dev/beta/update` (start pobierania `tekla_pellet_beta.bin` z podpisem, weryfikacja tym samym kluczem, restart); `GET /api/dev/beta/status` → `{ok, state, pct, msg}` (`state`: 0 bezczynny, 1 sprawdzanie, 2 pobieranie, 3 weryfikacja, 4 gotowe, 5 błąd); `POST /api/dev/beta/url` `{url}` (https, zmiana źródła). Publikacja BETA wymaga sekretu z kluczem podpisu w CI (patrz `.github/workflows/ci.yml`).
+- **Kanał BETA** (po odblokowaniu DEV; pobieranie przez HTTPS z `beta_url`, domyślnie wydanie GitHub `beta`): `GET /api/dev/beta` → `{ok, version, current}`; `POST /api/dev/beta/update` (start pobierania zwykłego pliku `tekla_pellet_beta.bin`, kontrola obrazu, restart; integralność łącza zapewnia HTTPS z github.com); `GET /api/dev/beta/status` → `{ok, state, pct, msg}` (`state`: 0 bezczynny, 1 sprawdzanie, 2 pobieranie, 3 weryfikacja, 4 gotowe, 5 błąd); `POST /api/dev/beta/url` `{url}` (https, zmiana źródła). Publikacja BETA: push na gałąź `beta` (job `publish-beta` w CI) tworzy/aktualizuje wydanie `beta`.
 
 ## 10. Odzyskiwanie zapomnianego hasła (bez fizycznego dostępu)
 - **Kod odzyskiwania**: 20 znaków (`XXXX-XXXX-XXXX-XXXX-XXXX`, alfabet bez 0/O/1/I), **generuje klient** (aplikacja/strona serwisowa) przy pierwszej konfiguracji i pokazuje właścicielowi; w urządzeniu tylko hasz PBKDF2. Przekazywany w `POST /api/setup` jako `recovery` albo później `POST /api/recovery` `{code}` (odblokowanie serwisowe; nowy kod unieważnia poprzedni). `GET /api/identity` ma pole `recovery` (true/false).
@@ -65,7 +65,7 @@ Wymagają wcześniejszego **odblokowania serwisowego** `POST /api/service/unlock
 | 403 | `service_locked`, `dev_locked`, `bad_pin`, `bad_password`, `level_too_low`, `blocked` | brak odblokowania/poziomu; parametr zablokowany |
 | 404 | `unknown_pid`, `unknown_client`, `unknown_list` | nie ma takiego zasobu |
 | 409 | `read_only_mode`, `not_writable`, `no_encoding`, `already_configured`, `too_many_clients`, `busy` | stan nie pozwala |
-| 422 | `bad_signature`, `bad_pack` | błędny podpis/plik |
+| 422 | `bad_pack` | plik nie jest poprawnym obrazem tego firmware |
 | 423/429 | `locked` | zbyt wiele błędnych prób |
 | 502 | `can_timeout`, `verify_failed`, `http_*` | kocioł nie odpowiada / odczyt zwrotny się nie zgadza / pobieranie BETA |
 

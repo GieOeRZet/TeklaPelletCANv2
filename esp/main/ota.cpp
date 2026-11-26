@@ -1,44 +1,29 @@
 #include "ota.hpp"
 #include "config.hpp"
-#include "tekla/ecdsa_der.hpp"
 #include "esp_ota_ops.h"
 #include "esp_http_client.h"
 #include "esp_crt_bundle.h"
 #include "cJSON.h"
 #include "nvs.h"
 #include "esp_log.h"
-#include "mbedtls/pk.h"
-#include "mbedtls/sha256.h"
+#include "esp_app_desc.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <cstring>
-extern const char pubkey_start[] asm("_binary_ota_pubkey_pem_start"); extern const char pubkey_end[] asm("_binary_ota_pubkey_pem_end");
 namespace ota {
 static const char* TAG = "ota"; static volatile bool g_http, g_can;
-static bool verify(const uint8_t hash[32], const uint8_t rs[64]) {
-  mbedtls_pk_context pk; mbedtls_pk_init(&pk); bool ok = false;
-  if (mbedtls_pk_parse_public_key(&pk, (const unsigned char*)pubkey_start, pubkey_end - pubkey_start) == 0) { uint8_t der[80]; size_t n = tekla::sig_rs_to_der(rs, der, sizeof der); ok = n && mbedtls_pk_verify(&pk, MBEDTLS_MD_SHA256, hash, 32, der, n) == 0; }
-  mbedtls_pk_free(&pk); return ok;                                   // brak/niepoprawny klucz publiczny = zawsze odrzucenie
-}
+// Bez klucza/podpisu: obraz to zwykly plik .bin. Ochrona = haslo (odblokowanie serwisowe / konto DEV) + kontrola formatu obrazu przez esp_ota_end (naglowek, suma, SHA-256)
+// + zgodnosc nazwy projektu z dzialajacym firmware + automatyczny rollback, gdy nowe firmware nie wstanie (HTTP + CAN w ok. 30 s).
+static bool same_project(const esp_partition_t* p) { esp_app_desc_t d; const esp_app_desc_t* run = esp_app_get_description(); return run && esp_ota_get_partition_description(p, &d) == ESP_OK && !strncmp(d.project_name, run->project_name, sizeof d.project_name); }
 static esp_err_t fail(httpd_req_t* r, const char* st, const char* code) { httpd_resp_set_status(r, st); httpd_resp_set_type(r, "application/json"); char b[80]; snprintf(b, sizeof b, "{\"ok\":false,\"code\":\"%s\"}", code); return httpd_resp_sendstr(r, b); }
-// Wspolna petla: strumieniowo czyta cialo, pierwsze len-64 B -> sink(), liczy SHA-256, ostatnie 64 B = podpis.
-template <typename Sink> static int stream(httpd_req_t* r, Sink sink, uint8_t hash[32], uint8_t sig[64]) {
-  size_t total = r->content_len; if (total <= 64) return -1; size_t body = total - 64, got = 0; mbedtls_sha256_context c; mbedtls_sha256_init(&c); mbedtls_sha256_starts(&c, 0);
-  static uint8_t buf[2048]; size_t sigf = 0;
-  while (got < total) {
-    int n = httpd_req_recv(r, (char*)buf, sizeof buf < total - got ? sizeof buf : total - got); if (n <= 0) { mbedtls_sha256_free(&c); return -2; }
-    size_t imgn = got < body ? (body - got < (size_t)n ? body - got : n) : 0;
-    if (imgn) { if (!sink(buf, imgn, got)) { mbedtls_sha256_free(&c); return -3; } mbedtls_sha256_update(&c, buf, imgn); }
-    if ((size_t)n > imgn) { memcpy(sig + sigf, buf + imgn, n - imgn); sigf += n - imgn; } got += n;
-  }
-  mbedtls_sha256_finish(&c, hash); mbedtls_sha256_free(&c); return sigf == 64 ? 0 : -4;
-}
 esp_err_t handle_fw(httpd_req_t* r) {
-  const esp_partition_t* p = esp_ota_get_next_update_partition(nullptr); esp_ota_handle_t h = 0; if (!p || esp_ota_begin(p, OTA_WITH_SEQUENTIAL_WRITES, &h) != ESP_OK) return fail(r, "500 Internal Server Error", "ota_begin");
-  uint8_t hash[32], sig[64]; int rc = stream(r, [&](const uint8_t* d, size_t n, size_t) { return esp_ota_write(h, d, n) == ESP_OK; }, hash, sig);
-  if (rc != 0) { esp_ota_abort(h); return fail(r, "400 Bad Request", "bad_stream"); }
-  if (!verify(hash, sig)) { esp_ota_abort(h); return fail(r, "422 Unprocessable Entity", "bad_signature"); }
-  if (esp_ota_end(h) != ESP_OK || esp_ota_set_boot_partition(p) != ESP_OK) return fail(r, "500 Internal Server Error", "ota_end");
+  size_t total = r->content_len; if (total < 100000) return fail(r, "400 Bad Request", "bad_stream");
+  const esp_partition_t* p = esp_ota_get_next_update_partition(nullptr); esp_ota_handle_t h = 0; if (!p || total > p->size || esp_ota_begin(p, OTA_WITH_SEQUENTIAL_WRITES, &h) != ESP_OK) return fail(r, "500 Internal Server Error", "ota_begin");
+  static uint8_t buf[2048]; size_t got = 0;
+  while (got < total) { int n = httpd_req_recv(r, (char*)buf, sizeof buf < total - got ? sizeof buf : total - got); if (n <= 0 || esp_ota_write(h, buf, n) != ESP_OK) { esp_ota_abort(h); return fail(r, "400 Bad Request", "bad_stream"); } got += n; }
+  if (esp_ota_end(h) != ESP_OK) return fail(r, "422 Unprocessable Entity", "bad_pack");               // zly obraz (naglowek/suma/SHA-256)
+  if (!same_project(p)) return fail(r, "422 Unprocessable Entity", "bad_pack");                         // plik z innego projektu
+  if (esp_ota_set_boot_partition(p) != ESP_OK) return fail(r, "500 Internal Server Error", "ota_end");
   httpd_resp_set_type(r, "application/json"); httpd_resp_sendstr(r, "{\"ok\":true,\"reboot\":true}"); vTaskDelay(pdMS_TO_TICKS(500)); esp_restart(); return ESP_OK;
 }
 // ---- kanal BETA: pobieranie przez HTTPS (certyfikaty z wbudowanego pakietu), ten sam podpis ECDSA co przy POST /api/ota/fw
@@ -65,23 +50,20 @@ bool beta_check(char* version, size_t vn, char* err, size_t en) {
   char base[160], url[200]; beta_get_url(base, sizeof base); snprintf(url, sizeof url, "%s/beta.json", base); static Txt t; t.n = 0; t.b[0] = 0; int st = http_get(url, txt_cb, &t);
   if (st != 200) { snprintf(err, en, "http_%d", st); return false; } cJSON* j = cJSON_Parse(t.b); const cJSON* v = j ? cJSON_GetObjectItem(j, "version") : nullptr; bool ok = v && cJSON_IsString(v); if (ok) strlcpy(version, v->valuestring, vn); else strlcpy(err, "bad_manifest", en); cJSON_Delete(j); return ok;
 }
-struct Dl { esp_ota_handle_t h; const esp_partition_t* part; size_t total, got, sigf; mbedtls_sha256_context c; uint8_t sig[64]; bool started; };
+struct Dl { esp_ota_handle_t h; const esp_partition_t* part; size_t total, got; bool started; };
 static bool dl_cb(void* u, esp_http_client_handle_t cl, const uint8_t* d, int n) {
   Dl* x = (Dl*)u;
-  if (!x->started) { int64_t tl = esp_http_client_get_content_length(cl); if (tl <= 64) return false; x->total = (size_t)tl; x->part = esp_ota_get_next_update_partition(nullptr); if (!x->part || esp_ota_begin(x->part, OTA_WITH_SEQUENTIAL_WRITES, &x->h) != ESP_OK) return false;
-    mbedtls_sha256_init(&x->c); mbedtls_sha256_starts(&x->c, 0); x->started = true; bmsg(2, "pobieranie"); }
-  size_t body = x->total - 64; size_t imgn = x->got < body ? (body - x->got < (size_t)n ? body - x->got : (size_t)n) : 0;
-  if (imgn) { if (esp_ota_write(x->h, d, imgn) != ESP_OK) return false; mbedtls_sha256_update(&x->c, d, imgn); }
-  if ((size_t)n > imgn) { size_t k = n - imgn; if (x->sigf + k > 64) return false; memcpy(x->sig + x->sigf, d + imgn, k); x->sigf += k; }
+  if (!x->started) { int64_t tl = esp_http_client_get_content_length(cl); if (tl < 100000) return false; x->total = (size_t)tl; x->part = esp_ota_get_next_update_partition(nullptr); if (!x->part || x->total > x->part->size || esp_ota_begin(x->part, OTA_WITH_SEQUENTIAL_WRITES, &x->h) != ESP_OK) return false; x->started = true; bmsg(2, "pobieranie"); }
+  if (esp_ota_write(x->h, d, n) != ESP_OK) return false;
   x->got += n; g_bpct = (int)(x->got * 100 / x->total); return true;
 }
 static void beta_task(void*) {
   char base[160], url[200]; beta_get_url(base, sizeof base); snprintf(url, sizeof url, "%s/tekla_pellet_beta.bin", base); static Dl x; memset(&x, 0, sizeof x); g_bpct = 0; bmsg(1, "laczenie");
   int st = http_get(url, dl_cb, &x);
-  if (st != 200 || !x.started || x.got != x.total || x.sigf != 64) { if (x.started) esp_ota_abort(x.h); char m[64]; snprintf(m, sizeof m, "pobieranie nieudane (http %d)", st); bmsg(5, m); g_bbusy = false; vTaskDelete(nullptr); return; }
-  bmsg(3, "weryfikacja podpisu"); uint8_t hash[32]; mbedtls_sha256_finish(&x.c, hash); mbedtls_sha256_free(&x.c);
-  if (!verify(hash, x.sig)) { esp_ota_abort(x.h); bmsg(5, "bledny podpis - odrzucono"); g_bbusy = false; vTaskDelete(nullptr); return; }
-  if (esp_ota_end(x.h) != ESP_OK || esp_ota_set_boot_partition(x.part) != ESP_OK) { bmsg(5, "zapis slotu nieudany"); g_bbusy = false; vTaskDelete(nullptr); return; }
+  if (st != 200 || !x.started || x.got != x.total) { if (x.started) esp_ota_abort(x.h); char m[64]; snprintf(m, sizeof m, "pobieranie nieudane (http %d)", st); bmsg(5, m); g_bbusy = false; vTaskDelete(nullptr); return; }
+  bmsg(3, "kontrola obrazu");
+  if (esp_ota_end(x.h) != ESP_OK || !same_project(x.part)) { bmsg(5, "zly obraz - odrzucono"); g_bbusy = false; vTaskDelete(nullptr); return; }
+  if (esp_ota_set_boot_partition(x.part) != ESP_OK) { bmsg(5, "zapis slotu nieudany"); g_bbusy = false; vTaskDelete(nullptr); return; }
   bmsg(4, "gotowe, restart"); vTaskDelay(pdMS_TO_TICKS(2000)); esp_restart();
 }
 bool beta_start() { if (g_bbusy) return false; g_bbusy = true; bmsg(1, "start"); if (xTaskCreate(beta_task, "beta", 8192, nullptr, 4, nullptr) != pdPASS) { g_bbusy = false; return false; } return true; }

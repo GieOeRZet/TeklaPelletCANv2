@@ -13,7 +13,7 @@ Cienki most CAN <-> API (REST + WebSocket) z malą wbudowaną stroną serwisową
 
 ## Budowanie
 CI buduje przy zmianach w `esp/`, `ui/`, `tools/`, `data/`, `android/` (artefakt `tekla-firmware`). Lokalnie (ESP-IDF 5.4.x): `cd esp && idf.py set-target esp32c6 && idf.py build`. Wymaga komponentu `espressif/mdns` (`main/idf_component.yml`). Partycje: `partitions.csv` (nvs, otadata, phy, ota_0, ota_1, store; brak partycji UI). Piny MCP2515: `main/config.hpp` (SCK 19, MISO 20, MOSI 18, CS 17, INT nieużywany, kwarc 16 MHz, SPI 1 MHz).
-**Klucz OTA:** w `main/ota_pubkey.pem` jest placeholder; do czasu wstawienia własnego klucza publicznego (`python3 ../tools/ota_sign.py keygen priv.pem pub.pem`, klucz prywatny poza repo) każda aktualizacja jest odrzucana.
+**OTA:** zwykły plik `.bin` bez klucza (ochrona = hasło serwisowe, kontrola obrazu i nazwy projektu, rollback). Pierwsze wgranie: jeden plik `tekla_pellet_flash.bin` (bootloader + tablica partycji + firmware) z artefaktów CI pod adres 0x0.
 
 ## Zachowanie (skrót)
 Domyślnie tryb **tylko odczyt** (po restarcie zawsze). Zapis do kotła: tryb `full` (hasło) + poziom PIN + strażnik `tekla::plan_write` (PID poza listami panelu zablokowane) + odczyt zwrotny. Operacje na module (Wi-Fi, IP, hasło, klienci, OTA, restart, reset) wymagają odblokowania serwisowego hasłem (5 min). Slot firmware oznaczany poprawnym po 30 s przy działających HTTP i CAN, inaczej rollback. Hasło, PIN-y, Wi-Fi i tokeny klientów są w NVS (przeżywają restart, zanik zasilania i aktualizacje; kasuje je tylko reset fabryczny).

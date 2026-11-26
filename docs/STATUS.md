@@ -11,8 +11,8 @@ Legenda: ✅ sprawdzone (test/CI/emulator) · 🟡 kod jest, kompiluje się, ale
 | Pierwsza konfiguracja (AP + strona serwisowa), parowanie tokenem (do 8 klientów, odwoływanie) | 🟡 |
 | Operacje serwisowe po haśle (5 min): Wi‑Fi (z cofnięciem 40 s), IP/DNS (z potwierdzeniem 60 s), nazwa, hasło, restart, reset | 🟡 |
 | Awaryjny AP po 3 min bez Wi‑Fi | 🟡 |
-| OTA firmware z pliku (podpis ECDSA P‑256, rollback po nieudanym starcie) | 🟡 · klucz w repo = **placeholder** (aktualizacje odrzucane do czasu wstawienia własnego) |
-| Konto DEV (osobne hasło) + OTA z kanału BETA przez HTTPS | 🟡 · brak publikacji BETA w CI i klucza podpisu |
+| OTA firmware z pliku (zwykły .bin bez klucza, kontrola obrazu, rollback po nieudanym starcie) | 🟡 · skompilowane, niesprawdzone na sprzęcie |
+| Konto DEV (osobne hasło) + OTA z kanału BETA przez HTTPS | 🟡 · publikacja BETA w CI (gałąź `beta`), niesprawdzone na sprzęcie |
 | Historia alarmów (odczyt rejestrów 0x4011‑0x404B) | ⬜ (`/api/alarms` zwraca pustą listę) |
 | Wykrywanie konfliktu węzła CAN (domyślnie 95), synchronizacja czasu, TLS | ⬜ |
 | UI z ESP | usunięte celowo (zostaje mała strona serwisowa) |

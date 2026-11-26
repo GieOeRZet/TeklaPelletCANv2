@@ -42,16 +42,39 @@ jobs:
           idf.py set-target esp32c6
           idf.py build 2>&1 | tee /tmp/build.log
           grep -E 'error:|FAILED' /tmp/build.log | head -40 || true
+          idf.py merge-bin -o build/tekla_pellet_flash.bin
           ls -la build/*.bin
       - uses: actions/upload-artifact@v4
         with:
           name: tekla-firmware
           path: |
             esp/build/tekla_pellet.bin
+            esp/build/tekla_pellet_flash.bin
             esp/build/partition_table/partition-table.bin
             esp/build/bootloader/bootloader.bin
-            ui/ui_pack.bin
           retention-days: 14
+  publish-beta:
+    # Tylko push na galaz 'beta': wydanie GitHub 'beta' z plikiem OTA (zwykly .bin, bez podpisu) - pobiera go modul z konta DEV
+    if: github.ref == 'refs/heads/beta'
+    needs: idf-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: tekla-firmware
+          path: art
+      - name: Wydanie beta
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          V="beta-$(date -u +%Y%m%d-%H%M)-${GITHUB_SHA::7}"
+          cp "$(find art -name tekla_pellet.bin | head -1)" tekla_pellet_beta.bin
+          printf '{"version":"%s"}' "$V" > beta.json
+          gh release delete beta --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
+          gh release create beta tekla_pellet_beta.bin beta.json --repo "$GITHUB_REPOSITORY" --prerelease --target "$GITHUB_SHA" --title "BETA $V" --notes "Automatyczne wydanie kanalu BETA (OTA z konta DEV)."
   android-shots:
     needs: android-build
     runs-on: ubuntu-latest

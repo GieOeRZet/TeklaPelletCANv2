@@ -9,7 +9,7 @@ button{background:#ff7a1a;color:#000;border:0;font-weight:700;cursor:pointer}but
 <script>
 const $=s=>document.querySelector(s);let T=sessionStorage.getItem('tpt'),ID={};
 const say=(t,e)=>{$('#msg').className='m'+(e?' e':'');$('#msg').textContent=t||''};
-const E={bad_password:'Błędne hasło.',locked:'Zbyt wiele prób, spróbuj za chwilę.',service_locked:'Najpierw odblokuj operacje serwisowe hasłem.',bad_request:'Błędne dane.',bad_signature:'Błędny podpis pliku.',unauthorized:'Zaloguj się ponownie.',too_many_clients:'Za dużo sparowanych klientów (max 8).',already_configured:'Urządzenie jest już skonfigurowane.'};
+const E={bad_password:'Błędne hasło.',locked:'Zbyt wiele prób, spróbuj za chwilę.',service_locked:'Najpierw odblokuj operacje serwisowe hasłem.',bad_request:'Błędne dane.',bad_pack:'To nie jest poprawny plik firmware tego urządzenia.',unauthorized:'Zaloguj się ponownie.',too_many_clients:'Za dużo sparowanych klientów (max 8).',already_configured:'Urządzenie jest już skonfigurowane.'};
 async function api(m,p,b,raw){const h={};if(T)h.Authorization='Bearer '+T;if(b&&!raw)h['Content-Type']='application/json';const r=await fetch(p,{method:m,headers:h,body:raw?b:b?JSON.stringify(b):undefined});let j={};try{j=await r.json()}catch(e){}if(r.status===401&&p!=='/api/login'){T=null;sessionStorage.removeItem('tpt');init()}return j}
 const gen=()=>{const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789',b=new Uint8Array(20);crypto.getRandomValues(b);let o='';b.forEach((x,i)=>{o+=A[x%32];if(i%4==3&&i<19)o+='-'});return o};
 const fail=j=>say(E[j.code]||('Błąd: '+(j.code||'nieznany')),true);
@@ -34,7 +34,7 @@ async function panel(){const ip=await api('GET','/api/ip');const cl=await api('G
 <h2>Hasło urządzenia</h2><div class="c"><input id="np" type="password" placeholder="Nowe hasło (min. 8 znaków)"><button id="sp">Zmień hasło</button></div>
 <h2>Kod odzyskiwania</h2><div class="c"><small>${ID.recovery?'Kod jest ustawiony.':'Brak kodu: bez niego nie odzyskasz zapomnianego hasła bez resetu.'} Wygenerowanie nowego unieważnia poprzedni (wymaga odblokowania serwisowego).</small><button class="s" id="gr">Wygeneruj nowy kod</button><div id="rcv" style="font-weight:700;font-size:18px"></div></div>
 <h2>Sparowani klienci</h2><div class="c">${(cl.clients||[]).map(c=>`<div class="r"><span>${c.name}</span><button class="s" data-rv="${c.i}" style="max-width:100px">Usuń</button></div>`).join('')||'<span class="k">Brak</span>'}</div>
-<h2>Aktualizacja firmware</h2><div class="c"><input type="file" id="fw"><button id="uf">Wgraj podpisany plik</button></div>
+<h2>Aktualizacja firmware</h2><div class="c"><input type="file" id="fw"><button id="uf">Wgraj plik firmware (.bin)</button></div>
 <h2>Konto DEV</h2><div class="c" id="dv"></div>
 <h2>Urządzenie</h2><div class="c"><button class="s" id="rs">Restart</button><button class="s" id="fr">Reset fabryczny (kasuje hasło, sieć, klientów)</button></div>
 <div class="c"><button class="s" id="lo">Wyloguj</button></div>`;
