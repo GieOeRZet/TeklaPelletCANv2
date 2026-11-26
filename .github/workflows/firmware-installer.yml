@@ -35,6 +35,11 @@ jobs:
           idf.py build
           idf.py merge-bin -o "$PWD/build/tekla_pellet_flash.bin"
           sha256sum "$PWD/build/tekla_pellet_flash.bin"
+          SIZE=$(stat -c '%s' "$PWD/build/tekla_pellet.bin")
+          SLOT=$((0x1E0000))
+          echo "OTA firmware size: ${SIZE} B / ${SLOT} B"
+          if [ "$SIZE" -gt "$SLOT" ]; then echo "ERROR: firmware exceeds one OTA slot"; exit 1; fi
+          if [ "$SIZE" -gt 1600000 ]; then echo "WARNING: firmware exceeds 1.60 MiB safety threshold"; fi
       - name: Create manifest
         shell: bash
         run: |
