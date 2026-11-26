@@ -52,24 +52,31 @@ const boilerImg = () => `<img class="boiler" src="${IC(ST.app.boiler_images[Stri
 function arcPath(cx, cy, r, a0, a1) { const f = a => [cx + r * Math.cos(a * Math.PI / 180), cy + r * Math.sin(a * Math.PI / 180)]; const [x0, y0] = f(a0), [x1, y1] = f(a1); return `M${x0.toFixed(1)} ${y0.toFixed(1)}A${r} ${r} 0 ${a1 - a0 > 180 ? 1 : 0} 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; }
 const modeLabel = v => (ST.app.program_modes.find(m => m.v === Math.round(v)) || {}).label || '--';
 function homeView() {
-  // Pulpit: luk z temperatura kotla + wartosci obok, karty CO / CWU / Palnik, ostatni alarm. Bez osobnych diod, pomp i zbiornika.
-  const t = num('0x2001'), set = num('0x2004'), bs = num('0x2007') || 0, on = num('0x2005') !== 0, nco = num('0x2105') || 0, cwu = (num('0x2106') || 0) !== 0;
+  // Pulpit = calosc instalacji: luk kotla + karta dla kazdego elementu widocznego wg konfiguracji (palnik, obwody CO, CWU, bufor, solary, kaskada, magazyn). Klik w karte -> ekran szczegolow (nastawy, harmonogram, popupy).
+  const t = num('0x2001'), set = num('0x2004'), bs = num('0x2007') || 0, on = num('0x2005') !== 0;
   const frac = Math.max(0, Math.min(1, ((t ?? 20) - 20) / 70)), a1 = 135 + 270 * frac;
-  // wskaznik: etykieta + dioda (swieci wg stanu wyjscia, przygaszona gdy wylaczone); mieszacz: 1 = zamykanie (niebieska), 2 = otwieranie (czerwona)
   const ind = (l, p, k) => { const v = num(p) || 0; const c = v ? (k === 'mix' ? (v === 1 ? 'close' : 'open') : k === 'burn' ? 'y' : 'on') : ''; return `<span class="ind"><i class="d ${c}"></i>${l}</span>`; };
   const kv = (l, v) => `<div>${l}<b>${v}</b></div>`;
   const fuel = num('0x3601'), cap = num('0x3600');
-  const al = (ST.alarms || [])[0];
-  const circuit = (n, tp, sp, md, pp, mx) => `<button class="hcard" data-go="${n}"><h3>${ST.app.screens[n].t}</h3><div class="val">${f1(num(tp))}<small>°C</small></div>${kv('zadana', f1(num(sp), 1) + ' °C')}${kv('tryb', modeLabel(num(md)))}<div class="inds">${ind('Pompa', pp)}${ind('Mieszacz', mx, 'mix')}</div></button>`;
+  const card = id => {
+    const sc = ST.app.screens[id]; if (!sc) return '';
+    const big = sc.state ? `<div class="val" style="font-size:22px">${ST.app.status[sc.state][num(sc.stateP || sc.big[0])] || '?'}</div>` : sc.big ? `<div class="val">${f1(num(sc.big[0]))}<small>${sc.big[1]}</small></div>` : '';
+    const rows = []; if (sc.pill) rows.push(kv('zadana', f1(num(sc.pill), 1) + ' °C')); if (sc.mode) rows.push(kv('tryb', modeLabel(num(sc.mode))));
+    for (const r of sc.kv) { if (rows.length >= 2) break; if (!r[4] || num(r[4])) rows.push(kv(r[0], f1(num(r[1]), r[3]) + ' ' + r[2])); }
+    const inds = sc.bar.map(c => ind(c.l || 'Wyjście', c.p, c.k === 'mixer' ? 'mix' : id === 'palnik' ? 'burn' : '')).join('');
+    return `<button class="hcard" data-go="${id}"><h3>${sc.t}</h3>${big}${rows.join('')}${inds ? `<div class="inds">${inds}</div>` : ''}</button>`;
+  };
+  const fuelCard = `<button class="hcard" data-go="magazyn"><h3>Paliwo</h3><div class="val">${f1(fuel, 0)}<small>kg z ${f1(cap, 0)}</small></div><div class="fbar"><i style="width:${cap ? Math.max(3, Math.min(100, fuel * 100 / cap)) : 0}%"></i></div>${kv('rezerwa', f1(num('0x3603'), 0) + ' kg')}</button>`;
+  const ids = ST.app.menu.filter(r => condOk(r.cond) && r.level_min <= ST.level).map(routeOf).filter(r => r && ST.app.screens[r] && r !== 'kociol');
+  const cards = ids.map(id => card(id) + (id === 'palnik' ? fuelCard : '')).join('');
+  const act = (ST.alarms || []).find(x => x.active);
   return `<div class="home">
-   <div class="card gauge"><svg viewBox="0 0 140 140" class="arc" aria-hidden="true"><defs><linearGradient id="ag" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ffc233"/><stop offset="1" stop-color="#ff7a1a"/></linearGradient></defs>
+   <div class="card gauge" data-go="kociol" role="button"><svg viewBox="0 0 140 140" class="arc" aria-hidden="true"><defs><linearGradient id="ag" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ffc233"/><stop offset="1" stop-color="#ff7a1a"/></linearGradient></defs>
      <path d="${arcPath(70, 70, 58, 135, 405)}" fill="none" stroke="var(--line)" stroke-width="9" stroke-linecap="round"/><path d="${arcPath(70, 70, 58, 135, Math.max(136, a1))}" fill="none" stroke="url(#ag)" stroke-width="9" stroke-linecap="round"/></svg>
-     <div class="gc"><div class="gv">${f1(t)}<small>°C</small></div><div class="gs">${ST.app.status.burner[bs] || '?'}</div><div class="gm">zadana ${f1(set, 0)} °C · ${on ? 'kocioł włączony' : 'kocioł wyłączony'}</div></div>
+     <div class="gc"><div class="gv">${f1(t)}<small>°C</small></div><div class="gs">${ST.app.status.burner[bs] || '?'}</div><div class="gm">zadana ${f1(set, 0)} °C</div></div>
      <div class="kv gk">${kv('Powrót', f1(num('0x4000')) + ' °C')}${kv('Temp. palnika', f1(num('0x226C')) + ' °C')}${kv('Temp. zewnętrzna', f1(num('0x215F')) + ' °C')}${kv('Moc palnika', f1(num('0x4005'), 0) + ' %')}</div></div>
-   <div class="hgrid">${nco >= 1 ? circuit('co1', '0x4001', '0x22F5', '0x2064', '0x2299', '0x22B9') : ''}${cwu ? circuit('cwu', '0x2110', '0x201A', '0x2014', '0x2278', '0x2278').replace(/<span class="ind"><i class="d[^"]*"><\/i>Mieszacz<\/span>/, '') : ''}
-    <button class="hcard" data-go="palnik"><h3>Palnik</h3><div class="val" style="font-size:22px">${ST.app.status.burner[bs] || '?'}</div>${kv('jasność płomienia', f1(num('0x2250'), 0) + ' %')}<div class="inds">${ind('Dmuchawa', '0x2254', 'burn')}${ind('Podajnik', '0x2252', 'burn')}${ind('Zapalarka', '0x2253', 'burn')}${ind('Ruszt', '0x2276')}</div></button>
-    <button class="hcard" data-go="magazyn"><h3>Paliwo</h3><div class="val">${f1(fuel, 0)}<small>kg z ${f1(cap, 0)}</small></div><div class="fbar"><i style="width:${cap ? Math.max(3, Math.min(100, fuel * 100 / cap)) : 0}%"></i></div>${kv('rezerwa', f1(num('0x3603'), 0) + ' kg')}</button></div>
-   <button class="card alarm" data-go="alarms"><h3>Ostatni alarm</h3>${al ? `<div class="al"><b>kod ${al.code}</b> · ${esc(al.text)}</div><div class="kv">${kv('w historii ' + (ST.alarms.length) + ' zdarzeń', al.active ? 'AKTYWNY' : 'nie aktywny')}</div>` : '<div class="al">Brak alarmów</div>'}</button></div>`;
+   ${act ? `<button class="card alarm" data-go="alarms"><h3>Alarm aktywny</h3><div class="al"><b>kod ${act.code}</b> · ${esc(act.text)}</div></button>` : ''}
+   <div class="hgrid">${cards}</div></div>`;
 }
 function modeChips(s) {
   if (!s.mode) return ''; const cur = num(s.mode);
@@ -126,7 +133,7 @@ function moreView() { return `<div class="card rows"><h3>Więcej</h3>${navItems(
 
 function renderTop() {
   const t = $('#top'); const nav = ST.app ? navItems() : []; const cur = nav.find(n => n.id === ST.screen); const title = cur ? cur.t : ({ home: 'Pulpit', more: 'Więcej', log: 'Dziennik' }[ST.screen] || (ST.screen.startsWith('set:') ? 'Nastawy' : ST.screen.startsWith('sched:') ? 'Harmonogram' : ''));
-  const now = new Date(), hh = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'), dd = now.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
+  const now = new Date(), hh = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0'), dd = now.toLocaleDateString('pl-PL', { weekday: 'short', day: 'numeric', month: 'short' });
   t.innerHTML = `<div class="tt"><h1>${esc(title)}</h1>${ST.screen === 'home' ? `<span class="date">${esc(dd)} · ${hh}</span>` : ''}</div>` + `<span class="sp"></span><span class="chip ${ST.wsOk ? '' : 'bad'}" title="Połączenie"><i></i><span class="hid">${ST.wsOk ? 'na żywo' : 'offline'}</span></span><span class="chip ${ST.mode === 'full' ? 'warn' : ''}" data-act="mode"><i></i>${ST.mode === 'full' ? '🔓 Pełna kontrola' : '🔒 Tylko odczyt'}</span><span class="chip" data-act="pin">PIN ${ST.level}</span>`;
   $('#side').innerHTML = `<div class="brand"><i></i><span>TeklaPellet</span></div><a data-go="home" class="${ST.screen === 'home' ? 'on' : ''}"><span>Pulpit</span></a>` + nav.filter(n => n.id !== 'pin').map(n => `<a data-go="${n.id}" class="${ST.screen === n.id ? 'on' : ''}"><img src="${IC(n.icon)}" width="22" height="22" alt=""><span>${esc(n.t)}</span></a>`).join('');
   $('#tabs').innerHTML = TABS.map(x => `<a data-go="${x[0]}" class="${ST.screen === x[0] ? 'on' : ''}"><b>${x[2]}${x[0] === 'alarms' && (ST.alarms || []).length ? `<em class="bdg">${ST.alarms.length}</em>` : ''}</b>${x[1]}</a>`).join('');

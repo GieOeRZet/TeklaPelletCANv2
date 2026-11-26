@@ -89,3 +89,4 @@ table{width:100%;border-collapse:collapse}td,th{padding:8px 4px;border-bottom:1p
 .fbar{height:8px;border-radius:4px;background:var(--line);margin-top:8px;overflow:hidden}.fbar i{display:block;height:100%;background:linear-gradient(90deg,#ff7a1a,#ffc233);border-radius:4px}
 #tabs a b{position:relative}.bdg{position:absolute;top:-6px;left:60%;background:var(--acc);color:#000;font-style:normal;font-size:10px;font-weight:800;border-radius:9px;padding:1px 5px}
 #top .tt{min-width:0}#top .date{overflow:hidden;text-overflow:ellipsis}@media (max-width:600px){#top .date{font-size:11px}}
+.hcard{display:flex;flex-direction:column;justify-content:flex-start}.hcard .inds{margin-top:auto;padding-top:10px}
