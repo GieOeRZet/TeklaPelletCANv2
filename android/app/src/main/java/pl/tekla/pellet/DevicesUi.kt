@@ -81,6 +81,7 @@ fun AppSettings(ui: Ui) {
     }
     BleSetupCard(ui)
     AppPinCard(ui)
+    BoilerAccessCard(ui)
     pairing?.let { (h, n) -> PairDialog(h, n, { pairing = null }) { p -> pairing = null; Ctl.addPaired(p); ui.toast("Sparowano: ${p.name}"); ui.go("home") } }
     forget?.let { d -> AlertDialog(onDismissRequest = { forget = null }, title = { Text("Usunąć ${d.name}?") }, text = { Text("Aplikacja zapomni ten moduł. Token zostaje w module do czasu usunięcia na stronie serwisowej lub w Module ESP › Sparowani klienci.") },
         confirmButton = { TextButton({ Ctl.forget(d.id); forget = null }) { Text("Usuń", color = Bad) } }, dismissButton = { TextButton({ forget = null }) { Text("Anuluj") } }) }
@@ -90,6 +91,34 @@ private fun phoneSsids(c: Context): List<String> = try {
     val ok = c.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     @Suppress("DEPRECATION") if (!ok) emptyList() else (c.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager).scanResults.map { it.SSID }.filter { it.isNotEmpty() }.distinct()
 } catch (e: Exception) { emptyList() }
+
+@Composable
+private fun BoilerAccessCard(ui: Ui) {
+    var p1 by remember { mutableStateOf("") }
+    var p2 by remember { mutableStateOf("") }
+    var p3 by remember { mutableStateOf("") }
+    Card("Poziomy dostępu kotła") {
+        Text("PIN-y są przechowywane wyłącznie w Androidzie. ESP pozostaje Full i nigdy ich nie otrzymuje.", color = Mut, fontSize = 13.sp)
+        Text("Aktualny poziom: \${BoilerAccess.level()}", color = Acc, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+        for (level in 1..3) {
+            val value = when (level) { 1 -> p1; 2 -> p2; else -> p3 }
+            val set = BoilerAccess.hasPin(level)
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(value, { v ->
+                    val z = v.filter(Char::isDigit).take(4)
+                    when (level) { 1 -> p1 = z; 2 -> p2 = z; else -> p3 = z }
+                }, label = { Text("PIN poziomu \$level") }, singleLine = true, visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword), modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(8.dp))
+                Button({
+                    if (value.length == 4) { BoilerAccess.setPin(level, value); when (level) { 1 -> p1 = ""; 2 -> p2 = ""; else -> p3 = "" }; ui.toast("PIN poziomu \$level ustawiony") }
+                    else ui.toast("PIN poziomu \$level musi mieć 4 cyfry")
+                }) { Text(if (set) "Zmień" else "Ustaw") }
+                if (set) TextButton({ BoilerAccess.clearPin(level); ui.toast("PIN poziomu \$level usunięty") }) { Text("×", color = Bad) }
+            }
+        }
+    }
+}
 
 @Composable
 private fun PinField(label: String, v: String, set: (String) -> Unit) = OutlinedTextField(v, set, label = { Text(label) }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword), modifier = Modifier.fillMaxWidth())
