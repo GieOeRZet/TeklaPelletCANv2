@@ -172,20 +172,21 @@ fun TeklaApp() {
                 containerColor = Color.Transparent,
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
-                    Row(
-                        Modifier.fillMaxWidth().height(56.dp).background(GlassBar),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    NavigationBar(containerColor = GlassBar, tonalElevation = 0.dp) {
                         for ((id, t, _) in tabs) {
-                            Box(
-                                Modifier.weight(1f).fillMaxHeight().clickable { go(id) },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                                    BottomNavIcon(id, screen == id)
-                                    Text(t, color = if (screen == id) Acc else Mut, fontSize = 8.sp, maxLines = 1, softWrap = false)
-                                }
-                            }
+                            NavigationBarItem(
+                                selected = screen == id || (id == "co1" && screen.startsWith("co")),
+                                onClick = { go(id) },
+                                icon = { BottomNavIcon(id, screen == id) },
+                                label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = Acc,
+                                    selectedTextColor = Acc,
+                                    indicatorColor = Glass2,
+                                    unselectedIconColor = Mut,
+                                    unselectedTextColor = Mut
+                                )
+                            )
                         }
                     }
                 },
@@ -217,12 +218,12 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
             ) {
                 Text("🔥", fontSize = 18.sp)
                 Column {
-                    Text(if (demo) "TeklaPellet" else Ctl.activeName(), color = Txt, fontSize = 13.sp,
+                    Text(if (demo) "TeklaPellet" else Ctl.activeName(), color = Txt, fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold, maxLines = 1)
                     Text(
                         if (demo) "Demo" else if (conn) "Połączono" else "Offline",
                         color = if (demo) Warn else if (conn) Okc else Bad,
-                        fontSize = 8.sp
+                        fontSize = 9.sp
                     )
                 }
             }
@@ -323,14 +324,14 @@ fun Body(ui: Ui, screen: String) {
 @Composable
 fun BoilerImage(ui: Ui) {
     val id = ui.m.boilerImages[ui.n("0x370A")?.toInt() ?: 2] ?: 12
-    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Ic(id, 104.dp) }
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Ic(id, 170.dp) }
 }
 
 @Composable
 fun BarView(ui: Ui, cells: List<Cell>) {
     if (cells.isEmpty()) return
     val frame = LocalFrame.current
-    Row(Modifier.fillMaxWidth().padding(top = 6.dp).background(Panel2, RoundedCornerShape(12.dp)).border(1.dp, Line, RoundedCornerShape(12.dp)).padding(7.dp).heightIn(min = 48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+    Row(Modifier.fillMaxWidth().padding(top = 12.dp).background(Panel2, RoundedCornerShape(12.dp)).border(1.dp, Line, RoundedCornerShape(12.dp)).padding(10.dp).heightIn(min = 66.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
         for (c in cells) {
             val s = ui.n(c.p)?.toInt() ?: 0
             if (s == 0) continue    // stan 0 = ikona niewidoczna (jak w panelu)
@@ -645,16 +646,16 @@ fun HomeView(ui: Ui) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         GlowCard(
-            Modifier.fillMaxWidth().height(170.dp),
+            Modifier.fillMaxWidth().height(246.dp),
             if (run) Okc else null,
             { ui.go("kociol") }
         ) {
             Row(
-                Modifier.fillMaxWidth().height(112.dp),
+                Modifier.fillMaxWidth().height(158.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
-                    Modifier.width(105.dp),
+                    Modifier.width(132.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     BoilerImage(ui)
@@ -669,7 +670,7 @@ fun HomeView(ui: Ui) {
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Text(f1(t, 1), color = Txt, fontSize = 34.sp, fontWeight = FontWeight.Light)
+                        Text(f1(t, 1), color = Txt, fontSize = 39.sp, fontWeight = FontWeight.Light)
                         Text("°C", color = Mut, fontSize = 14.sp, modifier = Modifier.padding(start = 3.dp, bottom = 6.dp))
                     }
                     Text("→ " + f1(set, 1) + " °C", color = Acc, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
