@@ -776,9 +776,14 @@ fun AppAboutView(ui: Ui) {
 
 @Composable
 fun InfoView(ui: Ui) {
+    val v = ui.n("0x3664")?.toInt()
+    val ver = if (v == null) "—" else if (v >= 2100) "v" + (v / 1000) + "." + (v % 1000).toString().padStart(3, '0') else "v" + (v / 100) + "." + (v % 100).toString().padStart(2, '0')
     Card("Informacje o programie") {
-        RowItem("Aplikacja", "TeklaPellet 0.1"); RowItem("Źródło danych", if (ui.src.isDemo) "demo (dane przykładowe)" else "urządzenie ESP")
-        RowItem("Tryb", if (ui.full) "pełna kontrola" else "tylko odczyt"); RowItem("Poziom PIN", ui.level.toString())
+        RowItem("Sterownik", "igneoTouch " + ver + " TE")
+        RowItem("Kocioł", if (ui.src.isDemo) "Draco Bio Compact FBII 18kW" else "dane z kotła")
+        RowItem("Producent", "Controller by Estyma")
+        RowItem("Źródło danych", if (ui.src.isDemo) "Demo" else "Moduł ESP")
+        RowItem("Poziom PIN", ui.level.toString())
     }
 }
 
