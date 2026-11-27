@@ -375,21 +375,8 @@ fun TeklaAppV2(){
                 Text("Sterowanie wyjściami od poziomu 2 (PIN 0999).",color=G2Mut,fontSize=13.sp)
             }
         } else {
-            TestHeaderV2()
             for(t in TESTS) TestRowV2(ui,t)
         }
-    }
-}
-
-@Composable private fun TestHeaderV2(){
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=2.dp),
-        verticalAlignment=Alignment.CenterVertically
-    ){
-        Text("Wyjście",color=G2Mut,fontSize=11.sp,modifier=Modifier.weight(1f))
-        Text("A",color=G2Mut,fontSize=11.sp,modifier=Modifier.width(55.dp),textAlign=androidx.compose.ui.text.style.TextAlign.Center)
-        Text("OFF",color=G2Mut,fontSize=11.sp,modifier=Modifier.width(55.dp),textAlign=androidx.compose.ui.text.style.TextAlign.Center)
-        Text("ON",color=G2Mut,fontSize=11.sp,modifier=Modifier.width(55.dp),textAlign=androidx.compose.ui.text.style.TextAlign.Center)
     }
 }
 
