@@ -53,7 +53,7 @@ class MainActivity : androidx.fragment.app.FragmentActivity() {
         Ctl.init(this)
         Ctl.appUnlocked = !AppLock.isSet()
         Ctl.startScreen = intent?.getStringExtra("screen")   // do zrzutow w CI: am start --es screen kociol
-        setContent { TeklaApp() }
+        setContent { TeklaAppV2() }
     }
 
     override fun onResume() { super.onResume(); Ctl.appUnlocked = !AppLock.isSet() }
