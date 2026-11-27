@@ -76,6 +76,7 @@ jobs:
           gh release delete beta --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag || true
           gh release create beta tekla_pellet_beta.bin beta.json --repo "$GITHUB_REPOSITORY" --prerelease --target "$GITHUB_SHA" --title "BETA $V" --notes "Automatyczne wydanie kanalu BETA (OTA z konta DEV)."
   android-shots:
+    timeout-minutes: 20
     needs: android-build
     runs-on: ubuntu-latest
     permissions: { contents: write }
