@@ -81,21 +81,24 @@ fun TeklaApp() {
                 bottomBar = {
                     val co = Ctl.model.circuits.map { it.id }.filter { it.startsWith("co") }.take(2)
                     val coRoute = co.firstOrNull() ?: "co1"
-                    val coLabel = if (co.size >= 2) "CO1" else "CO"
-                    val nav = buildList {
-                        add(Triple("kociol", "Kocioł", navIcon(ui, "kociol")))
-                        add(Triple("palnik", "Palnik", navIcon(ui, "palnik")))
-                        add(Triple(coRoute, coLabel, navIcon(ui, coRoute)))
-                        add(Triple("cwu", "CWU", navIcon(ui, "cwu")))
-                        add(Triple("more", "Menu", 0))
-                    }
+                    val coLabel = if (co.size >= 2) "CO1/2" else "CO"
+                    val nav = listOf(
+                        Triple("home", "Pulpit", 0),
+                        Triple(coRoute, coLabel, 0),
+                        Triple("cwu", "CWU", 0),
+                        Triple("power", "Power", 0),
+                        Triple("more", "Menu", 0)
+                    )
                     NavigationBar(containerColor = Color(0xFF101014)) {
-                        for ((id, t, ic) in nav) NavigationBarItem(
+                        for ((id, t, _) in nav) NavigationBarItem(
                             selected = screen == id,
                             onClick = { go(id) },
                             icon = { BottomNavIcon(t, selected = screen == id) },
                             label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
-                            colors = NavigationBarItemDefaults.colors(selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2, unselectedIconColor = Mut, unselectedTextColor = Mut)
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2,
+                                unselectedIconColor = Mut, unselectedTextColor = Mut
+                            )
                         )
                     }
                 },
@@ -115,6 +118,23 @@ fun BottomNavIcon(label: String, selected: Boolean) {
     Canvas(Modifier.size(24.dp)) {
         val w = size.width; val h = size.height; val s = 1.7.dp.toPx()
         when {
+            label == "Pulpit" -> {
+                drawRoundRect(color, Offset(w*.16f,h*.16f), Size(w*.68f,h*.68f), androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()), style=Stroke(s))
+                drawLine(color, Offset(w*.50f,h*.10f), Offset(w*.50f,h*.90f), s)
+                drawLine(color, Offset(w*.10f,h*.50f), Offset(w*.90f,h*.50f), s)
+            }
+            label == "Power" -> {
+                drawArc(color, 210f, 120f, false, Offset(w*.20f,h*.14f), Size(w*.60f,h*.68f), style=Stroke(s))
+                drawLine(color, Offset(w*.50f,h*.10f), Offset(w*.50f,h*.53f), s)
+            }
+            label.contains("CO") -> {
+                drawLine(color, Offset(w*.28f,h*.18f), Offset(w*.28f,h*.82f), s)
+                drawLine(color, Offset(w*.42f,h*.12f), Offset(w*.42f,h*.88f), s)
+                drawLine(color, Offset(w*.58f,h*.12f), Offset(w*.58f,h*.88f), s)
+                drawLine(color, Offset(w*.72f,h*.18f), Offset(w*.72f,h*.82f), s)
+                drawLine(color, Offset(w*.20f,h*.36f), Offset(w*.80f,h*.36f), s)
+                drawLine(color, Offset(w*.20f,h*.64f), Offset(w*.80f,h*.64f), s)
+            }
             label == "Kocioł" -> {
                 drawRoundRect(color, Offset(w*.28f,h*.12f), Size(w*.44f,h*.76f), androidx.compose.ui.geometry.CornerRadius(w*.08f), style=Stroke(s))
                 drawRect(color, Offset(w*.39f,h*.49f), Size(w*.22f,h*.22f), style=Stroke(s))
@@ -124,7 +144,7 @@ fun BottomNavIcon(label: String, selected: Boolean) {
                 val p=androidx.compose.ui.graphics.Path().apply { moveTo(w*.50f,h*.08f); cubicTo(w*.30f,h*.35f,w*.60f,h*.40f,w*.36f,h*.62f); cubicTo(w*.18f,h*.80f,w*.38f,h*.94f,w*.52f,h*.90f); cubicTo(w*.78f,h*.82f,w*.76f,h*.56f,w*.61f,h*.43f); cubicTo(w*.57f,h*.30f,w*.60f,h*.18f,w*.50f,h*.08f); close() }
                 drawPath(p, color, style=Stroke(s, cap=androidx.compose.ui.graphics.StrokeCap.Round, join=androidx.compose.ui.graphics.StrokeJoin.Round))
             }
-            label.startsWith("CO") -> {
+            label == "OLD_CO_ICON_UNUSED" -> {
                 drawLine(color, Offset(w*.28f,h*.18f), Offset(w*.28f,h*.82f), s); drawLine(color, Offset(w*.42f,h*.12f), Offset(w*.42f,h*.88f), s)
                 drawLine(color, Offset(w*.58f,h*.12f), Offset(w*.58f,h*.88f), s); drawLine(color, Offset(w*.72f,h*.18f), Offset(w*.72f,h*.82f), s)
                 drawLine(color, Offset(w*.20f,h*.36f), Offset(w*.80f,h*.36f), s); drawLine(color, Offset(w*.20f,h*.64f), Offset(w*.80f,h*.64f), s)
@@ -279,8 +299,48 @@ fun RowItem(label: String, value: String, locked: Boolean = false, click: (() ->
 fun BigValue(v: String, unit: String) { Row(verticalAlignment = Alignment.Bottom) { Text(v, color = Txt, fontSize = 46.sp, fontWeight = FontWeight.Light); Text(unit, color = Acc, fontSize = 18.sp, modifier = Modifier.padding(start = 3.dp, bottom = 6.dp)) } }
 
 @Composable
+fun PowerView(ui: Ui) {
+    val scope = rememberCoroutineScope()
+    val on = (ui.n("0x2005") ?: 0.0) != 0.0
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        GlowCard(Modifier.fillMaxWidth().height(118.dp), if (on) Okc else null, null) {
+            Row(Modifier.fillMaxSize().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Zasilanie kotła", color = Txt, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+                    Text(if (on) "Kocioł włączony" else "Kocioł wyłączony", color = if (on) Okc else Mut, fontSize = 12.sp)
+                }
+                Switch(
+                    checked = on,
+                    onCheckedChange = { v -> scope.launch { ui.src.write("0x2005", if (v) 257.0 else 256.0) } },
+                    colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = Acc, uncheckedThumbColor = Color.White, uncheckedTrackColor = Panel2)
+                )
+            }
+        }
+        GlowCard(Modifier.fillMaxWidth(), null, null) {
+            Text("Tryby", color = Txt, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(8.dp))
+            val modes = ui.m.programModes
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                for (m in modes.take(4)) {
+                    val selected = (ui.n("0x2002")?.toInt() ?: -1) == m.v
+                    Box(
+                        Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
+                            .background(if (selected) Acc.copy(alpha=.22f) else Panel2)
+                            .border(1.dp, if (selected) Acc else Line, RoundedCornerShape(10.dp))
+                            .clickable { scope.launch { ui.src.write("0x2002", m.v.toDouble()) } }
+                            .padding(vertical=11.dp),
+                        contentAlignment = Alignment.Center
+                    ) { Text(m.label, color = if (selected) Acc2 else Mut, fontSize = 11.sp, maxLines=1, softWrap=false) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun Body(ui: Ui, screen: String) {
     when {
+        screen == "power" -> PowerView(ui)
         screen == "home" -> HomeView(ui)
         screen == "more" -> MoreView(ui)
         screen == "notifications" -> NotificationsView(ui)
