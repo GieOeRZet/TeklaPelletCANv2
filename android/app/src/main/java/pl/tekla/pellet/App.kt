@@ -729,7 +729,7 @@ fun Dialogs(ui: Ui, d: Dlg, close: () -> Unit) {
         is Dlg.Pin -> { var pin by remember { mutableStateOf("") }
             AlertDialog(onDismissRequest = close, title = { Text("PIN poziomu") }, text = { Column { OutlinedTextField(pin, { pin = it }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword)); if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
                 confirmButton = { TextButton({ scope.launch { val e = ui.src.unlock(pin); if (e == null) { ui.toast("Poziom ${ui.src.level.value}"); close() } else err = e } }) { Text("OK") } }, dismissButton = { TextButton(close) { Text("Anuluj") } }) }
-        is Dlg.Fuel -> { val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0; val empty = res > 0 && fuel <= res; val level = if (cap > 0) (fuel / cap).coerceIn(0.0, 1.0).toFloat()
+        is Dlg.Fuel -> { val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0; val empty = res > 0 && fuel <= res; val level = if (cap > 0) (fuel / cap).coerceIn(0.0, 1.0).toFloat() else 0f
             AlertDialog(onDismissRequest = close, title = { Text("Paliwo") }, text = { Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) { HopperIcon(level, empty, 72.dp, 86.dp); BigNum(f1(fuel, 0), "kg", 40) }
                 LinearProgressIndicator(progress = { if (cap > 0) (fuel / cap).coerceIn(0.0, 1.0).toFloat() else 0f }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp), color = Acc2, trackColor = Line)
