@@ -329,11 +329,12 @@ fun BoilerImage(ui: Ui) {
 
 @Composable
 fun BarView(ui: Ui, cells: List<Cell>) {
-    if (cells.isEmpty()) return
+    val visible = cells.filter { (ui.n(it.p)?.toInt() ?: 0) != 0 }
+    if (visible.isEmpty()) return
     val frame = LocalFrame.current
     Row(Modifier.fillMaxWidth().padding(top = 7.dp).background(Glass2, RoundedCornerShape(14.dp))
         .border(1.dp, Line, RoundedCornerShape(14.dp)).padding(7.dp).heightIn(min = 50.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
-        for (c in cells) {
+        for (c in visible) {
             val s = ui.n(c.p)?.toInt() ?: 0
             if (s == 0) continue    // stan 0 = ikona niewidoczna (jak w panelu)
             // stały układ komórki: linia opisu (14 dp) + kwadrat ikony (32 dp) wyśrodkowany => ikony zawsze na tej samej wysokości
