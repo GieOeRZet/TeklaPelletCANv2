@@ -586,10 +586,13 @@ fun HomeView(ui: Ui) {
     val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
     val run = bs in 1..8
     val available = visibleTileIds(ui).filter { it != "kociol" && it != "palnik" }
+    // Pulpit zachowuje kompozycję wzorca: CO1 + CWU, opcjonalnie Solary + Bufor,
+    // a na dole Paliwo + Zasilanie. CO2..CO4 są na dolnej belce / w Menu.
     val ordered = buildList {
         if (available.contains("co1")) add("co1")
         if (available.contains("cwu")) add("cwu")
-        available.filter { it != "co1" && it != "cwu" }.forEach { add(it) }
+        if (available.contains("solary")) add("solary")
+        if (available.contains("bufor")) add("bufor")
         add("fuel"); add("power")
     }
     val entries = ordered.distinct()
