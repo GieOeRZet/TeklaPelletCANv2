@@ -466,15 +466,36 @@ fun tileTitle(id: String, s: ScreenDef) = if (id.startsWith("co") && id.length =
 
 @Composable
 fun SysTile(ui: Ui, id: String, modifier: Modifier) {
+    if (id == "solary") { SolarTile(ui, modifier); return }
+    if (id == "bufor") { BufferTile(ui, modifier); return }
     val s = ui.m.screens.getValue(id)
     val active = (id.startsWith("co") || id == "cwu") && (ui.n(s.mode)?.toInt() ?: 0) > 0
     val mi = s.mode?.let { m -> ui.m.programModes.firstOrNull { it.v == (ui.n(m)?.toInt() ?: -1) }?.icon }
     Tile(tileTitle(id, s), mi, if (active) Color(0xFFE8E8EE) else null, modifier, { ui.go(id) }, s.bar.mapNotNull { barIx(ui, it, id) }) {
         if (s.state != null) Text(ui.m.statusTables[s.state]?.getOrNull(ui.n(s.stateP ?: s.big)?.toInt() ?: 0) ?: "?", color = Txt, fontSize = 20.sp, fontWeight = FontWeight.Medium)
-        else if (s.big != null) BigNum(f1(ui.n(s.big)), (if (s.bigUnit == "°C") "°" else s.bigUnit) + (if (s.pill != null) " / ${f1(ui.n(s.pill), 0)}°" else ""))
+        else if (s.big != null) BigNum(f1(ui.n(s.big)), (if (s.bigUnit == "°C") "°" else s.bigUnit) + (if (s.pill != null) " / " + f1(ui.n(s.pill), 0) + "°" else ""))
     }
 }
 
+@Composable
+fun SolarTile(ui: Ui, modifier: Modifier) {
+    val temp = ui.n("0x2109") ?: 0.0
+    val kw = (ui.n("0x2101") ?: 0.0) / 1000.0
+    Tile("Solary", 71, if ((ui.n("0x3120") ?: 0.0) != 0.0) Okc else null, modifier, { ui.go("solary") }, emptyList()) {
+        BigNum(f1(temp, 1), "°", 28)
+        Text(if (kw > 0.0) f1(kw, 1) + " kW" else ui.m.statusTables["solar"]?.getOrNull(ui.n("0x3120")?.toInt() ?: 0) ?: "Stop", color = if (kw > 0.0) Mut else Txt, fontSize = 12.sp)
+    }
+}
+
+@Composable
+fun BufferTile(ui: Ui, modifier: Modifier) {
+    val top = ui.n("0x2112") ?: 0.0
+    val bottom = ui.n("0x2113") ?: 0.0
+    Tile("Bufor", 67, if ((ui.n("0x2277") ?: 0.0) != 0.0) Okc else null, modifier, { ui.go("bufor") }, emptyList()) {
+        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) { BigNum(f1(top, 1), "°", 27); Text("góra", color = Mut, fontSize = 10.sp, modifier = Modifier.padding(bottom = 4.dp)) }
+        Text(f1(bottom, 1) + " °C  dół", color = Mut, fontSize = 12.sp)
+    }
+}
 /** Zbiornik paliwa: wypełnienie rzędami kropek w pionie, od dołu (6 rzędów x 4 kolumny; liczba zapalonych wg promili pojemności); przy rezerwie litera E. */
 @Composable
 fun HopperIcon(level: Float, empty: Boolean, w: androidx.compose.ui.unit.Dp = 40.dp, h: androidx.compose.ui.unit.Dp = 48.dp) {
@@ -632,7 +653,7 @@ fun HomeView(ui: Ui) {
                 }
             }
         }
-        TileGrid(ui, entries, 94.dp)
+        TileGrid(ui, entries, 112.dp)
     }
 }
 
@@ -809,7 +830,7 @@ fun LevelSep(t: String) { Row(Modifier.fillMaxWidth().padding(top = 14.dp, botto
 fun MoreView(ui: Ui) {
     val items = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }
     val names = mapOf(1 to "POZIOM 1 — INSTALATOR", 2 to "POZIOM 2", 3 to "POZIOM 3")
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Card("MENU KOTŁA") {
             var lastLevel = -1
             for (m in items) {
