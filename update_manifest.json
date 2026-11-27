@@ -1,5 +1,13 @@
 {
   "schema": 1,
-  "app": { "version": "0.1", "changelog": "", "downloadUrl": "" },
-  "firmware": { "version": "", "changelog": "", "downloadUrl": "" }
+  "app": {
+    "version": "0.2.0",
+    "changelog": "Pierwsza wersjonowana wersja TeklaPelletCANv2: dynamiczna nawigacja modułów, menu zgodne z modelem Estyma i Modern Glass.",
+    "downloadUrl": "https://github.com/GieOeRZet/TeklaPelletCANv2/releases/latest"
+  },
+  "firmware": {
+    "version": "",
+    "changelog": "",
+    "downloadUrl": ""
+  }
 }
