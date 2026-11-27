@@ -12,14 +12,38 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 
-val Bg = Color(0xFF09090B); val Panel = Color(0xFF141418); val Panel2 = Color(0xFF1A1A1F); val Line = Color(0xFF26262C)
-val Txt = Color(0xFFF3F3F5); val Mut = Color(0xFF8A8A94); val Acc = Color(0xFFFF7A1A); val Acc2 = Color(0xFFFFB066); val Okc = Color(0xFF4FE38A); val Warn = Color(0xFFFFC233); val Bad = Color(0xFFFF4D4D)
+val Bg = Color(0xFF111A22)
+val Panel = Color(0xB8222D37)
+val Panel2 = Color(0xA92C3843)
+val Glass = Color(0x7A2A3742)
+val Glass2 = Color(0x8F34424E)
+val GlassBar = Color(0xCC18242D)
+val Line = Color(0x5C9BAAB5)
+val Txt = Color(0xFFF4F6F7)
+val Mut = Color(0xFFB0BAC1)
+val Acc = Color(0xFFFF861A)
+val Acc2 = Color(0xFFFFB45E)
+val Okc = Color(0xFF78E83A)
+val Warn = Color(0xFFFFC233)
+val Bad = Color(0xFFFF4D4D)
 
 val LocalFrame = compositionLocalOf { 0 }
 
 @Composable
 fun TeklaTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = darkColorScheme(primary = Acc, onPrimary = Color.Black, background = Bg, surface = Panel, onSurface = Txt, onBackground = Txt, surfaceVariant = Panel2, outline = Line), content = content)
+    MaterialTheme(
+        colorScheme = darkColorScheme(
+            primary = Acc,
+            onPrimary = Color.Black,
+            background = Bg,
+            surface = Panel,
+            onSurface = Txt,
+            onBackground = Txt,
+            surfaceVariant = Panel2,
+            outline = Line
+        ),
+        content = content
+    )
 }
 
 /** Grafika panelu z assets/ic/N.png (wbudowana w aplikacje). */
