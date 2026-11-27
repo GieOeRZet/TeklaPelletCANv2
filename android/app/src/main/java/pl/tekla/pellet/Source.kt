@@ -132,6 +132,7 @@ class RemoteSource(host: String, private val scope: CoroutineScope, private var 
     private var job: Job? = null
     private var timeSynced = false
     private var lastTimeAttempt = 0L
+    private var lastInfoCheck = 0L
     private var svcPw: String? = null
     override val serviceUnlocked: Boolean get() = svcPw != null
     private fun base() = (if (host.startsWith("http")) host else "http://$host").trimEnd('/')
@@ -180,6 +181,14 @@ class RemoteSource(host: String, private val scope: CoroutineScope, private var 
         if (!j.optBoolean("ok")) { connected.value = false; if (j.optString("code") == "unauthorized" && !authNotified) { authNotified = true; Ctl.notify("Moduł odwołał to połączenie - sparuj go ponownie w Ustawieniach.") }; return false }
         connected.value = true; fullMode.value = true; val v = j.optJSONObject("v") ?: return true; val m = HashMap(_values.value)
         for (k in v.keys()) m[normPid(k)] = v.getDouble(k); _values.value = m
+        if (System.currentTimeMillis() - lastInfoCheck > 30000L) {
+            lastInfoCheck = System.currentTimeMillis()
+            val info = call("GET", "/api/info")
+            if (info.optBoolean("ok")) {
+                Ctl.firmwareVersion = info.optString("fw").ifEmpty { Ctl.firmwareVersion }
+                UpdateCenter.refresh()
+            }
+        }
         
         return true
     }
