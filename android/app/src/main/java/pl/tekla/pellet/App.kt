@@ -113,7 +113,25 @@ fun TeklaApp() {
 
 @Composable
 fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
-    if (screen == "home") return
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
+    if (screen == "home") {
+        Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal=14.dp,vertical=8.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.weight(1f),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
+                Text("🔥",fontSize=19.sp)
+                Column {
+                    Text(if(demo) "TeklaPellet" else Ctl.activeName(),color=Txt,fontSize=14.sp,fontWeight=FontWeight.SemiBold,maxLines=1)
+                    Text(if(demo) "Demo" else if(conn) "Połączono" else "Offline",color=if(demo)Warn else if(conn)Okc else Bad,fontSize=10.sp)
+                }
+            }
+            Column(horizontalAlignment=Alignment.End) {
+                Text(java.text.SimpleDateFormat("HH:mm",java.util.Locale("pl")).format(now),color=Acc2,fontSize=16.sp,fontWeight=FontWeight.SemiBold)
+                Text(java.text.SimpleDateFormat("EEE, d MMM",java.util.Locale("pl")).format(now),color=Mut,fontSize=10.sp)
+            }
+            Box(Modifier.clickable{ui.go("alarms")}.padding(4.dp)) { Ic(78,22.dp); if(ui.alarmActive) Box(Modifier.size(6.dp).background(Bad,RoundedCornerShape(4.dp)).align(Alignment.TopEnd)) }
+        }
+        return
+    }
     val title = when {
         screen == "more" -> "Menu"
         screen == "module" -> "Moduł ESP"
@@ -123,18 +141,15 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
         screen.startsWith("sched:") -> "Harmonogram"
         else -> ui.m.screens[screen]?.title ?: ui.m.menu.firstOrNull { ui.m.routeOf(it) == screen }?.title ?: screen
     }
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
-    Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal = 14.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-            Text(title, color = Txt, fontSize = 17.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-            Text(java.text.SimpleDateFormat("EEE, d MMM · HH:mm", java.util.Locale("pl")).format(now), color = Mut, fontSize = 11.sp)
-        }
-        Chip("", if (demo) Warn else if (conn) Okc else Bad) { ui.go("appset") }
+    Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal=14.dp,vertical=9.dp),verticalAlignment=Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) { Text(title,color=Txt,fontSize=17.sp,fontWeight=FontWeight.SemiBold,maxLines=1); Text(java.text.SimpleDateFormat("EEE, d MMM · HH:mm",java.util.Locale("pl")).format(now),color=Mut,fontSize=11.sp) }
+        Box(Modifier.clickable{ui.go("alarms")}.padding(5.dp)) { Ic(78,22.dp); if(ui.alarmActive) Box(Modifier.size(6.dp).background(Bad,RoundedCornerShape(4.dp)).align(Alignment.TopEnd)) }
+        Chip("",if(demo)Warn else if(conn)Okc else Bad){ui.go("appset")}
         Spacer(Modifier.width(6.dp))
-        Chip("PIN " + ui.level, Mut) { ui.open(Dlg.Pin) }
+        Chip("PIN "+ui.level,Mut){ui.open(Dlg.Pin)}
     }
 }
+
 @Composable
 fun Chip(t: String, dot: Color, click: () -> Unit) {
     Row(Modifier.clip(RoundedCornerShape(20.dp)).border(1.dp, Line, RoundedCornerShape(20.dp)).background(Panel).clickable(onClick = click).padding(horizontal = 10.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -292,30 +307,31 @@ fun SysTile(ui: Ui, id: String, modifier: Modifier) {
     }
 }
 
-/** Zbiornik paliwa: wypełnienie rzędami kropek w pionie, od dołu (6 rzędów x 4 kolumny; liczba zapalonych wg promili pojemności); przy rezerwie litera E. */
+/** Zbiornik paliwa: wizualizacja jak przezroczysta szklanka z poziomem cieczy. */
 @Composable
-fun HopperIcon(dots: Int, empty: Boolean, w: androidx.compose.ui.unit.Dp = 40.dp, h: androidx.compose.ui.unit.Dp = 48.dp) {
-    val tm = androidx.compose.ui.text.rememberTextMeasurer()
+fun FuelGlassIcon(fuel: Double, cap: Double, empty: Boolean, w: androidx.compose.ui.unit.Dp = 42.dp, h: androidx.compose.ui.unit.Dp = 50.dp) {
     Canvas(Modifier.size(w, h)) {
-        val sc = size.width / 40f
-        val rr = androidx.compose.ui.geometry.CornerRadius(6f * sc)
-        drawRoundRect(Color(0xFF17171C), Offset(3f * sc, 2f * sc), Size(34f * sc, 44f * sc), rr)
-        drawRoundRect(Color(0xFF7D7D8A), Offset(3f * sc, 2f * sc), Size(34f * sc, 44f * sc), rr, style = Stroke(1.5f * sc))
-        if (empty) {
-            val r = tm.measure("E", androidx.compose.ui.text.TextStyle(color = Acc2, fontSize = (22f * sc / density).sp, fontWeight = FontWeight.ExtraBold))
-            drawText(r, topLeft = Offset(20f * sc - r.size.width / 2f, 24f * sc - r.size.height / 2f))
-        } else for (r in 0 until 6) for (c in 0 until 4) {
-            val idx = (5 - r) * 4 + c; val ctr = Offset((9.5f + c * 7f) * sc, (9f + r * 6.4f) * sc)
-            if (idx < dots) { drawCircle(Acc2.copy(alpha = 0.3f), 4.1f * sc, ctr); drawCircle(Acc2, 2.8f * sc, ctr) }
+        val sc = size.width / 42f
+        val left = 5f * sc; val top = 3f * sc; val width = 32f * sc; val height = 44f * sc
+        val pct = if (cap > 0) (fuel / cap).coerceIn(0.0, 1.0).toFloat() else 0f
+        drawRoundRect(Color(0xFF111318).copy(alpha = 0.72f), Offset(left, top), Size(width, height), androidx.compose.ui.geometry.CornerRadius(7f * sc))
+        if (!empty && pct > 0f) {
+            val liquidH = (height - 3f * sc) * pct
+            val liquidTop = top + height - liquidH
+            drawRoundRect(Acc2.copy(alpha = 0.16f), Offset(left + 1.5f * sc, liquidTop), Size(width - 3f * sc, liquidH), androidx.compose.ui.geometry.CornerRadius(5.5f * sc))
+            drawLine(Acc2, Offset(left + 3f * sc, liquidTop), Offset(left + width - 3f * sc, liquidTop), 1.8f * sc)
         }
+        drawRoundRect(Color(0xFF9A9AA5), Offset(left, top), Size(width, height), androidx.compose.ui.geometry.CornerRadius(7f * sc), style = Stroke(1.5f * sc))
+        drawRoundRect(Color(0xFF4A4A53), Offset(left + 4f * sc, top + 2f * sc), Size(width - 8f * sc, 3f * sc), androidx.compose.ui.geometry.CornerRadius(2f * sc))
+        if (empty) drawLine(Acc2, Offset(left + 9f * sc, top + height / 2f), Offset(left + width - 9f * sc, top + height / 2f), 1.5f * sc)
     }
 }
 
 @Composable
 fun FuelTile(ui: Ui, modifier: Modifier) {
-    val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0; val (dots, empty) = fuelDots(fuel, cap, res)
-    Tile("Paliwo", null, if (empty) Acc2 else null, modifier, { ui.open(Dlg.Fuel) }, listOf(IxData(if (empty) "rezerwa" else "z ${f1(cap, 0)} kg", "", empty, Acc2))) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) { HopperIcon(dots, empty); BigNum(f1(fuel, 0), "kg") }
+    val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0; val empty = res > 0 && fuel <= res
+    Tile("Paliwo", null, if (empty) Acc2 else null, modifier, { ui.open(Dlg.Fuel) }, listOf(IxData(if (empty) "rezerwa" else "z " + f1(cap, 0) + " kg", "", empty, Acc2))) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) { FuelGlassIcon(fuel, cap, empty); BigNum(f1(fuel, 0), "kg") }
     }
 }
 
@@ -529,21 +545,54 @@ fun LevelSep(t: String) { Row(Modifier.fillMaxWidth().padding(top = 14.dp, botto
 
 @Composable
 fun MoreView(ui: Ui) {
-    val items = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { m -> ui.m.routeOf(m)?.let { it to m } }.filter { it.first !in listOf("cwu", "co1", "co2", "co3", "co4") }
+    val items = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { m -> ui.m.routeOf(m)?.let { it to m } }
     val names = mapOf(1 to "POZIOM 1 — INSTALATOR", 2 to "POZIOM 2", 3 to "POZIOM 3")
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (Ctl.devices.isEmpty()) {
-            GlowCard(Modifier.fillMaxWidth(), Warn, null) { Row(verticalAlignment=Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("BRAK MODUŁU",color=Warn,fontSize=10.sp,fontWeight=FontWeight.Bold,letterSpacing=.8.sp); Text("Dodaj moduł TeklaPellet",color=Txt,fontSize=16.sp,fontWeight=FontWeight.Medium); Text("Wykrywanie mDNS, adres ręczny lub Bluetooth.",color=Mut,fontSize=11.sp) }; Button({ui.go("appset")}){Text("Dodaj")} } }
-        } else { Card("URZĄDZENIE") { RowItem("Aktywny moduł",Ctl.activeName()){ui.go("appset")}; RowItem("Moduły",Ctl.devices.size.toString()){ui.go("appset")} } }
+            GlowCard(Modifier.fillMaxWidth(), Warn, null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("BRAK MODUŁU", color=Warn, fontSize=10.sp, fontWeight=FontWeight.Bold, letterSpacing=.8.sp)
+                        Text("Dodaj moduł TeklaPellet", color=Txt, fontSize=16.sp, fontWeight=FontWeight.Medium)
+                        Text("mDNS, adres ręczny lub Bluetooth.", color=Mut, fontSize=11.sp)
+                    }
+                    Button({ ui.go("appset") }) { Text("Dodaj") }
+                }
+            }
+        } else Card("URZĄDZENIE") {
+            RowItem("Aktywny moduł", Ctl.activeName()) { ui.go("appset") }
+            RowItem("Moduły", Ctl.devices.size.toString()) { ui.go("appset") }
+        }
         Card("MENU KOTŁA") {
-            for (lv in 0..3) { val g=items.filter{it.second.levelMin==lv}; if(g.isEmpty()) continue; if(lv>=1) LevelSep(names.getValue(lv)); for((r,m) in g) Row(Modifier.fillMaxWidth().heightIn(min=52.dp).clickable{ui.go(r)}.padding(horizontal=4.dp),verticalAlignment=Alignment.CenterVertically){Ic(m.icon,24.dp);Spacer(Modifier.width(12.dp));Text(m.title,color=Txt,fontSize=15.sp,modifier=Modifier.weight(1f));if(m.levelMin>0)Text("PIN "+m.levelMin,color=Mut,fontSize=10.sp);Text("›",color=Mut,fontSize=22.sp)} }
+            for (lv in 0..3) {
+                val g = items.filter { it.second.levelMin == lv }
+                if (g.isEmpty()) continue
+                if (lv >= 1) LevelSep(names.getValue(lv))
+                for ((r,m) in g) Row(Modifier.fillMaxWidth().heightIn(min=52.dp).clickable { ui.go(r) }.padding(horizontal=4.dp), verticalAlignment=Alignment.CenterVertically) {
+                    Ic(m.icon,24.dp); Spacer(Modifier.width(12.dp)); Text(m.title,color=Txt,fontSize=15.sp,modifier=Modifier.weight(1f))
+                    if (m.levelMin > ui.level) Text("🔒",color=Mut,fontSize=12.sp) else Text("›",color=Mut,fontSize=22.sp)
+                }
+            }
         }
-        if(ui.level>=1){Card("SERWIS"){BeepRow(ui)}}
-        Card("USTAWIENIA APLIKACJI I MODUŁU") {
-            Row(Modifier.fillMaxWidth().heightIn(min=52.dp).clickable{ui.go("appset")}.padding(horizontal=4.dp),verticalAlignment=Alignment.CenterVertically){Text("Dodaj / przełącz moduł",color=Txt,fontSize=15.sp,modifier=Modifier.weight(1f));Text("›",color=Mut,fontSize=22.sp)}
-            Row(Modifier.fillMaxWidth().heightIn(min=52.dp).clickable{ui.go("module")}.padding(horizontal=4.dp),verticalAlignment=Alignment.CenterVertically){Text("Konfiguracja modułu ESP",color=Txt,fontSize=15.sp,modifier=Modifier.weight(1f));Text("Wi‑Fi · CAN · OTA ›",color=Mut,fontSize=11.sp)}
-            Row(Modifier.fillMaxWidth().heightIn(min=52.dp).clickable{ui.open(Dlg.Pin)}.padding(horizontal=4.dp),verticalAlignment=Alignment.CenterVertically){Text("Poziom dostępu kotła",color=Txt,fontSize=15.sp,modifier=Modifier.weight(1f));Text("PIN "+ui.level,color=Mut,fontSize=11.sp)}
+        LevelSep("MODUŁ ESP")
+        Card("MODUŁ") {
+            MenuRow("Moduł ESP", "Wi-Fi, CAN, OTA, klienci, diagnostyka") { ui.go("module") }
+            MenuRow("Dziennik modułu", "Logi i diagnostyka") { ui.go("log") }
+            MenuRow("Sieć CAN", "Węzły i stan komunikacji") { ui.go("network") }
         }
+        LevelSep("APLIKACJA")
+        Card("APLIKACJA") {
+            MenuRow("Powiadomienia", "Alarmy, aktualizacje aplikacji i firmware") { ui.go("alarms") }
+            MenuRow("Ustawienia aplikacji", "Demo, urządzenia, bezpieczeństwo") { ui.go("appset") }
+        }
+    }
+}
+
+@Composable
+fun MenuRow(title: String, subtitle: String, click: () -> Unit) {
+    Row(Modifier.fillMaxWidth().heightIn(min=56.dp).clickable(onClick=click).padding(horizontal=4.dp, vertical=6.dp), verticalAlignment=Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) { Text(title,color=Txt,fontSize=15.sp); Text(subtitle,color=Mut,fontSize=11.sp) }
+        Text("›",color=Mut,fontSize=20.sp)
     }
 }
 @Composable
@@ -553,9 +602,9 @@ fun Dialogs(ui: Ui, d: Dlg, close: () -> Unit) {
         is Dlg.Pin -> { var pin by remember { mutableStateOf("") }
             AlertDialog(onDismissRequest = close, title = { Text("PIN poziomu") }, text = { Column { OutlinedTextField(pin, { pin = it }, singleLine = true, visualTransformation = PasswordVisualTransformation(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword)); if (err.isNotEmpty()) Text(err, color = Bad, fontSize = 13.sp) } },
                 confirmButton = { TextButton({ scope.launch { val level = BoilerAccess.unlock(pin); ui.toast(if (level > 0) "Poziom $level" else "Błędny PIN poziomu"); if (level > 0) close() } }) { Text("OK") } }, dismissButton = { TextButton(close) { Text("Anuluj") } }) }
-        is Dlg.Fuel -> { val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0; val (dots, empty) = fuelDots(fuel, cap, res)
+        is Dlg.Fuel -> { val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0; val empty = res > 0 && fuel <= res
             AlertDialog(onDismissRequest = close, title = { Text("Paliwo") }, text = { Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) { HopperIcon(dots, empty, 72.dp, 86.dp); BigNum(f1(fuel, 0), "kg", 40) }
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) { FuelGlassIcon(fuel, cap, empty, 72.dp, 86.dp); BigNum(f1(fuel, 0), "kg", 40) }
                 LinearProgressIndicator(progress = { if (cap > 0) (fuel / cap).coerceIn(0.0, 1.0).toFloat() else 0f }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp), color = Acc2, trackColor = Line)
                 KvRow("pojemność", f1(cap, 0) + " kg"); KvRow("rezerwa", f1(res, 0) + " kg")
                 Text("Zmiana poziomu paliwa z aplikacji nie jest jeszcze obsługiwana: panel nie ma zmierzonego kodowania zapisu dla tego parametru (0x3601).", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 10.dp)) } },
