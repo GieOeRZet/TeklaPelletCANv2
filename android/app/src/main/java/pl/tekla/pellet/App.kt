@@ -418,9 +418,18 @@ fun FuelGlassIcon(fuel: Double, cap: Double, empty: Boolean, w: androidx.compose
 
 @Composable
 fun FuelTile(ui: Ui, modifier: Modifier) {
-    val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0; val empty = res > 0 && fuel <= res
-    Tile("Paliwo", null, if (empty) Acc2 else null, modifier, { ui.open(Dlg.Fuel) }, listOf(IxData(if (empty) "rezerwa" else "z " + f1(cap, 0) + " kg", "", empty, Acc2))) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) { FuelGlassIcon(fuel, cap, empty); BigNum(f1(fuel, 0), "kg") }
+    val fuel = ui.n("0x3601") ?: 0.0
+    val cap = ui.n("0x3600") ?: 0.0
+    val res = ui.n("0x3603") ?: 0.0
+    val empty = res > 0 && fuel <= res
+    Tile("Paliwo", null, if (empty) Acc2 else null, modifier, { ui.open(Dlg.Fuel) }, emptyList()) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            FuelGlassIcon(fuel, cap, empty)
+            Column {
+                BigNum(f1(fuel, 0), "kg")
+                Text(if (empty) "rezerwa" else "z " + f1(cap, 0) + " kg", color=Mut, fontSize=10.5.sp, maxLines=1)
+            }
+        }
     }
 }
 
