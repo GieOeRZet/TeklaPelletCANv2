@@ -324,7 +324,7 @@ fun Body(ui: Ui, screen: String) {
 @Composable
 fun BoilerImage(ui: Ui) {
     val id = ui.m.boilerImages[ui.n("0x370A")?.toInt() ?: 2] ?: 12
-    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Ic(id, 126.dp) }
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Ic(id, 138.dp) }
 }
 
 @Composable
@@ -591,7 +591,7 @@ fun HomeTileGrid(ui: Ui, entries: List<String>) {
                     ) {
                         ids.chunked(2).forEach { pair ->
                             Row(
-                                Modifier.fillMaxWidth().height(86.dp),
+                                Modifier.fillMaxWidth().height(104.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 HomeModuleTile(ui, pair[0], Modifier.weight(1f).fillMaxHeight())
@@ -651,12 +651,12 @@ fun HomeView(ui: Ui) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         GlowCard(
-            Modifier.fillMaxWidth().height(205.dp),
+            Modifier.fillMaxWidth().height(230.dp),
             if (run) Okc else null,
             { ui.go("kociol") }
         ) {
             Row(
-                Modifier.fillMaxWidth().height(126.dp),
+                Modifier.fillMaxWidth().height(142.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
