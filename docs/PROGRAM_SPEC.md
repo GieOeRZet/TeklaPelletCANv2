@@ -145,12 +145,13 @@ Dla rusztu i mieszaczy:
 - 1 — Close / Zamknij,
 - 2 — Open / Otwórz.
 
-Potwierdzona lista 21 pozycji i PID:
+Potwierdzona lista 22 pozycji i PID:
 
 | Pozycja | Nazwa | PID | Opcje |
 |---|---|---|---|
 | 1 | Pompa CWU | 0x2296 | Automat / Wyłączony / Włączony |
-| 2 | Pompa kotłowa | 0x2286 | Automat / Wyłączony / Włączony |
+| 2 | Pompa cyrkulacyjna CWU | 0x374A | Automat / Wyłączony / Włączony |
+| 3 | Pompa kotłowa | 0x2286 | Automat / Wyłączony / Włączony |
 | 3 | Pompa solarna | 0x311F | Automat / Wyłączony / Włączony |
 | 4 | Podajnik | 0x2259 | Automat / Wyłączony / Włączony |
 | 5 | Ruszt | 0x2279 | Automat / Close / Open |
@@ -400,7 +401,7 @@ Za gotowe uznajemy dopiero wtedy, gdy:
 - aktywny moduł zmienia wizualny stan kafla,
 - duży Kocioł otwiera szczegółowy Kocioł bez duplikowania HOME,
 - moduły mają realne widgety i nastawy z reverse,
-- Test wyjść ma dokładne 21 pozycji, PID-y i tryby,
+- Test wyjść ma dokładne 22 pozycje, PID-y i tryby,
 - PIN-y są respektowane,
 - dolna belka jest zawsze na dole,
 - długie listy przewijają się wewnątrz obszaru treści,
