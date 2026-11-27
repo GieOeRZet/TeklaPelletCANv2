@@ -152,25 +152,25 @@ Potwierdzona lista 22 pozycji i PID:
 | 1 | Pompa CWU | 0x2296 | Automat / Wyłączony / Włączony |
 | 2 | Pompa cyrkulacyjna CWU | 0x374A | Automat / Wyłączony / Włączony |
 | 3 | Pompa kotłowa | 0x2286 | Automat / Wyłączony / Włączony |
-| 3 | Pompa solarna | 0x311F | Automat / Wyłączony / Włączony |
-| 4 | Podajnik | 0x2259 | Automat / Wyłączony / Włączony |
-| 5 | Ruszt | 0x2279 | Automat / Close / Open |
-| 6 | Wymiennik | 0x2285 | Automat / Wyłączony / Włączony |
-| 7 | Zapalarka | 0x2284 | Automat / Wyłączony / Włączony |
-| 8 | Podajnik palnika | 0x2295 | Automat / Wyłączony / Włączony |
-| 9 | Magazyn paliwa transporter | 0x351E | Automat / Wyłączony / Włączony |
-| 10 | Magazyn paliwa podajnik | 0x351F | Automat / Wyłączony / Włączony |
-| 11 | Dmuchawa | 0x2283 | Automat / Wyłączony / Włączony + moc testowa |
-| 12 | WentWyc | 0x2293 | Automat / Wyłączony / Włączony + moc testowa |
-| 13 | Pompa CO1 | 0x229D | Automat / Wyłączony / Włączony |
-| 14 | Pompa CO2 | 0x229E | Automat / Wyłączony / Włączony |
-| 15 | Pompa CO3 | 0x229F | Automat / Wyłączony / Włączony |
-| 16 | Pompa CO4 | 0x22A0 | Automat / Wyłączony / Włączony |
-| 17 | Mieszacz CO1 | 0x214A | Automat / Close / Open |
-| 18 | Mieszacz CO2 | 0x214B | Automat / Close / Open |
-| 19 | Mieszacz CO3 | 0x214C | Automat / Close / Open |
-| 20 | Mieszacz CO4 | 0x214D | Automat / Close / Open |
-| 21 | Mieszacz powrotu | 0x216D | Automat / Close / Open |
+| 4 | Pompa solarna | 0x311F | Automat / Wyłączony / Włączony |
+| 5 | Podajnik | 0x2259 | Automat / Wyłączony / Włączony |
+| 6 | Ruszt | 0x2279 | Automat / Close / Open |
+| 7 | Wymiennik | 0x2285 | Automat / Wyłączony / Włączony |
+| 8 | Zapalarka | 0x2284 | Automat / Wyłączony / Włączony |
+| 9 | Podajnik palnika | 0x2295 | Automat / Wyłączony / Włączony |
+| 10 | Magazyn paliwa transporter | 0x351E | Automat / Wyłączony / Włączony |
+| 11 | Magazyn paliwa podajnik | 0x351F | Automat / Wyłączony / Włączony |
+| 12 | Dmuchawa | 0x2283 | Automat / Wyłączony / Włączony + moc testowa |
+| 13 | WentWyc | 0x2293 | Automat / Wyłączony / Włączony + moc testowa |
+| 14 | Pompa CO1 | 0x229D | Automat / Wyłączony / Włączony |
+| 15 | Pompa CO2 | 0x229E | Automat / Wyłączony / Włączony |
+| 16 | Pompa CO3 | 0x229F | Automat / Wyłączony / Włączony |
+| 17 | Pompa CO4 | 0x22A0 | Automat / Wyłączony / Włączony |
+| 18 | Mieszacz CO1 | 0x214A | Automat / Close / Open |
+| 19 | Mieszacz CO2 | 0x214B | Automat / Close / Open |
+| 20 | Mieszacz CO3 | 0x214C | Automat / Close / Open |
+| 21 | Mieszacz CO4 | 0x214D | Automat / Close / Open |
+| 22 | Mieszacz powrotu | 0x216D | Automat / Close / Open |
 
 Moc testowa:
 - Dmuchawa: PID 0x2288, procent,
