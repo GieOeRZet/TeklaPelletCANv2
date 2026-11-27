@@ -12,14 +12,44 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 
-val Bg = Color(0xFF09090B); val Panel = Color(0xFF141418); val Panel2 = Color(0xFF1A1A1F); val Line = Color(0xFF26262C)
-val Txt = Color(0xFFF3F3F5); val Mut = Color(0xFF8A8A94); val Acc = Color(0xFFFF7A1A); val Acc2 = Color(0xFFFFB066); val Okc = Color(0xFF4FE38A); val Warn = Color(0xFFFFC233); val Bad = Color(0xFFFF4D4D)
+// Tekla Modern Glass — wspólny język całej aplikacji.
+val Bg = Color(0xFF080D14)
+val BgTop = Color(0xFF111A24)
+val Panel = Color(0xB8141D27)
+val Panel2 = Color(0xCC1B2632)
+val PanelGlass = Color(0xA61A2530)
+val Line = Color(0x33E6EDF5)
+val LineStrong = Color(0x55E6EDF5)
+val GlassHi = Color(0x14FFFFFF)
+val Txt = Color(0xFFF4F7FA)
+val Mut = Color(0xFFA3AFBC)
+val Acc = Color(0xFFFF8A1C)
+val Acc2 = Color(0xFFFFB45C)
+val Okc = Color(0xFF48D597)
+val Warn = Color(0xFFFFC34D)
+val Bad = Color(0xFFFF5F66)
+val Cold = Color(0xFF66B8FF)
 
 val LocalFrame = compositionLocalOf { 0 }
 
 @Composable
 fun TeklaTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = darkColorScheme(primary = Acc, onPrimary = Color.Black, background = Bg, surface = Panel, onSurface = Txt, onBackground = Txt, surfaceVariant = Panel2, outline = Line), content = content)
+    MaterialTheme(
+        colorScheme = darkColorScheme(
+            primary = Acc,
+            onPrimary = Color.Black,
+            primaryContainer = Panel2,
+            background = Bg,
+            surface = Panel,
+            onSurface = Txt,
+            onBackground = Txt,
+            surfaceVariant = Panel2,
+            outline = LineStrong,
+            secondary = Acc2,
+            error = Bad
+        ),
+        content = content
+    )
 }
 
 /** Grafika panelu z assets/ic/N.png (wbudowana w aplikacje). */
