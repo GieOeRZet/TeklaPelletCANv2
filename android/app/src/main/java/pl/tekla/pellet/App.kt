@@ -512,62 +512,51 @@ fun Spark(hist: List<Float>, set: Float?, modifier: Modifier) {
 
 @Composable
 fun HomeView(ui: Ui) {
-    val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0; val on = ui.n("0x2005") != 0.0
+    val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0
+    val on = ui.n("0x2005") != 0.0
     val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
     val run = bs in 1..8
     val entries = visibleTileIds(ui).filter { it != "kociol" && it != "palnik" } + listOf("fuel", "power")
-
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-        GlowCard(Modifier.fillMaxWidth().height(154.dp), if (run) Warn else null, { ui.go("kociol") }) {
-            Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Box(Modifier.width(92.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
-                    val imageId = ui.m.boilerImages[ui.n("0x370A")?.toInt() ?: 2] ?: 12
-                    Ic(imageId, 82.dp)
+        GlowCard(Modifier.fillMaxWidth().height(160.dp), if (run) Warn else null, { ui.go("kociol") }) {
+            Column(Modifier.fillMaxSize()) {
+                Row(Modifier.weight(1f).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(Modifier.width(86.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                        val imageId = ui.m.boilerImages[ui.n("0x370A")?.toInt() ?: 2] ?: 12
+                        Ic(imageId, 76.dp)
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Kocioł", color = Txt, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                            Box(Modifier.size(8.dp).background(if (run) Okc else Mut, RoundedCornerShape(4.dp)))
+                            Spacer(Modifier.width(5.dp))
+                            Text(if (run) "Praca" else "Postój", color = if (run) Okc else Mut, fontSize = 10.5.sp)
+                        }
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text(f1(t), color = Txt, fontSize = 32.sp, fontWeight = FontWeight.Light)
+                            Text("°C", color = Txt, fontSize = 14.sp, modifier = Modifier.padding(start = 3.dp, bottom = 4.dp))
+                        }
+                        Text("→ ${f1(set,0)}°C", color = Acc2, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                    Column(Modifier.width(66.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                        Ic(prog, 17.dp)
+                        Text("${f1(ui.n("0x4005"),0)} %", color = Txt, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text(f1(ui.n("0x3710"),1) + " kg/h", color = Mut, fontSize = 9.5.sp)
+                    }
                 }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Kocioł", color = Txt, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                        Box(Modifier.size(8.dp).background(if (run) Okc else Mut, RoundedCornerShape(4.dp)))
-                        Spacer(Modifier.width(5.dp))
-                        Text(if (run) "Praca" else "Postój", color = if (run) Okc else Mut, fontSize = 11.sp)
+                val kix = ui.m.screens.getValue("palnik").bar.mapNotNull { barIx(ui, it, "palnik") } +
+                        ui.m.screens.getValue("kociol").bar.filter { it.k != "anim" }.mapNotNull { barIx(ui, it, "kociol") }
+                if (kix.isNotEmpty()) {
+                    Box(Modifier.fillMaxWidth().height(34.dp).clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = .045f)), contentAlignment = Alignment.Center) {
+                        IxRow(kix.take(6))
                     }
-                    Row(verticalAlignment = Alignment.Bottom) {
-                        Text(f1(t), color = Txt, fontSize = 34.sp, fontWeight = FontWeight.Light, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum"))
-                        Text("°C", color = Txt, fontSize = 15.sp, modifier = Modifier.padding(start = 3.dp, bottom = 5.dp))
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("→ "+f1(set,0)+"°C", color = Acc2, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                        Spacer(Modifier.width(12.dp)); Ic(prog, 16.dp); Spacer(Modifier.width(4.dp))
-                        Text(f1(ui.n("0x4005"),0)+" %", color = Mut, fontSize = 11.sp)
-                    }
-                }
-                Column(Modifier.width(92.dp), verticalArrangement = Arrangement.spacedBy(5.dp), horizontalAlignment = Alignment.End) {
-                    Text(f1(ui.n("0x4005"),0)+" %", color = Txt, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    Text(f1(ui.n("0x3710"),1) + " kg/h", color = Mut, fontSize = 10.5.sp)
-                    Spacer(Modifier.height(2.dp)); Text("Palnik", color = Mut, fontSize = 10.5.sp)
-                    Text(f1(ui.n("0x226C"),0) + "°C", color = Txt, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
-        val kix = ui.m.screens.getValue("palnik").bar.mapNotNull { barIx(ui, it, "palnik") } +
-                ui.m.screens.getValue("kociol").bar.filter { it.k != "anim" }.mapNotNull { barIx(ui, it, "kociol") }
-        if (kix.isNotEmpty()) {
-            GlowCard(Modifier.fillMaxWidth().heightIn(min = 54.dp, max = 62.dp), null, null) { IxRow(kix.take(6)) }
-        }
-        val rows = (entries.size + 1) / 2
-        val tileH = if (rows <= 2) 106.dp else 96.dp
-        TileGrid(ui, entries, tileH)
-        if (ui.hist.size >= 2) {
-            GlowCard(Modifier.fillMaxWidth().height(86.dp), null, null) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Temperatura kotła", color = Txt, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                    Text("ostatnie "+(ui.hist.size / 4)+" min", color = Mut, fontSize = 10.sp)
-                }
-                Spark(ui.hist, set?.toFloat(), Modifier.fillMaxWidth().height(47.dp).padding(top = 3.dp))
-            }
-        }
+        TileGrid(ui, entries, 94.dp)
     }
 }
+
 @Composable
 fun Led(t: String, on: Boolean, c: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) { Box(Modifier.size(34.dp, 7.dp).background(if (on) c else Color(0xFF3A3A42), RoundedCornerShape(4.dp))); Text(t, color = Mut, fontSize = 11.sp) }
