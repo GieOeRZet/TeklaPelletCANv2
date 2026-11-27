@@ -165,8 +165,15 @@ fun TeklaApp() {
         val ui = Ui(src, vals, level, full, ::go, { dlg = it }, { Toast.makeText(ctx, it, Toast.LENGTH_SHORT).show() }, alarmActive, hist.toList())
         val screen = stack.last()
         CompositionLocalProvider(LocalFrame provides frame) {
+            Box(
+                Modifier.fillMaxSize().background(
+                    Brush.verticalGradient(
+                        listOf(Color(0xFF17232D), Color(0xFF0F1820), Color(0xFF16212A))
+                    )
+                )
+            ) {
             Scaffold(
-                containerColor = Bg,
+                containerColor = Color.Transparent,
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
                     NavigationBar(containerColor = GlassBar) {
@@ -199,6 +206,7 @@ fun TeklaApp() {
                 }
             }
             dlg?.let { Dialogs(ui, it) { dlg = null } }
+            }
         }
     }
 }
@@ -208,7 +216,7 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
     if (screen == "home") {
-        Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal=14.dp,vertical=8.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth().background(GlassBar).statusBarsPadding().padding(horizontal=14.dp,vertical=8.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(10.dp)) {
             Row(Modifier.weight(1f),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 Text("🔥",fontSize=19.sp)
                 Column {
