@@ -1,128 +1,717 @@
---------- beginning of crash
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: FATAL EXCEPTION: main
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: Process: pl.tekla.pellet, PID: 2766
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: java.lang.IllegalStateException: Vertically scrollable component was measured with an infinity maximum height constraints, which is disallowed. One of the common reasons is nesting layouts like LazyColumn and Column(Modifier.verticalScroll()). If you want to add a header before the list of items please add a header as a separate item() before the main items() inside the LazyColumn scope. There are could be other reasons for this to happen: your ComposeView was added into a LinearLayout with some weight, you applied Modifier.wrapContentSize(unbounded = true) or wrote a custom layout. Please try to remove the source of infinite constraints in the hierarchy above the scrolling container.
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.foundation.CheckScrollableContainerConstraintsKt.checkScrollableContainerConstraints-K40F9xA(CheckScrollableContainerConstraints.kt:35)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.foundation.ScrollingLayoutNode.measure-3p2s80s(Scroll.kt:407)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutModifierNodeCoordinator.measure-BRTryo0(LayoutModifierNodeCoordinator.kt:188)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.graphics.SimpleGraphicsLayerModifier.measure-3p2s80s(GraphicsLayerModifier.kt:646)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutModifierNodeCoordinator.measure-BRTryo0(LayoutModifierNodeCoordinator.kt:188)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.foundation.layout.FillNode.measure-3p2s80s(Size.kt:699)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutModifierNodeCoordinator.measure-BRTryo0(LayoutModifierNodeCoordinator.kt:188)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$performMeasureBlock$1.invoke(LayoutNodeLayoutDelegate.kt:316)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$performMeasureBlock$1.invoke(LayoutNodeLayoutDelegate.kt:315)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.Snapshot$Companion.observe(Snapshot.kt:503)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.SnapshotStateObserver$ObservedScopeMap.observe(SnapshotStateObserver.kt:502)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.SnapshotStateObserver.observeReads(SnapshotStateObserver.kt:258)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.OwnerSnapshotObserver.observeReads$ui_release(OwnerSnapshotObserver.kt:133)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.OwnerSnapshotObserver.observeMeasureSnapshotReads$ui_release(OwnerSnapshotObserver.kt:113)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate.performMeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:1782)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate.access$performMeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:40)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$MeasurePassDelegate.remeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:696)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$MeasurePassDelegate.measure-BRTryo0(LayoutNodeLayoutDelegate.kt:672)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.foundation.layout.RowColumnMeasurePolicyKt.measure(RowColumnMeasurePolicy.kt:119)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.foundation.layout.RowColumnMeasurePolicyKt.measure$default(RowColumnMeasurePolicy.kt:74)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.foundation.layout.ColumnMeasurePolicy.measure-3p2s80s(Column.kt:208)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.InnerNodeCoordinator.measure-BRTryo0(InnerNodeCoordinator.kt:135)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.foundation.layout.PaddingNode.measure-3p2s80s(Padding.kt:414)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutModifierNodeCoordinator.measure-BRTryo0(LayoutModifierNodeCoordinator.kt:188)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.foundation.ScrollingLayoutNode.measure-3p2s80s(Scroll.kt:416)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutModifierNodeCoordinator.measure-BRTryo0(LayoutModifierNodeCoordinator.kt:188)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.graphics.SimpleGraphicsLayerModifier.measure-3p2s80s(GraphicsLayerModifier.kt:646)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutModifierNodeCoordinator.measure-BRTryo0(LayoutModifierNodeCoordinator.kt:188)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.foundation.layout.FillNode.measure-3p2s80s(Size.kt:699)
-11-27 14:00:28.812  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutModifierNodeCoordinator.measure-BRTryo0(LayoutModifierNodeCoordinator.kt:188)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.foundation.layout.PaddingValuesModifier.measure-3p2s80s(Padding.kt:472)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutModifierNodeCoordinator.measure-BRTryo0(LayoutModifierNodeCoordinator.kt:188)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$performMeasureBlock$1.invoke(LayoutNodeLayoutDelegate.kt:316)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$performMeasureBlock$1.invoke(LayoutNodeLayoutDelegate.kt:315)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.Snapshot$Companion.observe(Snapshot.kt:503)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.SnapshotStateObserver$ObservedScopeMap.observe(SnapshotStateObserver.kt:502)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.SnapshotStateObserver.observeReads(SnapshotStateObserver.kt:258)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.OwnerSnapshotObserver.observeReads$ui_release(OwnerSnapshotObserver.kt:133)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.OwnerSnapshotObserver.observeMeasureSnapshotReads$ui_release(OwnerSnapshotObserver.kt:113)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate.performMeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:1782)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate.access$performMeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:40)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$MeasurePassDelegate.remeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:696)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$MeasurePassDelegate.measure-BRTryo0(LayoutNodeLayoutDelegate.kt:672)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.material3.ScaffoldKt$ScaffoldLayout$1$1.invoke-0kLqBqw(Scaffold.kt:263)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.material3.ScaffoldKt$ScaffoldLayout$1$1.invoke(Scaffold.kt:140)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.layout.LayoutNodeSubcompositionsState$createMeasurePolicy$1.measure-3p2s80s(SubcomposeLayout.kt:725)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.InnerNodeCoordinator.measure-BRTryo0(InnerNodeCoordinator.kt:135)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$performMeasureBlock$1.invoke(LayoutNodeLayoutDelegate.kt:316)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$performMeasureBlock$1.invoke(LayoutNodeLayoutDelegate.kt:315)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.Snapshot$Companion.observe(Snapshot.kt:503)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.SnapshotStateObserver$ObservedScopeMap.observe(SnapshotStateObserver.kt:502)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.SnapshotStateObserver.observeReads(SnapshotStateObserver.kt:258)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.OwnerSnapshotObserver.observeReads$ui_release(OwnerSnapshotObserver.kt:133)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.OwnerSnapshotObserver.observeMeasureSnapshotReads$ui_release(OwnerSnapshotObserver.kt:113)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate.performMeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:1782)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate.access$performMeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:40)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$MeasurePassDelegate.remeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:696)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$MeasurePassDelegate.measure-BRTryo0(LayoutNodeLayoutDelegate.kt:672)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.foundation.layout.BoxMeasurePolicy.measure-3p2s80s(Box.kt:151)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.InnerNodeCoordinator.measure-BRTryo0(InnerNodeCoordinator.kt:135)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.graphics.SimpleGraphicsLayerModifier.measure-3p2s80s(GraphicsLayerModifier.kt:646)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutModifierNodeCoordinator.measure-BRTryo0(LayoutModifierNodeCoordinator.kt:188)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$performMeasureBlock$1.invoke(LayoutNodeLayoutDelegate.kt:316)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$performMeasureBlock$1.invoke(LayoutNodeLayoutDelegate.kt:315)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.Snapshot$Companion.observe(Snapshot.kt:503)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.SnapshotStateObserver$ObservedScopeMap.observe(SnapshotStateObserver.kt:502)
-11-27 14:00:28.814  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.SnapshotStateObserver.observeReads(SnapshotStateObserver.kt:258)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.OwnerSnapshotObserver.observeReads$ui_release(OwnerSnapshotObserver.kt:133)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.OwnerSnapshotObserver.observeMeasureSnapshotReads$ui_release(OwnerSnapshotObserver.kt:113)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate.performMeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:1782)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate.access$performMeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:40)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$MeasurePassDelegate.remeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:696)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$MeasurePassDelegate.measure-BRTryo0(LayoutNodeLayoutDelegate.kt:672)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.layout.RootMeasurePolicy.measure-3p2s80s(RootMeasurePolicy.kt:38)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.InnerNodeCoordinator.measure-BRTryo0(InnerNodeCoordinator.kt:135)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$performMeasureBlock$1.invoke(LayoutNodeLayoutDelegate.kt:316)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$performMeasureBlock$1.invoke(LayoutNodeLayoutDelegate.kt:315)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.Snapshot$Companion.observe(Snapshot.kt:2441)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.SnapshotStateObserver$ObservedScopeMap.observe(SnapshotStateObserver.kt:502)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.runtime.snapshots.SnapshotStateObserver.observeReads(SnapshotStateObserver.kt:258)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.OwnerSnapshotObserver.observeReads$ui_release(OwnerSnapshotObserver.kt:133)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.OwnerSnapshotObserver.observeMeasureSnapshotReads$ui_release(OwnerSnapshotObserver.kt:113)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate.performMeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:1782)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate.access$performMeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:40)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNodeLayoutDelegate$MeasurePassDelegate.remeasure-BRTryo0(LayoutNodeLayoutDelegate.kt:696)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.LayoutNode.remeasure-_Sx5XlM$ui_release(LayoutNode.kt:1222)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.MeasureAndLayoutDelegate.doRemeasure-sdFAvZA(MeasureAndLayoutDelegate.kt:367)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.MeasureAndLayoutDelegate.remeasureOnly(MeasureAndLayoutDelegate.kt:622)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.node.MeasureAndLayoutDelegate.measureOnly(MeasureAndLayoutDelegate.kt:420)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.platform.AndroidComposeView.onMeasure(AndroidComposeView.android.kt:1370)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.View.measure(View.java:27122)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.platform.AbstractComposeView.internalOnMeasure$ui_release(ComposeView.android.kt:309)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at androidx.compose.ui.platform.AbstractComposeView.onMeasure(ComposeView.android.kt:296)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.View.measure(View.java:27122)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.ViewGroup.measureChildWithMargins(ViewGroup.java:7008)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.widget.FrameLayout.onMeasure(FrameLayout.java:194)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.View.measure(View.java:27122)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.ViewGroup.measureChildWithMargins(ViewGroup.java:7008)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.widget.LinearLayout.measureChildBeforeLayout(LinearLayout.java:1608)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.widget.LinearLayout.measureVertical(LinearLayout.java:878)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.widget.LinearLayout.onMeasure(LinearLayout.java:721)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.View.measure(View.java:27122)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.ViewGroup.measureChildWithMargins(ViewGroup.java:7008)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.widget.FrameLayout.onMeasure(FrameLayout.java:194)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at com.android.internal.policy.DecorView.onMeasure(DecorView.java:750)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.View.measure(View.java:27122)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.ViewRootImpl.performMeasure(ViewRootImpl.java:4182)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.ViewRootImpl.measureHierarchy(ViewRootImpl.java:2759)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.ViewRootImpl.performTraversals(ViewRootImpl.java:3086)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.ViewRootImpl.doTraversal(ViewRootImpl.java:2465)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.ViewRootImpl$TraversalRunnable.run(ViewRootImpl.java:9305)
-11-27 14:00:28.817  2766  2766 E AndroidRuntime: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1339)
-11-27 14:00:28.818  2766  2766 E AndroidRuntime: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1348)
-11-27 14:00:28.818  2766  2766 E AndroidRuntime: 	at android.view.Choreographer.doCallbacks(Choreographer.java:952)
-11-27 14:00:28.818  2766  2766 E AndroidRuntime: 	at android.view.Choreographer.doFrame(Choreographer.java:882)
-11-27 14:00:28.818  2766  2766 E AndroidRuntime: 	at android.view.Choreographer$FrameDisplayEventReceiver.run(Choreographer.java:1322)
-11-27 14:00:28.818  2766  2766 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:958)
-11-27 14:00:28.818  2766  2766 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:99)
-11-27 14:00:28.818  2766  2766 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:205)
-11-27 14:00:28.818  2766  2766 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:294)
-11-27 14:00:28.818  2766  2766 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:8177)
-11-27 14:00:28.818  2766  2766 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
-11-27 14:00:28.818  2766  2766 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:552)
-11-27 14:00:28.818  2766  2766 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:971)
+--------- beginning of system
+11-27 14:24:38.695   505   523 D DisplayManagerService: Drop pending events for gone uid 10141
+11-27 14:24:38.696   505  2767 I ActivityManager: Killing 2992:pl.tekla.pellet/u0a141 (adj 0): stop pl.tekla.pellet due to from pid 3036
+11-27 14:24:38.696   505  2767 W ActivityTaskManager: Force removing ActivityRecord{c2ff23c u0 pl.tekla.pellet/.MainActivity t19 f}}: app died, no saved state
+11-27 14:24:38.697   792   842 V WindowManagerShell: Transition requested: android.os.BinderProxy@464e2f4 TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=19 displayId=0 isRunning=false baseIntent=Intent { flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity } baseActivity=null topActivity=null origActivity=null realActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} numActivities=0 lastActiveTime=98312 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@8d32a1d} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 128 - 0, 0) topActivityInfo=null launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+11-27 14:24:38.699   505  2767 D OomAdjuster: Not killing cached processes
+--------- beginning of main
+11-27 14:24:38.702   992   992 D CarrierSvcBindHelper: onHandleForceStop: [pl.tekla.pellet]
+11-27 14:24:38.702   992   992 D CarrierSvcBindHelper: No carrier app for: 0
+11-27 14:24:38.708   505  2545 V ActivityManager: Got obituary of 2992:pl.tekla.pellet
+11-27 14:24:38.708   505  2486 I WindowManager: WIN DEATH: Window{f6c43b8 u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity}
+11-27 14:24:38.708   505  2486 W InputManager-JNI: Input channel object 'f6c43b8 pl.tekla.pellet/pl.tekla.pellet.MainActivity (client)' was disposed without first being removed with the input manager!
+11-27 14:24:38.709   505   779 I ImeTracker: pl.tekla.pellet:64360470: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_REMOVE_CLIENT
+11-27 14:24:38.709   505   779 I ImeTracker: pl.tekla.pellet:64360470: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-27 14:24:38.710   505   727 I serviceDiscovery: [MdnsDiscoveryManager] Unregistering listener for serviceType:_teklapellet._tcp.local
+11-27 14:24:38.710   505   727 I serviceDiscovery: [MdnsSocketProvider] Stop monitoring sockets.
+11-27 14:24:38.710   505   727 I TetheringManager: unregisterTetheringEventCallback caller:android
+11-27 14:24:38.710   389   389 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+11-27 14:24:38.711   505   525 V WindowManager: Unknown focus tokens, dropping reportFocusChanged
+11-27 14:24:38.727   505   526 W WindowManager: Failed to deliver inset control state change to w=Window{f6c43b8 u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity EXITING}
+11-27 14:24:38.727   505   526 W WindowManager: android.os.DeadObjectException
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.view.IWindow$Stub$Proxy.insetsControlChanged(IWindow.java:479)
+11-27 14:24:38.727   505   526 W WindowManager: 	at com.android.server.wm.WindowState.notifyInsetsControlChanged(WindowState.java:3802)
+11-27 14:24:38.727   505   526 W WindowManager: 	at com.android.server.wm.InsetsStateController.lambda$notifyPendingInsetsControlChanged$3(InsetsStateController.java:343)
+11-27 14:24:38.727   505   526 W WindowManager: 	at com.android.server.wm.InsetsStateController.$r8$lambda$8yykPRG1GyNq_J17QvL9d5xANMc(InsetsStateController.java:0)
+11-27 14:24:38.727   505   526 W WindowManager: 	at com.android.server.wm.InsetsStateController$$ExternalSyntheticLambda2.run(R8$$SyntheticClass:0)
+11-27 14:24:38.727   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.executeAfterPrepareSurfacesRunnables(WindowAnimator.java:294)
+11-27 14:24:38.727   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.animate(WindowAnimator.java:202)
+11-27 14:24:38.727   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.lambda$new$1(WindowAnimator.java:99)
+11-27 14:24:38.727   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.$r8$lambda$aHNu1uhcqxihX5NZc4McDDQPAyw(WindowAnimator.java:0)
+11-27 14:24:38.727   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator$$ExternalSyntheticLambda1.doFrame(R8$$SyntheticClass:0)
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1337)
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1348)
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.view.Choreographer.doCallbacks(Choreographer.java:952)
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.view.Choreographer.doFrame(Choreographer.java:878)
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.view.Choreographer$FrameDisplayEventReceiver.run(Choreographer.java:1322)
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.os.Handler.handleCallback(Handler.java:958)
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.os.Looper.loopOnce(Looper.java:205)
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.os.Looper.loop(Looper.java:294)
+11-27 14:24:38.727   505   526 W WindowManager: 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-27 14:24:38.727   505   526 W WindowManager: 	at com.android.server.ServiceThread.run(ServiceThread.java:46)
+11-27 14:24:38.730   325   325 I Zygote  : Process 2992 exited due to signal 9 (Killed)
+11-27 14:24:38.791   505   522 V WindowManager: Sent Transition #23 createdAt=11-27 14:24:38.696 via request=TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=19 displayId=0 isRunning=false baseIntent=Intent { flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity } baseActivity=null topActivity=null origActivity=null realActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} numActivities=0 lastActiveTime=98312 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{7536cca Task{2a09bc5 #19 type=standard A=10141:pl.tekla.pellet}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 128 - 0, 0) topActivityInfo=null launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+11-27 14:24:38.791   505   522 V WindowManager:     startWCT=WindowContainerTransaction { changes = {} hops = [] errorCallbackToken=null taskFragmentOrganizer=null }
+11-27 14:24:38.791   505   522 V WindowManager:     info={id=23 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{RemoteToken{7536cca Task{2a09bc5 #19 type=standard A=10141:pl.tekla.pellet}}} m=CLOSE f=NONE leash=Surface(name=Task=19)/@0xd72626c sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{RemoteToken{a5bdae7 Task{35299f #1 type=home}}} m=TO_FRONT f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xea46426 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{4f09e2b token=android.os.Binder@3fe9517})/@0x95d20f5 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:38.792   792   842 V WindowManagerShell: onTransitionReady android.os.BinderProxy@464e2f4: {id=23 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@710c7de} m=CLOSE f=NONE leash=Surface(name=Task=19)/@0x82bf492 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@2beedbf} m=TO_FRONT f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xa27ce63 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{4f09e2b token=android.os.Binder@3fe9517})/@0x7673a60 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:38.792   792   842 V WindowManagerShell: Playing animation for (#23)android.os.BinderProxy@464e2f4@0
+11-27 14:24:38.792   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.DefaultMixedHandler@23b5b6b
+11-27 14:24:38.792   792   842 V WindowManagerShell:  try handler com.android.wm.shell.keyguard.KeyguardTransitionHandler@8e2b6c8
+11-27 14:24:38.792   792   842 V WindowManagerShell:  try handler com.android.wm.shell.activityembedding.ActivityEmbeddingController@2e8f361
+11-27 14:24:38.792   792   842 V WindowManagerShell:  try handler com.android.wm.shell.recents.RecentsTransitionHandler@55d5e86
+11-27 14:24:38.792   792   842 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+11-27 14:24:38.792   792   842 V WindowManagerShell:  try handler com.android.wm.shell.pip.PipTransition@d324347
+11-27 14:24:38.792   792   842 V WindowManagerShell:  try handler com.android.wm.shell.splitscreen.StageCoordinator@ed07774
+11-27 14:24:38.793   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.RemoteTransitionHandler@ae0649d
+11-27 14:24:38.793   792   842 V WindowManagerShell: Transition doesn't have explicit remote, search filters for match for {id=23 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@710c7de} m=CLOSE f=NONE leash=Surface(name=Task=19)/@0x82bf492 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@2beedbf} m=TO_FRONT f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xa27ce63 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{4f09e2b token=android.os.Binder@3fe9517})/@0x7673a60 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:38.793   792   842 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x100 checks=[{atype=home independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=TOP topActivity=ComponentInfo{com.android.launcher3/com.android.launcher3.uioverrides.QuickstepLauncher}},{atype=standard independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@dfd9aa, appThread = android.app.IApplicationThread$Stub$Proxy@71da99b, debugName = QuickstepLaunchHome }}
+11-27 14:24:38.794   792   842 V WindowManagerShell:  Delegate animation for #23 to null
+11-27 14:24:38.794   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.DefaultTransitionHandler@23796e0
+11-27 14:24:38.794   792   842 V WindowManagerShell: start default transition animation, info = {id=23 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@710c7de} m=CLOSE f=NONE leash=Surface(name=Task=19)/@0x82bf492 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@2beedbf} m=TO_FRONT f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xa27ce63 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{4f09e2b token=android.os.Binder@3fe9517})/@0x7673a60 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:38.794   792   842 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@e7fd5 animAttr=0x10 type=CLOSE isEntrance=true
+11-27 14:24:38.794   792   842 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@225f578 animAttr=0x11 type=CLOSE isEntrance=false
+11-27 14:24:38.795   792   842 V WindowManagerShell:  animated by com.android.wm.shell.transition.DefaultTransitionHandler@23796e0
+11-27 14:24:38.801   505   519 D CompatibilityChangeReporter: Compat change id reported: 161252188; UID 10141; state: DISABLED
+11-27 14:24:38.801   505   519 W ActivityTaskManager: callingPackage for (uid=2000, pid=3042) has no WPC
+11-27 14:24:38.802   505   519 D CompatibilityChangeReporter: Compat change id reported: 265464455; UID 10141; state: DISABLED
+11-27 14:24:38.802   505   519 D CompatibilityChangeReporter: Compat change id reported: 265452344; UID 10141; state: DISABLED
+11-27 14:24:38.802   505   519 D CompatibilityChangeReporter: Compat change id reported: 266124927; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 265451093; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 265456536; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 255940284; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 236283604; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 263959004; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 264304459; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 264301586; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 254631730; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 273509367; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 263259275; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 174042980; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 174042936; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 181136395; UID 10141; state: DISABLED
+11-27 14:24:38.803   505   519 D CompatibilityChangeReporter: Compat change id reported: 194480991; UID 10141; state: ENABLED
+11-27 14:24:38.809   505   519 D CompatibilityChangeReporter: Compat change id reported: 197654537; UID 10141; state: ENABLED
+11-27 14:24:38.810   505   519 V SplashScreenExceptionList: SplashScreen checking exception for package pl.tekla.pellet (target sdk:34) -> false
+11-27 14:24:38.810   505   519 D CompatibilityChangeReporter: Compat change id reported: 205907456; UID 10141; state: ENABLED
+11-27 14:24:38.811   505   519 I ActivityTaskManager: Add Task{2a09bc5 #19 type=standard A=10141:pl.tekla.pellet} to hidden list because adding Task{f9192de #20 type=standard A=10141:pl.tekla.pellet}
+11-27 14:24:38.811   505   519 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity (has extras)} with LAUNCH_MULTIPLE from uid 2000 (BAL_ALLOW_PERMISSION) result code=0
+11-27 14:24:38.812   505   841 I ImeTracker: com.android.launcher3:65bee6d9: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_UNSPECIFIED_WINDOW
+11-27 14:24:38.813   505   841 I ImeTracker: com.android.launcher3:65bee6d9: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-27 14:24:38.813   792   842 V WindowManagerShell: Transition requested: android.os.BinderProxy@107f4b6 TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=20 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity } baseActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} topActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} origActivity=null realActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} numActivities=1 lastActiveTime=104639 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@7b6d5b7} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 128 - 0, 0) topActivityInfo=ActivityInfo{80f124 pl.tekla.pellet.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+11-27 14:24:38.815   792   864 D SplashScreenView: Build android.window.SplashScreenView{732fccb V.E...... ......ID 0,0-0,0}
+11-27 14:24:38.815   792   864 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-27 14:24:38.815   792   864 D SplashScreenView: Branding: view: android.view.View{9bdaca8 G.ED..... ......I. 0,0-0,0 #10204ef android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-27 14:24:38.838   792   842 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#23)android.os.BinderProxy@464e2f4@0
+11-27 14:24:38.840   505   525 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10141; state: DISABLED
+11-27 14:24:38.842   505   526 W WindowManager: Failed to deliver inset control state change to w=Window{f6c43b8 u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity EXITING}
+11-27 14:24:38.842   505   526 W WindowManager: android.os.DeadObjectException
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.view.IWindow$Stub$Proxy.insetsControlChanged(IWindow.java:479)
+11-27 14:24:38.842   505   526 W WindowManager: 	at com.android.server.wm.WindowState.notifyInsetsControlChanged(WindowState.java:3802)
+11-27 14:24:38.842   505   526 W WindowManager: 	at com.android.server.wm.InsetsStateController.lambda$notifyPendingInsetsControlChanged$3(InsetsStateController.java:343)
+11-27 14:24:38.842   505   526 W WindowManager: 	at com.android.server.wm.InsetsStateController.$r8$lambda$8yykPRG1GyNq_J17QvL9d5xANMc(InsetsStateController.java:0)
+11-27 14:24:38.842   505   526 W WindowManager: 	at com.android.server.wm.InsetsStateController$$ExternalSyntheticLambda2.run(R8$$SyntheticClass:0)
+11-27 14:24:38.842   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.executeAfterPrepareSurfacesRunnables(WindowAnimator.java:294)
+11-27 14:24:38.842   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.animate(WindowAnimator.java:202)
+11-27 14:24:38.842   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.lambda$new$1(WindowAnimator.java:99)
+11-27 14:24:38.842   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.$r8$lambda$aHNu1uhcqxihX5NZc4McDDQPAyw(WindowAnimator.java:0)
+11-27 14:24:38.842   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator$$ExternalSyntheticLambda1.doFrame(R8$$SyntheticClass:0)
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1337)
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1348)
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.view.Choreographer.doCallbacks(Choreographer.java:952)
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.view.Choreographer.doFrame(Choreographer.java:878)
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.view.Choreographer$FrameDisplayEventReceiver.run(Choreographer.java:1322)
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.os.Handler.handleCallback(Handler.java:958)
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.os.Looper.loopOnce(Looper.java:205)
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.os.Looper.loop(Looper.java:294)
+11-27 14:24:38.842   505   526 W WindowManager: 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-27 14:24:38.842   505   526 W WindowManager: 	at com.android.server.ServiceThread.run(ServiceThread.java:46)
+11-27 14:24:38.849   505  1573 D CoreBackPreview: Window{1193b51 u0 Splash Screen pl.tekla.pellet}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@bf79424, mPriority=0, mIsAnimationCallback=false}
+11-27 14:24:38.856   505   533 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10141; state: ENABLED
+11-27 14:24:38.885   325   325 D Zygote  : Forked child process 3045
+11-27 14:24:38.890   505   533 W ActivityManager: Slow operation: 79ms so far, now at startProcess: returned from zygote!
+11-27 14:24:38.890   505   533 W ActivityManager: Slow operation: 79ms so far, now at startProcess: done updating battery stats
+11-27 14:24:38.891   505   533 W ActivityManager: Slow operation: 79ms so far, now at startProcess: building log message
+11-27 14:24:38.891   505   533 I ActivityManager: Start proc 3045:pl.tekla.pellet/u0a141 for next-top-activity {pl.tekla.pellet/pl.tekla.pellet.MainActivity}
+11-27 14:24:38.891   505   533 W ActivityManager: Slow operation: 79ms so far, now at startProcess: starting to update pids map
+11-27 14:24:38.891   505   533 W ActivityManager: Slow operation: 79ms so far, now at startProcess: done updating pids map
+11-27 14:24:38.910   505   522 V WindowManager: Finish Transition #23: created at 11-27 14:24:38.696 collect-started=0.024ms request-sent=0.091ms started=2.538ms ready=2.53ms sent=93.13ms finished=213.573ms
+11-27 14:24:38.969   505  1572 W WindowManager: Exception thrown during dispatchAppVisibility Window{f6c43b8 u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity EXITING}
+11-27 14:24:38.969   505  1572 W WindowManager: android.os.DeadObjectException
+11-27 14:24:38.969   505  1572 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at android.view.IWindow$Stub$Proxy.dispatchAppVisibility(IWindow.java:546)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at com.android.server.wm.WindowState.sendAppVisibilityToClients(WindowState.java:3271)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at com.android.server.wm.WindowContainer.sendAppVisibilityToClients(WindowContainer.java:1221)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at com.android.server.wm.WindowToken.setClientVisible(WindowToken.java:409)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at com.android.server.wm.ActivityRecord.setClientVisible(ActivityRecord.java:6946)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at com.android.server.wm.ActivityRecord.postApplyAnimation(ActivityRecord.java:5637)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:5580)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at com.android.server.wm.Transition.finishTransition(Transition.java:1151)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at com.android.server.wm.TransitionController.finishTransition(TransitionController.java:868)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at com.android.server.wm.WindowOrganizerController.finishTransition(WindowOrganizerController.java:396)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at android.window.IWindowOrganizerController$Stub.onTransact(IWindowOrganizerController.java:286)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at com.android.server.wm.WindowOrganizerController.onTransact(WindowOrganizerController.java:181)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at android.os.Binder.execTransactInternal(Binder.java:1339)
+11-27 14:24:38.969   505  1572 W WindowManager: 	at android.os.Binder.execTransact(Binder.java:1275)
+11-27 14:24:38.969   505  1572 I Process : Sending signal. PID: 2992 SIG: 9
+11-27 14:24:38.976   505   525 W ActivityManager: setHasOverlayUi called on unknown pid: 2992
+11-27 14:24:39.039   792   842 V WindowManagerShell: Track 0 became idle
+11-27 14:24:39.039   792   842 W Looper  : Slow dispatch took 201ms wmshell.main h=android.os.Handler c=com.android.wm.shell.transition.DefaultTransitionHandler$$ExternalSyntheticLambda7@cff68c0 m=0
+11-27 14:24:39.040   792   842 W Looper  : Slow delivery took 185ms wmshell.main h=android.os.Handler c=com.android.wm.shell.common.DisplayInsetsController$PerDisplay$DisplayWindowInsetsControllerImpl$$ExternalSyntheticLambda1@f2a49f9 m=0
+11-27 14:24:39.041   792   842 W Looper  : Drained
+11-27 14:24:39.076   792   792 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+11-27 14:24:39.084  3045  3045 I pl.tekla.pellet: Late-enabling -Xcheck:jni
+11-27 14:24:39.111  3045  3045 I pl.tekla.pellet: Using CollectorTypeCC GC.
+11-27 14:24:39.112  3045  3045 W pl.tekla.pellet: Unexpected CPU variant for x86: x86_64.
+11-27 14:24:39.112  3045  3045 W pl.tekla.pellet: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+11-27 14:24:39.143   505   578 D CompatibilityChangeReporter: Compat change id reported: 265195908; UID 10141; state: ENABLED
+11-27 14:24:39.153   405   418 I adbd    : jdwp connection from 3045
+11-27 14:24:39.167   792   842 V WindowManagerShell: onTransitionReady android.os.BinderProxy@107f4b6: {id=24 t=OPEN f=0x0 trk=1 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@e60aebb} m=OPEN f=NONE leash=Surface(name=Task=20)/@0xcd250ec sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@4098fd8} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xcbc8cb5 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:39.167   792   842 V WindowManagerShell: Playing animation for (#24)android.os.BinderProxy@107f4b6@1
+11-27 14:24:39.167   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.DefaultMixedHandler@23b5b6b
+11-27 14:24:39.167   792   842 V WindowManagerShell:  try handler com.android.wm.shell.keyguard.KeyguardTransitionHandler@8e2b6c8
+11-27 14:24:39.168   792   842 V WindowManagerShell:  try handler com.android.wm.shell.activityembedding.ActivityEmbeddingController@2e8f361
+11-27 14:24:39.168   792   842 V WindowManagerShell:  try handler com.android.wm.shell.recents.RecentsTransitionHandler@55d5e86
+11-27 14:24:39.168   792   842 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+11-27 14:24:39.168   792   842 V WindowManagerShell:  try handler com.android.wm.shell.pip.PipTransition@d324347
+11-27 14:24:39.168   792   842 V WindowManagerShell:  try handler com.android.wm.shell.splitscreen.StageCoordinator@ed07774
+11-27 14:24:39.168   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.RemoteTransitionHandler@ae0649d
+11-27 14:24:39.168   792   842 V WindowManagerShell: Transition doesn't have explicit remote, search filters for match for {id=24 t=OPEN f=0x0 trk=1 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@e60aebb} m=OPEN f=NONE leash=Surface(name=Task=20)/@0xcd250ec sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@4098fd8} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xcbc8cb5 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:39.168   792   842 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x100 checks=[{atype=home independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=TOP topActivity=ComponentInfo{com.android.launcher3/com.android.launcher3.uioverrides.QuickstepLauncher}},{atype=standard independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@dfd9aa, appThread = android.app.IApplicationThread$Stub$Proxy@71da99b, debugName = QuickstepLaunchHome }}
+11-27 14:24:39.168   792   842 V WindowManagerShell:  Delegate animation for #24 to null
+11-27 14:24:39.168   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.DefaultTransitionHandler@23796e0
+11-27 14:24:39.168   792   842 V WindowManagerShell: start default transition animation, info = {id=24 t=OPEN f=0x0 trk=1 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@e60aebb} m=OPEN f=NONE leash=Surface(name=Task=20)/@0xcd250ec sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@4098fd8} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xcbc8cb5 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:39.173   792   842 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@3000616 animAttr=0x13 type=OPEN isEntrance=false
+11-27 14:24:39.173   792   842 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@4ee6da2 animAttr=0x12 type=OPEN isEntrance=true
+11-27 14:24:39.173   792   842 V WindowManagerShell:  animated by com.android.wm.shell.transition.DefaultTransitionHandler@23796e0
+11-27 14:24:39.173   505   522 V WindowManager: Sent Transition #24 createdAt=11-27 14:24:38.805 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=20 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity } baseActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} topActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} origActivity=null realActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} numActivities=1 lastActiveTime=104639 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{adf69a Task{f9192de #20 type=standard A=10141:pl.tekla.pellet}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 128 - 0, 0) topActivityInfo=ActivityInfo{511bcb pl.tekla.pellet.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+11-27 14:24:39.173   505   522 V WindowManager:     startWCT=WindowContainerTransaction { changes = {} hops = [] errorCallbackToken=null taskFragmentOrganizer=null }
+11-27 14:24:39.174   505   522 V WindowManager:     info={id=24 t=OPEN f=0x0 trk=1 r=[0@Point(0, 0)] c=[{WCT{RemoteToken{adf69a Task{f9192de #20 type=standard A=10141:pl.tekla.pellet}}} m=OPEN f=NONE leash=Surface(name=Task=20)/@0x12743bc sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{RemoteToken{a5bdae7 Task{35299f #1 type=home}}} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xea46426 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:39.179   792   842 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#24)android.os.BinderProxy@107f4b6@1
+11-27 14:24:39.180   505   522 V WindowManager: Finish Transition #24: created at 11-27 14:24:38.805 collect-started=0.017ms request-sent=6.117ms started=8.276ms ready=355.361ms sent=361.263ms finished=374.523ms
+11-27 14:24:39.181   792   842 V WindowManagerShell: Track 1 became idle
+11-27 14:24:39.181   792   842 V WindowManagerShell: All active transition animations finished
+11-27 14:24:39.196  3045  3045 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10141; state: ENABLED
+11-27 14:24:39.197  3045  3045 D CompatibilityChangeReporter: Compat change id reported: 242716250; UID 10141; state: ENABLED
+11-27 14:24:39.207   505  1573 D CompatibilityChangeReporter: Compat change id reported: 170503758; UID 10141; state: ENABLED
+11-27 14:24:39.215  3045  3045 W ziparchive: Unable to open '/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.dm': No such file or directory
+11-27 14:24:39.216  3045  3045 W ziparchive: Unable to open '/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.dm': No such file or directory
+11-27 14:24:39.463   505   514 I system_server: NativeAlloc concurrent copying GC freed 74484(3412KB) AllocSpace objects, 10(200KB) LOS objects, 50% free, 16MB/33MB, paused 30us,36us total 106.601ms
+11-27 14:24:39.477   389   389 E BpTransactionCompletedListener: Failed to transact (-32)
+11-27 14:24:39.483  3045  3045 D nativeloader: Configuring clns-6 for other apk /data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/lib/x86_64:/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/pl.tekla.pellet
+11-27 14:24:39.494  3045  3045 V GraphicsEnvironment: Currently set values for:
+11-27 14:24:39.494  3045  3045 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+11-27 14:24:39.494  3045  3045 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+11-27 14:24:39.494  3045  3045 V GraphicsEnvironment: ANGLE GameManagerService for pl.tekla.pellet: false
+11-27 14:24:39.494  3045  3045 V GraphicsEnvironment: pl.tekla.pellet is not listed in per-application setting
+11-27 14:24:39.495  3045  3045 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+11-27 14:24:39.505   505   519 I ActivityManager: Flag disabled. Ignoring finishAttachApplication from uid: 10141. pid: 3045
+11-27 14:24:39.509  3045  3065 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+11-27 14:24:39.510  3045  3065 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+11-27 14:24:39.511  3045  3065 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+11-27 14:24:39.528  3045  3045 W pl.tekla.pellet: Method boolean androidx.compose.runtime.snapshots.SnapshotStateList.conditionalUpdate(boolean, kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-27 14:24:39.528  3045  3045 W pl.tekla.pellet: Common causes for lock verification issues are non-optimized dex code
+11-27 14:24:39.528  3045  3045 W pl.tekla.pellet: and incorrect proguard optimizations.
+11-27 14:24:39.528  3045  3045 W pl.tekla.pellet: Method boolean androidx.compose.runtime.snapshots.SnapshotStateList.conditionalUpdate$default(androidx.compose.runtime.snapshots.SnapshotStateList, boolean, kotlin.jvm.functions.Function1, int, java.lang.Object) failed lock verification and will run slower.
+11-27 14:24:39.528  3045  3045 W pl.tekla.pellet: Method java.lang.Object androidx.compose.runtime.snapshots.SnapshotStateList.mutate(kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-27 14:24:39.529  3045  3045 W pl.tekla.pellet: Method void androidx.compose.runtime.snapshots.SnapshotStateList.update(boolean, kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-27 14:24:39.529  3045  3045 W pl.tekla.pellet: Method void androidx.compose.runtime.snapshots.SnapshotStateList.update$default(androidx.compose.runtime.snapshots.SnapshotStateList, boolean, kotlin.jvm.functions.Function1, int, java.lang.Object) failed lock verification and will run slower.
+11-27 14:24:39.595   324  2269 W resolv  : SSL_connect ssl error =5, mark 0xf0065: Connection refused
+11-27 14:24:39.595   324  2269 W resolv  : TLS Handshake failed
+11-27 14:24:39.595   324  2269 W resolv  : query failed
+11-27 14:24:39.595   324  2269 W resolv  : validateDnsTlsServer returned 0 for 10.0.2.3
+11-27 14:24:39.595   324  2269 W resolv  : Validation failed
+11-27 14:24:39.654  3045  3045 D CompatibilityChangeReporter: Compat change id reported: 270306772; UID 10141; state: ENABLED
+11-27 14:24:39.654  3045  3045 D CompatibilityChangeReporter: Compat change id reported: 235355681; UID 10141; state: ENABLED
+11-27 14:24:39.654   505   727 I serviceDiscovery: [MdnsSocketProvider] Start monitoring sockets.
+11-27 14:24:39.654   505   727 I TetheringManager: registerTetheringEventCallback caller:android
+11-27 14:24:39.655   505   727 I serviceDiscovery: [MdnsDiscoveryManager] Registering listener for serviceType: _teklapellet._tcp.local
+11-27 14:24:39.655   505   724 D ConnectivityService: NetReassign [no changes] [c 0] [a 0] [i 0]
+11-27 14:24:39.656   505   727 D TrafficStats: tagSocket(202) with statsTag=0xffffffff, statsUid=-1
+11-27 14:24:39.676  3045  3045 D CompatibilityChangeReporter: Compat change id reported: 237531167; UID 10141; state: DISABLED
+11-27 14:24:39.677  3045  3045 W OpenGLRenderer: Unknown dataspace 0
+11-27 14:24:39.826  3045  3045 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-27 14:24:39.826  3045  3045 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-27 14:24:39.828   505  1572 D CoreBackPreview: Window{41ff58f u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@ab05bab, mPriority=0, mIsAnimationCallback=false}
+11-27 14:24:40.002  3045  3063 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-27 14:24:40.055   134   134 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+11-27 14:24:40.055  3045  3063 I Gralloc4: mapper 4.x is not supported
+11-27 14:24:40.792   505   522 W ziparchive: Unable to open '/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.dm': No such file or directory
+11-27 14:24:40.792   505   522 I ActivityTaskManager: Displayed pl.tekla.pellet/.MainActivity for user 0: +1s990ms
+11-27 14:24:40.800  3045  3059 I OpenGLRenderer: Davey! duration=1283ms; Flags=1, FrameTimelineVsyncId=16560, IntendedVsync=105339003994, Vsync=105505670654, InputEventId=0, HandleInputStart=105508816817, AnimationStart=105508819762, PerformTraversalsStart=105508884718, DrawStart=105894839626, FrameDeadline=105355670660, FrameInterval=105508706644, FrameStartTime=16666666, SyncQueued=105913114012, SyncStart=105913363767, IssueDrawCommandsStart=105913733854, SwapBuffers=106519720420, FrameCompleted=106622508656, DequeueBufferDuration=3315, QueueBufferDuration=219475, GpuCompleted=106622508656, SwapBuffersCompleted=106613945313, DisplayPresentTime=0, CommandSubmissionCompleted=106519720420, 
+11-27 14:24:40.807  3045  3045 I Choreographer: Skipped 65 frames!  The application may be doing too much work on its main thread.
+11-27 14:24:40.824   792   862 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@613fafd
+11-27 14:24:40.824   505  1572 D CoreBackPreview: Window{1193b51 u0 Splash Screen pl.tekla.pellet EXITING}: Setting back callback null
+11-27 14:24:40.824   505  1572 W InputManager-JNI: Input channel object '1193b51 Splash Screen pl.tekla.pellet (client)' was disposed without first being removed with the input manager!
+11-27 14:24:40.826  1043  1092 I ImeTracker: com.android.launcher3:895e1925: onRequestHide at ORIGIN_CLIENT_HIDE_SOFT_INPUT reason HIDE_SOFT_INPUT
+11-27 14:24:40.826   505   841 I ImeTracker: com.android.launcher3:895e1925: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-27 14:24:40.879   792   842 W Looper  : Slow delivery took 33ms wmshell.main h=android.os.Handler c=com.android.wm.shell.pip.PinnedStackListenerForwarder$PinnedTaskListenerImpl$$ExternalSyntheticLambda1@c6c9f08 m=0
+11-27 14:24:40.891   505  1572 D CompatibilityChangeReporter: Compat change id reported: 214016041; UID 10141; state: ENABLED
+11-27 14:24:40.891   505  1572 I ImeTracker: pl.tekla.pellet:51ae72ac: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_UNSPECIFIED_WINDOW
+11-27 14:24:40.891   505  1572 I ImeTracker: pl.tekla.pellet:51ae72ac: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-27 14:24:40.935  3045  3060 I OpenGLRenderer: Davey! duration=1190ms; Flags=0, FrameTimelineVsyncId=16590, IntendedVsync=105539003986, Vsync=106622337276, InputEventId=0, HandleInputStart=106636078239, AnimationStart=106636081835, PerformTraversalsStart=106663099996, DrawStart=106665363116, FrameDeadline=106655670608, FrameInterval=106635366922, FrameStartTime=16666666, SyncQueued=106666102410, SyncStart=106666540693, IssueDrawCommandsStart=106666700259, SwapBuffers=106667847347, FrameCompleted=106730377682, DequeueBufferDuration=2574, QueueBufferDuration=142892, GpuCompleted=106729883530, SwapBuffersCompleted=106730377682, DisplayPresentTime=0, CommandSubmissionCompleted=106667847347, 
+11-27 14:24:41.640   792   792 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+11-27 14:24:41.651   792   874 D EGL_emulation: app_time_stats: avg=30003.76ms min=30003.76ms max=30003.76ms count=1
+11-27 14:24:42.010  3045  3063 D EGL_emulation: app_time_stats: avg=122.53ms min=72.61ms max=136.89ms count=10
+11-27 14:24:42.062   792   792 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+11-27 14:24:42.813   505  1823 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+11-27 14:24:43.057  3045  3063 D EGL_emulation: app_time_stats: avg=116.27ms min=50.01ms max=139.44ms count=9
+11-27 14:24:44.109  3045  3063 D EGL_emulation: app_time_stats: avg=131.49ms min=116.86ms max=135.29ms count=8
+11-27 14:24:45.063   792   792 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+11-27 14:24:45.125  3081  3081 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+11-27 14:24:45.125  3081  3081 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+11-27 14:24:45.138   134   134 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+11-27 14:24:45.138  3081  3082 I Gralloc4: mapper 4.x is not supported
+11-27 14:24:45.167  3045  3063 D EGL_emulation: app_time_stats: avg=132.17ms min=118.01ms max=140.45ms count=8
+11-27 14:24:45.361   505   519 I ActivityManager: Force stopping pl.tekla.pellet appid=10141 user=0: from pid 3085
+11-27 14:24:45.362   505   519 I ActivityManager: Killing 3045:pl.tekla.pellet/u0a141 (adj 0): stop pl.tekla.pellet due to from pid 3085
+11-27 14:24:45.362   505   523 D DisplayManagerService: Drop pending events for gone uid 10141
+11-27 14:24:45.363   505   519 W ActivityTaskManager: Force removing ActivityRecord{9266219 u0 pl.tekla.pellet/.MainActivity t20 f}}: app died, no saved state
+11-27 14:24:45.364   792   842 W Looper  : Drained
+11-27 14:24:45.367   792   842 V WindowManagerShell: Transition requested: android.os.BinderProxy@ae456a1 TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=20 displayId=0 isRunning=false baseIntent=Intent { flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity } baseActivity=null topActivity=null origActivity=null realActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} numActivities=0 lastActiveTime=104985 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@72420c6} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 128 - 0, 0) topActivityInfo=null launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+11-27 14:24:45.368   505   519 D OomAdjuster: Not killing cached processes
+11-27 14:24:45.371   992   992 D CarrierSvcBindHelper: onHandleForceStop: [pl.tekla.pellet]
+11-27 14:24:45.371   992   992 D CarrierSvcBindHelper: No carrier app for: 0
+11-27 14:24:45.373   505   519 V ActivityManager: Got obituary of 3045:pl.tekla.pellet
+11-27 14:24:45.374   325   325 I Zygote  : Process 3045 exited due to signal 9 (Killed)
+11-27 14:24:45.374   505   841 I WindowManager: WIN DEATH: Window{41ff58f u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity}
+11-27 14:24:45.375   505   841 W InputManager-JNI: Input channel object '41ff58f pl.tekla.pellet/pl.tekla.pellet.MainActivity (client)' was disposed without first being removed with the input manager!
+11-27 14:24:45.375   505   727 I serviceDiscovery: [MdnsDiscoveryManager] Unregistering listener for serviceType:_teklapellet._tcp.local
+11-27 14:24:45.375   505  2159 I ImeTracker: pl.tekla.pellet:65b869aa: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_REMOVE_CLIENT
+11-27 14:24:45.375   505  2159 I ImeTracker: pl.tekla.pellet:65b869aa: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-27 14:24:45.375   505   727 I serviceDiscovery: [MdnsSocketProvider] Stop monitoring sockets.
+11-27 14:24:45.375   505   727 I TetheringManager: unregisterTetheringEventCallback caller:android
+11-27 14:24:45.377   389   389 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+11-27 14:24:45.380   505   525 V WindowManager: Unknown focus tokens, dropping reportFocusChanged
+11-27 14:24:45.395   505   526 W WindowManager: Failed to deliver inset control state change to w=Window{41ff58f u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity EXITING}
+11-27 14:24:45.395   505   526 W WindowManager: android.os.DeadObjectException
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.view.IWindow$Stub$Proxy.insetsControlChanged(IWindow.java:479)
+11-27 14:24:45.395   505   526 W WindowManager: 	at com.android.server.wm.WindowState.notifyInsetsControlChanged(WindowState.java:3802)
+11-27 14:24:45.395   505   526 W WindowManager: 	at com.android.server.wm.InsetsStateController.lambda$notifyPendingInsetsControlChanged$3(InsetsStateController.java:343)
+11-27 14:24:45.395   505   526 W WindowManager: 	at com.android.server.wm.InsetsStateController.$r8$lambda$8yykPRG1GyNq_J17QvL9d5xANMc(InsetsStateController.java:0)
+11-27 14:24:45.395   505   526 W WindowManager: 	at com.android.server.wm.InsetsStateController$$ExternalSyntheticLambda2.run(R8$$SyntheticClass:0)
+11-27 14:24:45.395   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.executeAfterPrepareSurfacesRunnables(WindowAnimator.java:294)
+11-27 14:24:45.395   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.animate(WindowAnimator.java:202)
+11-27 14:24:45.395   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.lambda$new$1(WindowAnimator.java:99)
+11-27 14:24:45.395   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.$r8$lambda$aHNu1uhcqxihX5NZc4McDDQPAyw(WindowAnimator.java:0)
+11-27 14:24:45.395   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator$$ExternalSyntheticLambda1.doFrame(R8$$SyntheticClass:0)
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1337)
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.view.Choreographer$CallbackRecord.run(Choreographer.java:1348)
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.view.Choreographer.doCallbacks(Choreographer.java:952)
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.view.Choreographer.doFrame(Choreographer.java:878)
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.view.Choreographer$FrameDisplayEventReceiver.run(Choreographer.java:1322)
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.os.Handler.handleCallback(Handler.java:958)
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.os.Looper.loopOnce(Looper.java:205)
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.os.Looper.loop(Looper.java:294)
+11-27 14:24:45.395   505   526 W WindowManager: 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-27 14:24:45.395   505   526 W WindowManager: 	at com.android.server.ServiceThread.run(ServiceThread.java:46)
+11-27 14:24:45.398   505  1572 D CompatibilityChangeReporter: Compat change id reported: 161252188; UID 10141; state: DISABLED
+11-27 14:24:45.398   505  1572 W ActivityTaskManager: callingPackage for (uid=2000, pid=3090) has no WPC
+11-27 14:24:45.401   505  1572 V SplashScreenExceptionList: SplashScreen checking exception for package pl.tekla.pellet (target sdk:34) -> false
+11-27 14:24:45.403   792   864 D SplashScreenView: Build android.window.SplashScreenView{c4ebbdd V.E...... ......ID 0,0-0,0}
+11-27 14:24:45.403   792   864 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-27 14:24:45.403   792   864 D SplashScreenView: Branding: view: android.view.View{4b18352 G.ED..... ......I. 0,0-0,0 #10204ef android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-27 14:24:45.406   505  1572 I ActivityTaskManager: Add Task{f9192de #20 type=standard A=10141:pl.tekla.pellet} to hidden list because adding Task{acaf2fe #21 type=standard A=10141:pl.tekla.pellet}
+11-27 14:24:45.407   505  1572 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity (has extras)} with LAUNCH_MULTIPLE from uid 2000 (BAL_ALLOW_PERMISSION) result code=0
+11-27 14:24:45.412   505   525 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10141; state: DISABLED
+11-27 14:24:45.414   505   533 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10141; state: ENABLED
+11-27 14:24:45.420   325   325 D Zygote  : Forked child process 3094
+11-27 14:24:45.422   505   533 I ActivityManager: Start proc 3094:pl.tekla.pellet/u0a141 for next-top-activity {pl.tekla.pellet/pl.tekla.pellet.MainActivity}
+11-27 14:24:45.426   505   841 D CoreBackPreview: Window{25f410a u0 Splash Screen pl.tekla.pellet}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@a027bf1, mPriority=0, mIsAnimationCallback=false}
+11-27 14:24:45.451  3094  3094 I pl.tekla.pellet: Late-enabling -Xcheck:jni
+11-27 14:24:45.476  3094  3094 I pl.tekla.pellet: Using CollectorTypeCC GC.
+11-27 14:24:45.477  3094  3094 W pl.tekla.pellet: Unexpected CPU variant for x86: x86_64.
+11-27 14:24:45.477  3094  3094 W pl.tekla.pellet: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+11-27 14:24:45.480   405   418 I adbd    : jdwp connection from 3094
+11-27 14:24:45.491   505   526 W WindowManager: Failed to deliver inset control state change to w=Window{41ff58f u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity EXITING}
+11-27 14:24:45.491   505   526 W WindowManager: android.os.DeadObjectException
+11-27 14:24:45.491   505   526 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+11-27 14:24:45.491   505   526 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-27 14:24:45.491   505   526 W WindowManager: 	at android.view.IWindow$Stub$Proxy.insetsControlChanged(IWindow.java:479)
+11-27 14:24:45.491   505   526 W WindowManager: 	at com.android.server.wm.WindowState.notifyInsetsControlChanged(WindowState.java:3802)
+11-27 14:24:45.491   505   526 W WindowManager: 	at com.android.server.wm.InsetsStateController.lambda$notifyPendingInsetsControlChanged$3(InsetsStateController.java:343)
+11-27 14:24:45.491   505   526 W WindowManager: 	at com.android.server.wm.InsetsStateController.$r8$lambda$8yykPRG1GyNq_J17QvL9d5xANMc(InsetsStateController.java:0)
+11-27 14:24:45.491   505   526 W WindowManager: 	at com.android.server.wm.InsetsStateController$$ExternalSyntheticLambda2.run(R8$$SyntheticClass:0)
+11-27 14:24:45.491   505   526 W WindowManager: 	at com.android.server.wm.WindowAnimator.executeAfterPrepareSurfacesRunnables(WindowAnimator.java:294)
+11-27 14:24:45.491   505   526 W WindowManager: 	at com.android.server.wm.RootWindowContainer.performSurfacePlacementNoTrace(RootWindowContainer.java:811)
+11-27 14:24:45.491   505   526 W WindowManager: 	at com.android.server.wm.RootWindowContainer.performSurfacePlacement(RootWindowContainer.java:756)
+11-27 14:24:45.491   505   526 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacementLoop(WindowSurfacePlacer.java:177)
+11-27 14:24:45.491   505   526 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:126)
+11-27 14:24:45.491   505   526 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:115)
+11-27 14:24:45.491   505   526 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer$Traverser.run(WindowSurfacePlacer.java:57)
+11-27 14:24:45.491   505   526 W WindowManager: 	at android.os.Handler.handleCallback(Handler.java:958)
+11-27 14:24:45.491   505   526 W WindowManager: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+11-27 14:24:45.491   505   526 W WindowManager: 	at android.os.Looper.loopOnce(Looper.java:205)
+11-27 14:24:45.491   505   526 W WindowManager: 	at android.os.Looper.loop(Looper.java:294)
+11-27 14:24:45.491   505   526 W WindowManager: 	at android.os.HandlerThread.run(HandlerThread.java:67)
+11-27 14:24:45.491   505   526 W WindowManager: 	at com.android.server.ServiceThread.run(ServiceThread.java:46)
+11-27 14:24:45.512  3094  3094 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10141; state: ENABLED
+11-27 14:24:45.512  3094  3094 D CompatibilityChangeReporter: Compat change id reported: 242716250; UID 10141; state: ENABLED
+11-27 14:24:45.544   505   522 V WindowManager: Sent Transition #25 createdAt=11-27 14:24:45.363 via request=TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=20 displayId=0 isRunning=false baseIntent=Intent { flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity } baseActivity=null topActivity=null origActivity=null realActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} numActivities=0 lastActiveTime=104985 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{adf69a Task{f9192de #20 type=standard A=10141:pl.tekla.pellet}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 128 - 0, 0) topActivityInfo=null launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+11-27 14:24:45.544   505   522 V WindowManager:     startWCT=WindowContainerTransaction { changes = {} hops = [] errorCallbackToken=null taskFragmentOrganizer=null }
+11-27 14:24:45.544   505   522 V WindowManager:     info={id=25 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{RemoteToken{30d494f Task{acaf2fe #21 type=standard A=10141:pl.tekla.pellet}}} m=OPEN f=MOVE_TO_TOP leash=Surface(name=Task=21)/@0xf73b829 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{RemoteToken{adf69a Task{f9192de #20 type=standard A=10141:pl.tekla.pellet}}} m=CLOSE f=NONE leash=Surface(name=Task=20)/@0x12743bc sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{4f09e2b token=android.os.Binder@3fe9517})/@0x95d20f5 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:45.546   792   842 V WindowManagerShell: onTransitionReady android.os.BinderProxy@ae456a1: {id=25 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@8949177} m=OPEN f=MOVE_TO_TOP leash=Surface(name=Task=21)/@0xf24269b sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@49e61e4} m=CLOSE f=NONE leash=Surface(name=Task=20)/@0xd09da38 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{4f09e2b token=android.os.Binder@3fe9517})/@0xcff2a11 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:45.546   792   842 V WindowManagerShell: Playing animation for (#25)android.os.BinderProxy@ae456a1@0
+11-27 14:24:45.546   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.DefaultMixedHandler@23b5b6b
+11-27 14:24:45.546   792   842 V WindowManagerShell:  try handler com.android.wm.shell.keyguard.KeyguardTransitionHandler@8e2b6c8
+11-27 14:24:45.546   792   842 V WindowManagerShell:  try handler com.android.wm.shell.activityembedding.ActivityEmbeddingController@2e8f361
+11-27 14:24:45.546   792   842 V WindowManagerShell:  try handler com.android.wm.shell.recents.RecentsTransitionHandler@55d5e86
+11-27 14:24:45.546   792   842 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+11-27 14:24:45.546   792   842 V WindowManagerShell:  try handler com.android.wm.shell.pip.PipTransition@d324347
+11-27 14:24:45.546   792   842 V WindowManagerShell:  try handler com.android.wm.shell.splitscreen.StageCoordinator@ed07774
+11-27 14:24:45.546   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.RemoteTransitionHandler@ae0649d
+11-27 14:24:45.546   792   842 V WindowManagerShell: Transition doesn't have explicit remote, search filters for match for {id=25 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@8949177} m=OPEN f=MOVE_TO_TOP leash=Surface(name=Task=21)/@0xf24269b sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@49e61e4} m=CLOSE f=NONE leash=Surface(name=Task=20)/@0xd09da38 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{4f09e2b token=android.os.Binder@3fe9517})/@0xcff2a11 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:45.546   792   842 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x100 checks=[{atype=home independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=TOP topActivity=ComponentInfo{com.android.launcher3/com.android.launcher3.uioverrides.QuickstepLauncher}},{atype=standard independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@dfd9aa, appThread = android.app.IApplicationThread$Stub$Proxy@71da99b, debugName = QuickstepLaunchHome }}
+11-27 14:24:45.546   792   842 V WindowManagerShell:  Delegate animation for #25 to null
+11-27 14:24:45.546   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.DefaultTransitionHandler@23796e0
+11-27 14:24:45.546   792   842 V WindowManagerShell: start default transition animation, info = {id=25 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@8949177} m=OPEN f=MOVE_TO_TOP leash=Surface(name=Task=21)/@0xf24269b sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@49e61e4} m=CLOSE f=NONE leash=Surface(name=Task=20)/@0xd09da38 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{4f09e2b token=android.os.Binder@3fe9517})/@0xcff2a11 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:45.547   792   842 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@736ce13 animAttr=0xb type=CLOSE isEntrance=false
+11-27 14:24:45.547   792   842 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@f540a49 animAttr=0xa type=CLOSE isEntrance=true
+11-27 14:24:45.548   792   842 V WindowManagerShell:  animated by com.android.wm.shell.transition.DefaultTransitionHandler@23796e0
+11-27 14:24:45.548  3094  3094 W ziparchive: Unable to open '/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.dm': No such file or directory
+11-27 14:24:45.548  3094  3094 W ziparchive: Unable to open '/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.dm': No such file or directory
+11-27 14:24:45.570   792   842 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#25)android.os.BinderProxy@ae456a1@0
+11-27 14:24:45.572   505   522 V WindowManager: Finish Transition #25: created at 11-27 14:24:45.363 collect-started=0.021ms request-sent=0.094ms started=4.56ms ready=126.64ms sent=171.316ms finished=208.681ms
+11-27 14:24:45.572   505   841 W WindowManager: Exception thrown during dispatchAppVisibility Window{41ff58f u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity EXITING}
+11-27 14:24:45.572   505   841 W WindowManager: android.os.DeadObjectException
+11-27 14:24:45.572   505   841 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+11-27 14:24:45.572   505   841 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-27 14:24:45.572   505   841 W WindowManager: 	at android.view.IWindow$Stub$Proxy.dispatchAppVisibility(IWindow.java:546)
+11-27 14:24:45.572   505   841 W WindowManager: 	at com.android.server.wm.WindowState.sendAppVisibilityToClients(WindowState.java:3271)
+11-27 14:24:45.572   505   841 W WindowManager: 	at com.android.server.wm.WindowContainer.sendAppVisibilityToClients(WindowContainer.java:1221)
+11-27 14:24:45.572   505   841 W WindowManager: 	at com.android.server.wm.WindowToken.setClientVisible(WindowToken.java:409)
+11-27 14:24:45.572   505   841 W WindowManager: 	at com.android.server.wm.ActivityRecord.setClientVisible(ActivityRecord.java:6946)
+11-27 14:24:45.572   505   841 W WindowManager: 	at com.android.server.wm.ActivityRecord.postApplyAnimation(ActivityRecord.java:5637)
+11-27 14:24:45.572   505   841 W WindowManager: 	at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:5580)
+11-27 14:24:45.572   505   841 W WindowManager: 	at com.android.server.wm.Transition.finishTransition(Transition.java:1151)
+11-27 14:24:45.572   505   841 W WindowManager: 	at com.android.server.wm.TransitionController.finishTransition(TransitionController.java:868)
+11-27 14:24:45.572   505   841 W WindowManager: 	at com.android.server.wm.WindowOrganizerController.finishTransition(WindowOrganizerController.java:396)
+11-27 14:24:45.572   505   841 W WindowManager: 	at android.window.IWindowOrganizerController$Stub.onTransact(IWindowOrganizerController.java:286)
+11-27 14:24:45.572   505   841 W WindowManager: 	at com.android.server.wm.WindowOrganizerController.onTransact(WindowOrganizerController.java:181)
+11-27 14:24:45.572   505   841 W WindowManager: 	at android.os.Binder.execTransactInternal(Binder.java:1339)
+11-27 14:24:45.572   505   841 W WindowManager: 	at android.os.Binder.execTransact(Binder.java:1275)
+11-27 14:24:45.572   505   841 I Process : Sending signal. PID: 3045 SIG: 9
+11-27 14:24:45.639   505   841 W WindowManager: Failed to deliver inset control state change to w=Window{41ff58f u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity EXITING}
+11-27 14:24:45.639   505   841 W WindowManager: android.os.DeadObjectException
+11-27 14:24:45.639   505   841 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+11-27 14:24:45.639   505   841 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-27 14:24:45.639   505   841 W WindowManager: 	at android.view.IWindow$Stub$Proxy.insetsControlChanged(IWindow.java:479)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowState.notifyInsetsControlChanged(WindowState.java:3802)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.InsetsStateController.lambda$notifyPendingInsetsControlChanged$3(InsetsStateController.java:343)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.InsetsStateController.$r8$lambda$8yykPRG1GyNq_J17QvL9d5xANMc(InsetsStateController.java:0)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.InsetsStateController$$ExternalSyntheticLambda2.run(R8$$SyntheticClass:0)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowAnimator.executeAfterPrepareSurfacesRunnables(WindowAnimator.java:294)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.RootWindowContainer.performSurfacePlacementNoTrace(RootWindowContainer.java:811)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.RootWindowContainer.performSurfacePlacement(RootWindowContainer.java:756)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacementLoop(WindowSurfacePlacer.java:177)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:126)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:115)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowState.setupWindowForRemoveOnExit(WindowState.java:2538)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowState.removeIfPossible(WindowState.java:2498)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowToken.removeAllWindowsIfPossible(WindowToken.java:249)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.ActivityRecord.removeIfPossible(ActivityRecord.java:4259)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.ActivityRecord.handleCompleteDeferredRemoval(ActivityRecord.java:4266)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowContainer.handleCompleteDeferredRemoval(WindowContainer.java:1396)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.TaskFragment.handleCompleteDeferredRemoval(TaskFragment.java:2844)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowContainer.handleCompleteDeferredRemoval(WindowContainer.java:1396)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowContainer.handleCompleteDeferredRemoval(WindowContainer.java:1396)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowContainer.handleCompleteDeferredRemoval(WindowContainer.java:1396)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowContainer.handleCompleteDeferredRemoval(WindowContainer.java:1396)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowContainer.handleCompleteDeferredRemoval(WindowContainer.java:1396)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowContainer.handleCompleteDeferredRemoval(WindowContainer.java:1396)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.DisplayContent.handleCompleteDeferredRemoval(DisplayContent.java:3382)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.Transition.finishTransition(Transition.java:1322)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.TransitionController.finishTransition(TransitionController.java:868)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowOrganizerController.finishTransition(WindowOrganizerController.java:396)
+11-27 14:24:45.639   505   841 W WindowManager: 	at android.window.IWindowOrganizerController$Stub.onTransact(IWindowOrganizerController.java:286)
+11-27 14:24:45.639   505   841 W WindowManager: 	at com.android.server.wm.WindowOrganizerController.onTransact(WindowOrganizerController.java:181)
+11-27 14:24:45.639   505   841 W WindowManager: 	at android.os.Binder.execTransactInternal(Binder.java:1339)
+11-27 14:24:45.639   505   841 W WindowManager: 	at android.os.Binder.execTransact(Binder.java:1275)
+11-27 14:24:45.660   505   525 W ActivityManager: setHasOverlayUi called on unknown pid: 3045
+11-27 14:24:45.679   792   842 V WindowManagerShell: Track 0 became idle
+11-27 14:24:45.679   792   842 V WindowManagerShell: All active transition animations finished
+11-27 14:24:45.680   792   842 W Looper  : Slow dispatch took 110ms wmshell.main h=android.os.Handler c=com.android.wm.shell.transition.DefaultTransitionHandler$$ExternalSyntheticLambda7@ec44168 m=0
+11-27 14:24:45.680   792   842 W Looper  : Slow delivery took 42ms wmshell.main h=android.os.Handler c=com.android.wm.shell.pip.phone.PipController$$ExternalSyntheticLambda1@3edb981 m=0
+11-27 14:24:45.697   389   389 E BpTransactionCompletedListener: Failed to transact (-32)
+11-27 14:24:45.801  3094  3094 D nativeloader: Configuring clns-6 for other apk /data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/lib/x86_64:/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/pl.tekla.pellet
+11-27 14:24:45.809  3094  3094 V GraphicsEnvironment: Currently set values for:
+11-27 14:24:45.809  3094  3094 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+11-27 14:24:45.809  3094  3094 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+11-27 14:24:45.809  3094  3094 V GraphicsEnvironment: ANGLE GameManagerService for pl.tekla.pellet: false
+11-27 14:24:45.810  3094  3094 V GraphicsEnvironment: pl.tekla.pellet is not listed in per-application setting
+11-27 14:24:45.810  3094  3094 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+11-27 14:24:45.823   505   841 I ActivityManager: Flag disabled. Ignoring finishAttachApplication from uid: 10141. pid: 3094
+11-27 14:24:45.834   792   842 W Looper  : Drained
+11-27 14:24:45.844  3094  3114 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+11-27 14:24:45.845  3094  3114 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+11-27 14:24:45.846  3094  3114 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+11-27 14:24:45.848  3094  3094 W pl.tekla.pellet: Method boolean androidx.compose.runtime.snapshots.SnapshotStateList.conditionalUpdate(boolean, kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-27 14:24:45.848  3094  3094 W pl.tekla.pellet: Common causes for lock verification issues are non-optimized dex code
+11-27 14:24:45.848  3094  3094 W pl.tekla.pellet: and incorrect proguard optimizations.
+11-27 14:24:45.848  3094  3094 W pl.tekla.pellet: Method boolean androidx.compose.runtime.snapshots.SnapshotStateList.conditionalUpdate$default(androidx.compose.runtime.snapshots.SnapshotStateList, boolean, kotlin.jvm.functions.Function1, int, java.lang.Object) failed lock verification and will run slower.
+11-27 14:24:45.849  3094  3094 W pl.tekla.pellet: Method java.lang.Object androidx.compose.runtime.snapshots.SnapshotStateList.mutate(kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-27 14:24:45.849  3094  3094 W pl.tekla.pellet: Method void androidx.compose.runtime.snapshots.SnapshotStateList.update(boolean, kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-27 14:24:45.849  3094  3094 W pl.tekla.pellet: Method void androidx.compose.runtime.snapshots.SnapshotStateList.update$default(androidx.compose.runtime.snapshots.SnapshotStateList, boolean, kotlin.jvm.functions.Function1, int, java.lang.Object) failed lock verification and will run slower.
+11-27 14:24:45.975  3094  3094 D CompatibilityChangeReporter: Compat change id reported: 270306772; UID 10141; state: ENABLED
+11-27 14:24:45.976  3094  3094 D CompatibilityChangeReporter: Compat change id reported: 235355681; UID 10141; state: ENABLED
+11-27 14:24:45.976   505   727 I serviceDiscovery: [MdnsSocketProvider] Start monitoring sockets.
+11-27 14:24:45.977   505   727 I TetheringManager: registerTetheringEventCallback caller:android
+11-27 14:24:45.977   505   727 I serviceDiscovery: [MdnsDiscoveryManager] Registering listener for serviceType: _teklapellet._tcp.local
+11-27 14:24:45.977   505   724 D ConnectivityService: NetReassign [no changes] [c 0] [a 0] [i 0]
+11-27 14:24:45.978   505   727 D TrafficStats: tagSocket(415) with statsTag=0xffffffff, statsUid=-1
+11-27 14:24:46.001  3094  3094 D CompatibilityChangeReporter: Compat change id reported: 237531167; UID 10141; state: DISABLED
+11-27 14:24:46.002  3094  3094 W OpenGLRenderer: Unknown dataspace 0
+11-27 14:24:46.148  3094  3094 W WindowOnBackDispatcher: OnBackInvokedCallback is not enabled for the application.
+11-27 14:24:46.148  3094  3094 W WindowOnBackDispatcher: Set 'android:enableOnBackInvokedCallback="true"' in the application manifest.
+11-27 14:24:46.149   505   841 D CoreBackPreview: Window{178641a u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@da8a7e6, mPriority=0, mIsAnimationCallback=false}
+11-27 14:24:46.292  3094  3112 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-27 14:24:46.342   134   134 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+11-27 14:24:46.343  3094  3112 I Gralloc4: mapper 4.x is not supported
+11-27 14:24:47.056   505   522 W ziparchive: Unable to open '/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.dm': No such file or directory
+11-27 14:24:47.057   505   522 I ActivityTaskManager: Displayed pl.tekla.pellet/.MainActivity for user 0: +1s657ms
+11-27 14:24:47.059  3094  3094 I Choreographer: Skipped 61 frames!  The application may be doing too much work on its main thread.
+11-27 14:24:47.065  3094  3109 I OpenGLRenderer: Davey! duration=1233ms; Flags=1, FrameTimelineVsyncId=17714, IntendedVsync=111655675949, Vsync=111822342599, InputEventId=0, HandleInputStart=111834197825, AnimationStart=111834200529, PerformTraversalsStart=111834285254, DrawStart=112189385438, FrameDeadline=111672342615, FrameInterval=111834114061, FrameStartTime=16666665, SyncQueued=112205165232, SyncStart=112205381031, IssueDrawCommandsStart=112205764829, SwapBuffers=112787653069, FrameCompleted=112889156169, DequeueBufferDuration=2905, QueueBufferDuration=179826, GpuCompleted=112889156169, SwapBuffersCompleted=112876218906, DisplayPresentTime=0, CommandSubmissionCompleted=112787653069, 
+11-27 14:24:47.067   792   862 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@40038d9
+11-27 14:24:47.067   505  1572 D CoreBackPreview: Window{25f410a u0 Splash Screen pl.tekla.pellet EXITING}: Setting back callback null
+11-27 14:24:47.067   505  1572 W InputManager-JNI: Input channel object '25f410a Splash Screen pl.tekla.pellet (client)' was disposed without first being removed with the input manager!
+11-27 14:24:47.072  1043  1092 I ImeTracker: com.android.launcher3:49ecbe7d: onRequestHide at ORIGIN_CLIENT_HIDE_SOFT_INPUT reason HIDE_SOFT_INPUT
+11-27 14:24:47.072  1043  1092 I ImeTracker: com.android.launcher3:49ecbe7d: onFailed at PHASE_CLIENT_VIEW_SERVED
+11-27 14:24:47.108   505  1572 D CompatibilityChangeReporter: Compat change id reported: 214016041; UID 10141; state: ENABLED
+11-27 14:24:47.108   505  1572 I ImeTracker: pl.tekla.pellet:ac45f185: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_UNSPECIFIED_WINDOW
+11-27 14:24:47.108   505  1572 I ImeTracker: pl.tekla.pellet:ac45f185: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-27 14:24:47.197  3094  3108 I OpenGLRenderer: Davey! duration=1160ms; Flags=0, FrameTimelineVsyncId=17743, IntendedVsync=111855670400, Vsync=112872337026, InputEventId=0, HandleInputStart=112888392719, AnimationStart=112888395192, PerformTraversalsStart=112918175352, DrawStart=112921196423, FrameDeadline=112922342490, FrameInterval=112888179984, FrameStartTime=16666666, SyncQueued=112926821708, SyncStart=112926924801, IssueDrawCommandsStart=112935935467, SwapBuffers=112940802259, FrameCompleted=113015916629, DequeueBufferDuration=5028, QueueBufferDuration=8756740, GpuCompleted=113015846685, SwapBuffersCompleted=113015916629, DisplayPresentTime=0, CommandSubmissionCompleted=112940802259, 
+11-27 14:24:48.065   792   792 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+11-27 14:24:48.278  3094  3112 D EGL_emulation: app_time_stats: avg=111.86ms min=56.78ms max=139.67ms count=11
+11-27 14:24:49.327  3094  3112 D EGL_emulation: app_time_stats: avg=116.54ms min=57.65ms max=137.53ms count=9
+11-27 14:24:49.413   505  1823 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+11-27 14:24:50.374  3094  3112 D EGL_emulation: app_time_stats: avg=115.22ms min=30.78ms max=136.31ms count=9
+11-27 14:24:51.069   792   792 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+11-27 14:24:51.424  3094  3112 D EGL_emulation: app_time_stats: avg=131.18ms min=115.79ms max=136.03ms count=8
+11-27 14:24:51.508  3130  3130 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+11-27 14:24:51.509  3130  3130 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+11-27 14:24:51.522   134   134 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+11-27 14:24:51.522  3130  3131 I Gralloc4: mapper 4.x is not supported
+11-27 14:24:51.630  3094  3132 D ProfileInstaller: Installing profile for pl.tekla.pellet
+11-27 14:24:51.634   792   792 D StatusBarIconController: ignoring old pipeline callbacks, because the new mobile icons are enabled
+11-27 14:24:51.763   505   841 I ActivityManager: Force stopping pl.tekla.pellet appid=10141 user=0: from pid 3135
+11-27 14:24:51.764   505   523 D DisplayManagerService: Drop pending events for gone uid 10141
+11-27 14:24:51.765   505   841 I ActivityManager: Killing 3094:pl.tekla.pellet/u0a141 (adj 0): stop pl.tekla.pellet due to from pid 3135
+11-27 14:24:51.766   505   841 W ActivityTaskManager: Force removing ActivityRecord{926aeb9 u0 pl.tekla.pellet/.MainActivity t21 f}}: app died, no saved state
+11-27 14:24:51.767   792   842 V WindowManagerShell: Transition requested: android.os.BinderProxy@f3b6cbd TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=21 displayId=0 isRunning=false baseIntent=Intent { flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity } baseActivity=null topActivity=null origActivity=null realActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} numActivities=0 lastActiveTime=111314 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@e9d12b2} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 128 - 0, 0) topActivityInfo=null launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+11-27 14:24:51.769   505   841 D OomAdjuster: Not killing cached processes
+11-27 14:24:51.774   992   992 D CarrierSvcBindHelper: onHandleForceStop: [pl.tekla.pellet]
+11-27 14:24:51.774   992   992 D CarrierSvcBindHelper: No carrier app for: 0
+11-27 14:24:51.777   389   389 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+11-27 14:24:51.784   325   325 I Zygote  : Process 3094 exited due to signal 9 (Killed)
+11-27 14:24:51.785   505  1572 V ActivityManager: Got obituary of 3094:pl.tekla.pellet
+11-27 14:24:51.786   505   519 I WindowManager: WIN DEATH: Window{178641a u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity}
+11-27 14:24:51.786   505   519 W InputManager-JNI: Input channel object '178641a pl.tekla.pellet/pl.tekla.pellet.MainActivity (client)' was disposed without first being removed with the input manager!
+11-27 14:24:51.787   505  1318 I ImeTracker: pl.tekla.pellet:74930670: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_REMOVE_CLIENT
+11-27 14:24:51.787   505   727 I serviceDiscovery: [MdnsDiscoveryManager] Unregistering listener for serviceType:_teklapellet._tcp.local
+11-27 14:24:51.788   505  1318 I ImeTracker: pl.tekla.pellet:74930670: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-27 14:24:51.788   505   727 I serviceDiscovery: [MdnsSocketProvider] Stop monitoring sockets.
+11-27 14:24:51.788   505   727 I TetheringManager: unregisterTetheringEventCallback caller:android
+11-27 14:24:51.789   505   519 W WindowManager: Failed to deliver inset control state change to w=Window{178641a u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity EXITING}
+11-27 14:24:51.789   505   519 W WindowManager: android.os.DeadObjectException
+11-27 14:24:51.789   505   519 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+11-27 14:24:51.789   505   519 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-27 14:24:51.789   505   519 W WindowManager: 	at android.view.IWindow$Stub$Proxy.insetsControlChanged(IWindow.java:479)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.WindowState.notifyInsetsControlChanged(WindowState.java:3802)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.InsetsStateController.lambda$notifyPendingInsetsControlChanged$3(InsetsStateController.java:343)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.InsetsStateController.$r8$lambda$8yykPRG1GyNq_J17QvL9d5xANMc(InsetsStateController.java:0)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.InsetsStateController$$ExternalSyntheticLambda2.run(R8$$SyntheticClass:0)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.WindowAnimator.executeAfterPrepareSurfacesRunnables(WindowAnimator.java:294)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.RootWindowContainer.performSurfacePlacementNoTrace(RootWindowContainer.java:811)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.RootWindowContainer.performSurfacePlacement(RootWindowContainer.java:756)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacementLoop(WindowSurfacePlacer.java:177)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:126)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.WindowSurfacePlacer.performSurfacePlacement(WindowSurfacePlacer.java:115)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.WindowState.setupWindowForRemoveOnExit(WindowState.java:2538)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.WindowState.removeIfPossible(WindowState.java:2498)
+11-27 14:24:51.789   505   519 W WindowManager: 	at com.android.server.wm.WindowState$DeathRecipient.binderDied(WindowState.java:2929)
+11-27 14:24:51.789   505   519 W WindowManager: 	at android.os.IBinder$DeathRecipient.binderDied(IBinder.java:319)
+11-27 14:24:51.789   505   519 W WindowManager: 	at android.os.BinderProxy.sendDeathNotice(BinderProxy.java:704)
+11-27 14:24:51.854   505   522 V WindowManager: Sent Transition #26 createdAt=11-27 14:24:51.766 via request=TransitionRequestInfo { type = CLOSE, triggerTask = TaskInfo{userId=0 taskId=21 displayId=0 isRunning=false baseIntent=Intent { flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity } baseActivity=null topActivity=null origActivity=null realActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} numActivities=0 lastActiveTime=111314 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{30d494f Task{acaf2fe #21 type=standard A=10141:pl.tekla.pellet}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 128 - 0, 0) topActivityInfo=null launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=true isVisible=true isVisibleRequested=true isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+11-27 14:24:51.854   505   522 V WindowManager:     startWCT=WindowContainerTransaction { changes = {} hops = [] errorCallbackToken=null taskFragmentOrganizer=null }
+11-27 14:24:51.854   505   522 V WindowManager:     info={id=26 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{RemoteToken{30d494f Task{acaf2fe #21 type=standard A=10141:pl.tekla.pellet}}} m=CLOSE f=NONE leash=Surface(name=Task=21)/@0xf73b829 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{RemoteToken{a5bdae7 Task{35299f #1 type=home}}} m=TO_FRONT f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xea46426 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{4f09e2b token=android.os.Binder@3fe9517})/@0x95d20f5 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:51.858   792   842 V WindowManagerShell: onTransitionReady android.os.BinderProxy@f3b6cbd: {id=26 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@e4c1b5f} m=CLOSE f=NONE leash=Surface(name=Task=21)/@0xc3f6203 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@138c9ac} m=TO_FRONT f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0x82bd580 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{4f09e2b token=android.os.Binder@3fe9517})/@0x6b717b9 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:51.858   792   842 V WindowManagerShell: Playing animation for (#26)android.os.BinderProxy@f3b6cbd@0
+11-27 14:24:51.858   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.DefaultMixedHandler@23b5b6b
+11-27 14:24:51.858   792   842 V WindowManagerShell:  try handler com.android.wm.shell.keyguard.KeyguardTransitionHandler@8e2b6c8
+11-27 14:24:51.858   792   842 V WindowManagerShell:  try handler com.android.wm.shell.activityembedding.ActivityEmbeddingController@2e8f361
+11-27 14:24:51.858   792   842 V WindowManagerShell:  try handler com.android.wm.shell.recents.RecentsTransitionHandler@55d5e86
+11-27 14:24:51.858   792   842 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+11-27 14:24:51.858   792   842 V WindowManagerShell:  try handler com.android.wm.shell.pip.PipTransition@d324347
+11-27 14:24:51.858   792   842 V WindowManagerShell:  try handler com.android.wm.shell.splitscreen.StageCoordinator@ed07774
+11-27 14:24:51.858   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.RemoteTransitionHandler@ae0649d
+11-27 14:24:51.858   792   842 V WindowManagerShell: Transition doesn't have explicit remote, search filters for match for {id=26 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@e4c1b5f} m=CLOSE f=NONE leash=Surface(name=Task=21)/@0xc3f6203 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@138c9ac} m=TO_FRONT f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0x82bd580 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{4f09e2b token=android.os.Binder@3fe9517})/@0x6b717b9 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:51.858   792   842 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x100 checks=[{atype=home independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=TOP topActivity=ComponentInfo{com.android.launcher3/com.android.launcher3.uioverrides.QuickstepLauncher}},{atype=standard independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@dfd9aa, appThread = android.app.IApplicationThread$Stub$Proxy@71da99b, debugName = QuickstepLaunchHome }}
+11-27 14:24:51.858   792   842 V WindowManagerShell:  Delegate animation for #26 to null
+11-27 14:24:51.858   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.DefaultTransitionHandler@23796e0
+11-27 14:24:51.858   792   842 V WindowManagerShell: start default transition animation, info = {id=26 t=CLOSE f=0x0 trk=0 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@e4c1b5f} m=CLOSE f=NONE leash=Surface(name=Task=21)/@0xc3f6203 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@138c9ac} m=TO_FRONT f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0x82bd580 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{null m=TO_FRONT f=IS_WALLPAPER leash=Surface(name=WallpaperWindowToken{4f09e2b token=android.os.Binder@3fe9517})/@0x6b717b9 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:51.858   792   842 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@450460a animAttr=0x10 type=CLOSE isEntrance=true
+11-27 14:24:51.862   792   842 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@a1704f1 animAttr=0x11 type=CLOSE isEntrance=false
+11-27 14:24:51.863   792   842 V WindowManagerShell:  animated by com.android.wm.shell.transition.DefaultTransitionHandler@23796e0
+11-27 14:24:51.864   505   519 D CompatibilityChangeReporter: Compat change id reported: 161252188; UID 10141; state: DISABLED
+11-27 14:24:51.864   505   519 W ActivityTaskManager: callingPackage for (uid=2000, pid=3141) has no WPC
+11-27 14:24:51.865   505   519 D CompatibilityChangeReporter: Compat change id reported: 265464455; UID 10141; state: DISABLED
+11-27 14:24:51.865   505   519 D CompatibilityChangeReporter: Compat change id reported: 265452344; UID 10141; state: DISABLED
+11-27 14:24:51.865   505   519 D CompatibilityChangeReporter: Compat change id reported: 266124927; UID 10141; state: DISABLED
+11-27 14:24:51.865   505   519 D CompatibilityChangeReporter: Compat change id reported: 265451093; UID 10141; state: DISABLED
+11-27 14:24:51.865   505   519 D CompatibilityChangeReporter: Compat change id reported: 265456536; UID 10141; state: DISABLED
+11-27 14:24:51.865   505   519 D CompatibilityChangeReporter: Compat change id reported: 255940284; UID 10141; state: DISABLED
+11-27 14:24:51.868   505   519 D CompatibilityChangeReporter: Compat change id reported: 236283604; UID 10141; state: DISABLED
+11-27 14:24:51.871   505   519 D CompatibilityChangeReporter: Compat change id reported: 263959004; UID 10141; state: DISABLED
+11-27 14:24:51.871   505   519 D CompatibilityChangeReporter: Compat change id reported: 264304459; UID 10141; state: DISABLED
+11-27 14:24:51.871   505   519 D CompatibilityChangeReporter: Compat change id reported: 264301586; UID 10141; state: DISABLED
+11-27 14:24:51.871   505   519 D CompatibilityChangeReporter: Compat change id reported: 254631730; UID 10141; state: DISABLED
+11-27 14:24:51.872   505   519 D CompatibilityChangeReporter: Compat change id reported: 273509367; UID 10141; state: DISABLED
+11-27 14:24:51.872   505   519 D CompatibilityChangeReporter: Compat change id reported: 263259275; UID 10141; state: DISABLED
+11-27 14:24:51.872   505   519 D CompatibilityChangeReporter: Compat change id reported: 174042980; UID 10141; state: DISABLED
+11-27 14:24:51.872   505   519 D CompatibilityChangeReporter: Compat change id reported: 174042936; UID 10141; state: DISABLED
+11-27 14:24:51.872   505   519 D CompatibilityChangeReporter: Compat change id reported: 181136395; UID 10141; state: DISABLED
+11-27 14:24:51.872   505   519 D CompatibilityChangeReporter: Compat change id reported: 194480991; UID 10141; state: ENABLED
+11-27 14:24:51.875   505   519 D CompatibilityChangeReporter: Compat change id reported: 184838306; UID 10141; state: DISABLED
+11-27 14:24:51.875   505   519 D CompatibilityChangeReporter: Compat change id reported: 185004937; UID 10141; state: DISABLED
+11-27 14:24:51.875   505   519 D CompatibilityChangeReporter: Compat change id reported: 197654537; UID 10141; state: ENABLED
+11-27 14:24:51.876   505   519 V SplashScreenExceptionList: SplashScreen checking exception for package pl.tekla.pellet (target sdk:34) -> false
+11-27 14:24:51.876   505   519 D CompatibilityChangeReporter: Compat change id reported: 205907456; UID 10141; state: ENABLED
+11-27 14:24:51.877   792   864 D SplashScreenView: Build android.window.SplashScreenView{51b8c62 V.E...... ......ID 0,0-0,0}
+11-27 14:24:51.877   792   864 D SplashScreenView: Icon: view: null drawable: null size: 0
+11-27 14:24:51.877   792   864 D SplashScreenView: Branding: view: android.view.View{74cd1f3 G.ED..... ......I. 0,0-0,0 #10204ef android:id/splashscreen_branding_view} drawable: null size w: 0 h: 0
+11-27 14:24:51.880   792   842 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#26)android.os.BinderProxy@f3b6cbd@0
+11-27 14:24:51.877   505   519 I ActivityTaskManager: Add Task{acaf2fe #21 type=standard A=10141:pl.tekla.pellet} to hidden list because adding Task{8b400cd #22 type=standard A=10141:pl.tekla.pellet}
+11-27 14:24:51.880   505   519 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity (has extras)} with LAUNCH_MULTIPLE from uid 2000 (BAL_ALLOW_PERMISSION) result code=0
+11-27 14:24:51.881   505  1710 I ImeTracker: com.android.launcher3:294f8345: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_UNSPECIFIED_WINDOW
+11-27 14:24:51.881   505  1710 I ImeTracker: com.android.launcher3:294f8345: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-27 14:24:51.887   505   522 V WindowManager: Finish Transition #26: created at 11-27 14:24:51.766 collect-started=0.022ms request-sent=0.085ms started=4.327ms ready=4.315ms sent=86.545ms finished=121.201ms
+11-27 14:24:51.888   505  1710 W WindowManager: Exception thrown during dispatchAppVisibility Window{178641a u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity EXITING}
+11-27 14:24:51.888   505  1710 W WindowManager: android.os.DeadObjectException
+11-27 14:24:51.888   505  1710 W WindowManager: 	at android.os.BinderProxy.transactNative(Native Method)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at android.os.BinderProxy.transact(BinderProxy.java:584)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at android.view.IWindow$Stub$Proxy.dispatchAppVisibility(IWindow.java:546)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at com.android.server.wm.WindowState.sendAppVisibilityToClients(WindowState.java:3271)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at com.android.server.wm.WindowContainer.sendAppVisibilityToClients(WindowContainer.java:1221)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at com.android.server.wm.WindowToken.setClientVisible(WindowToken.java:409)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at com.android.server.wm.ActivityRecord.setClientVisible(ActivityRecord.java:6946)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at com.android.server.wm.ActivityRecord.postApplyAnimation(ActivityRecord.java:5637)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at com.android.server.wm.ActivityRecord.commitVisibility(ActivityRecord.java:5580)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at com.android.server.wm.Transition.finishTransition(Transition.java:1151)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at com.android.server.wm.TransitionController.finishTransition(TransitionController.java:868)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at com.android.server.wm.WindowOrganizerController.finishTransition(WindowOrganizerController.java:396)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at android.window.IWindowOrganizerController$Stub.onTransact(IWindowOrganizerController.java:286)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at com.android.server.wm.WindowOrganizerController.onTransact(WindowOrganizerController.java:181)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at android.os.Binder.execTransactInternal(Binder.java:1339)
+11-27 14:24:51.888   505  1710 W WindowManager: 	at android.os.Binder.execTransact(Binder.java:1275)
+11-27 14:24:51.891   505  1710 I Process : Sending signal. PID: 3094 SIG: 9
+11-27 14:24:51.900   792   842 V WindowManagerShell: Track 0 became idle
+11-27 14:24:51.900   792   842 V WindowManagerShell: All active transition animations finished
+11-27 14:24:51.900   792   842 V WindowManagerShell: Transition requested: android.os.BinderProxy@a706129 TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=22 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity } baseActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} topActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} origActivity=null realActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} numActivities=1 lastActiveTime=117708 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{android.window.IWindowContainerToken$Stub$Proxy@e2a0cae} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 128 - 0, 0) topActivityInfo=ActivityInfo{4589a4f pl.tekla.pellet.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+11-27 14:24:51.902   505   525 D CompatibilityChangeReporter: Compat change id reported: 135634846; UID 10141; state: DISABLED
+11-27 14:24:51.904   505   525 W ActivityManager: setHasOverlayUi called on unknown pid: 3094
+11-27 14:24:51.946   505  1318 D CompatibilityChangeReporter: Compat change id reported: 168419799; UID 10141; state: DISABLED
+11-27 14:24:51.946   505  1318 D CompatibilityChangeReporter: Compat change id reported: 273564678; UID 10141; state: DISABLED
+11-27 14:24:51.987   505   533 W ActivityManager: Slow operation: 86ms so far, now at startProcess: asking zygote to start proc
+11-27 14:24:51.992   505   533 D CompatibilityChangeReporter: Compat change id reported: 143937733; UID 10141; state: ENABLED
+11-27 14:24:51.993   505   578 D CompatibilityChangeReporter: Compat change id reported: 265195908; UID 10141; state: ENABLED
+11-27 14:24:51.994   505  1921 D CoreBackPreview: Window{d88f094 u0 Splash Screen pl.tekla.pellet}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@767cb32, mPriority=0, mIsAnimationCallback=false}
+11-27 14:24:52.015   325   325 D Zygote  : Forked child process 3145
+11-27 14:24:52.027   389   389 I BpBinder: onLastStrongRef automatically unlinking death recipients: 
+11-27 14:24:52.047   505   533 W ActivityManager: Slow operation: 145ms so far, now at startProcess: returned from zygote!
+11-27 14:24:52.047   505   533 W ActivityManager: Slow operation: 145ms so far, now at startProcess: done updating battery stats
+11-27 14:24:52.047   505   533 W ActivityManager: Slow operation: 145ms so far, now at startProcess: building log message
+11-27 14:24:52.047   505   533 I ActivityManager: Start proc 3145:pl.tekla.pellet/u0a141 for next-top-activity {pl.tekla.pellet/pl.tekla.pellet.MainActivity}
+11-27 14:24:52.047   505   533 W ActivityManager: Slow operation: 145ms so far, now at startProcess: starting to update pids map
+11-27 14:24:52.047   505   533 W ActivityManager: Slow operation: 146ms so far, now at startProcess: done updating pids map
+11-27 14:24:52.095   792   842 V WindowManagerShell: onTransitionReady android.os.BinderProxy@a706129: {id=27 t=OPEN f=0x0 trk=1 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@8c3d212} m=OPEN f=NONE leash=Surface(name=Task=22)/@0x2278447 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@14e1de3} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xb0b2474 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:52.095   792   842 V WindowManagerShell: Playing animation for (#27)android.os.BinderProxy@a706129@1
+11-27 14:24:52.096   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.DefaultMixedHandler@23b5b6b
+11-27 14:24:52.096   792   842 V WindowManagerShell:  try handler com.android.wm.shell.keyguard.KeyguardTransitionHandler@8e2b6c8
+11-27 14:24:52.096   792   842 V WindowManagerShell:  try handler com.android.wm.shell.activityembedding.ActivityEmbeddingController@2e8f361
+11-27 14:24:52.096   792   842 V WindowManagerShell:  try handler com.android.wm.shell.recents.RecentsTransitionHandler@55d5e86
+11-27 14:24:52.096   792   842 V ShellRecents: RecentsTransitionHandler.startAnimation: no controller found
+11-27 14:24:52.096   792   842 V WindowManagerShell:  try handler com.android.wm.shell.pip.PipTransition@d324347
+11-27 14:24:52.096   792   842 V WindowManagerShell:  try handler com.android.wm.shell.splitscreen.StageCoordinator@ed07774
+11-27 14:24:52.096   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.RemoteTransitionHandler@ae0649d
+11-27 14:24:52.096   792   842 V WindowManagerShell: Transition doesn't have explicit remote, search filters for match for {id=27 t=OPEN f=0x0 trk=1 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@8c3d212} m=OPEN f=NONE leash=Surface(name=Task=22)/@0x2278447 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@14e1de3} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xb0b2474 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:52.096   792   842 V WindowManagerShell:  Checking filter Pair{{types=[] flags=0x0] notFlags=0x100 checks=[{atype=home independent=true modes=[OPEN,TO_FRONT] flags=NONE mustBeTask=false order=TOP topActivity=ComponentInfo{com.android.launcher3/com.android.launcher3.uioverrides.QuickstepLauncher}},{atype=standard independent=true modes=[CLOSE,TO_BACK] flags=NONE mustBeTask=false order=ANY topActivity=null}]} RemoteTransition { remoteTransition = android.window.IRemoteTransition$Stub$Proxy@dfd9aa, appThread = android.app.IApplicationThread$Stub$Proxy@71da99b, debugName = QuickstepLaunchHome }}
+11-27 14:24:52.096   792   842 V WindowManagerShell:  Delegate animation for #27 to null
+11-27 14:24:52.096   792   842 V WindowManagerShell:  try handler com.android.wm.shell.transition.DefaultTransitionHandler@23796e0
+11-27 14:24:52.096   792   842 V WindowManagerShell: start default transition animation, info = {id=27 t=OPEN f=0x0 trk=1 r=[0@Point(0, 0)] c=[{WCT{android.window.IWindowContainerToken$Stub$Proxy@8c3d212} m=OPEN f=NONE leash=Surface(name=Task=22)/@0x2278447 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{android.window.IWindowContainerToken$Stub$Proxy@14e1de3} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xb0b2474 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:52.096   792   842 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@a86e699 animAttr=0x13 type=OPEN isEntrance=false
+11-27 14:24:52.102   792   842 V WindowManagerShell: loadAnimation: anim=android.view.animation.AnimationSet@b565355 animAttr=0x12 type=OPEN isEntrance=true
+11-27 14:24:52.103  3145  3145 I pl.tekla.pellet: Late-enabling -Xcheck:jni
+11-27 14:24:52.111   505   522 V WindowManager: Sent Transition #27 createdAt=11-27 14:24:51.873 via request=TransitionRequestInfo { type = OPEN, triggerTask = TaskInfo{userId=0 taskId=22 displayId=0 isRunning=true baseIntent=Intent { flg=0x10000000 cmp=pl.tekla.pellet/.MainActivity } baseActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} topActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} origActivity=null realActivity=ComponentInfo{pl.tekla.pellet/pl.tekla.pellet.MainActivity} numActivities=1 lastActiveTime=117708 supportsMultiWindow=true resizeMode=1 isResizeable=true minWidth=-1 minHeight=-1 defaultMinSize=220 token=WCT{RemoteToken{119be2c Task{8b400cd #22 type=standard A=10141:pl.tekla.pellet}}} topActivityType=1 pictureInPictureParams=null shouldDockBigOverlays=false launchIntoPipHostTaskId=-1 lastParentTaskIdBeforePip=-1 displayCutoutSafeInsets=Rect(0, 128 - 0, 0) topActivityInfo=ActivityInfo{1ef90f5 pl.tekla.pellet.MainActivity} launchCookies=[] positionInParent=Point(0, 0) parentTaskId=-1 isFocused=false isVisible=false isVisibleRequested=false isSleeping=false topActivityInSizeCompat=false topActivityEligibleForLetterboxEducation= false topActivityLetterboxed= false isFromDoubleTap= false topActivityLetterboxVerticalPosition= -1 topActivityLetterboxHorizontalPosition= -1 topActivityLetterboxWidth=-1 topActivityLetterboxHeight=-1 locusId=null displayAreaFeatureId=1 cameraCompatControlState=hidden}, remoteTransition = null, displayChange = null }
+11-27 14:24:52.111   505   522 V WindowManager:     startWCT=WindowContainerTransaction { changes = {} hops = [] errorCallbackToken=null taskFragmentOrganizer=null }
+11-27 14:24:52.111   505   522 V WindowManager:     info={id=27 t=OPEN f=0x0 trk=1 r=[0@Point(0, 0)] c=[{WCT{RemoteToken{119be2c Task{8b400cd #22 type=standard A=10141:pl.tekla.pellet}}} m=OPEN f=NONE leash=Surface(name=Task=22)/@0x74e8200 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0},{WCT{RemoteToken{a5bdae7 Task{35299f #1 type=home}}} m=TO_BACK f=SHOW_WALLPAPER leash=Surface(name=Task=1)/@0xea46426 sb=Rect(0, 0 - 1080, 2400) eb=Rect(0, 0 - 1080, 2400) d=0}]}
+11-27 14:24:52.118   792   842 V WindowManagerShell:  animated by com.android.wm.shell.transition.DefaultTransitionHandler@23796e0
+11-27 14:24:52.123  3145  3145 I pl.tekla.pellet: Using CollectorTypeCC GC.
+11-27 14:24:52.124  3145  3145 W pl.tekla.pellet: Unexpected CPU variant for x86: x86_64.
+11-27 14:24:52.124  3145  3145 W pl.tekla.pellet: Known variants: atom, sandybridge, silvermont, goldmont, goldmont-plus, tremont, kabylake, default
+11-27 14:24:52.177   792   842 W Looper  : Slow delivery took 35ms wmshell.main h=android.os.Handler c=android.window.TaskOrganizer$1$$ExternalSyntheticLambda5@bfa92a4 m=0
+11-27 14:24:52.178   792   842 V WindowManagerShell: Transition animation finished (aborted=false), notifying core (#27)android.os.BinderProxy@a706129@1
+11-27 14:24:52.199   405   418 I adbd    : jdwp connection from 3145
+11-27 14:24:52.203   792   842 V WindowManagerShell: Track 1 became idle
+11-27 14:24:52.204   792   842 V WindowManagerShell: All active transition animations finished
+11-27 14:24:52.204   792   842 W Looper  : Drained
+11-27 14:24:52.235   389   389 E BpTransactionCompletedListener: Failed to transact (-32)
+11-27 14:24:52.262   505   522 V WindowManager: Finish Transition #27: created at 11-27 14:24:51.873 collect-started=0.02ms request-sent=7.254ms started=26.931ms ready=217.14ms sent=221.565ms finished=327.916ms
+11-27 14:24:52.310  3145  3145 D CompatibilityChangeReporter: Compat change id reported: 171979766; UID 10141; state: ENABLED
+11-27 14:24:52.311  3145  3145 D CompatibilityChangeReporter: Compat change id reported: 242716250; UID 10141; state: ENABLED
+11-27 14:24:52.318   505   519 D CompatibilityChangeReporter: Compat change id reported: 170503758; UID 10141; state: ENABLED
+11-27 14:24:52.321  3145  3145 W ziparchive: Unable to open '/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.dm': No such file or directory
+11-27 14:24:52.321  3145  3145 W ziparchive: Unable to open '/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.dm': No such file or directory
+11-27 14:24:52.478  3145  3145 D nativeloader: Configuring clns-6 for other apk /data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.apk. target_sdk_version=34, uses_libraries=, library_path=/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/lib/x86_64:/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.apk!/lib/x86_64, permitted_path=/data:/mnt/expand:/data/user/0/pl.tekla.pellet
+11-27 14:24:52.482  3145  3145 V GraphicsEnvironment: Currently set values for:
+11-27 14:24:52.483  3145  3145 V GraphicsEnvironment:   angle_gl_driver_selection_pkgs=[]
+11-27 14:24:52.483  3145  3145 V GraphicsEnvironment:   angle_gl_driver_selection_values=[]
+11-27 14:24:52.483  3145  3145 V GraphicsEnvironment: ANGLE GameManagerService for pl.tekla.pellet: false
+11-27 14:24:52.483  3145  3145 V GraphicsEnvironment: pl.tekla.pellet is not listed in per-application setting
+11-27 14:24:52.483  3145  3145 V GraphicsEnvironment: Neither updatable production driver nor prerelease driver is supported.
+11-27 14:24:52.492   505   519 I ActivityManager: Flag disabled. Ignoring finishAttachApplication from uid: 10141. pid: 3145
+11-27 14:24:52.496  3145  3165 D libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so
+11-27 14:24:52.497  3145  3165 D libEGL  : loaded /vendor/lib64/egl/libGLESv1_CM_emulation.so
+11-27 14:24:52.498  3145  3165 D libEGL  : loaded /vendor/lib64/egl/libGLESv2_emulation.so
+11-27 14:24:52.515  3145  3145 W pl.tekla.pellet: Method boolean androidx.compose.runtime.snapshots.SnapshotStateList.conditionalUpdate(boolean, kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-27 14:24:52.515  3145  3145 W pl.tekla.pellet: Common causes for lock verification issues are non-optimized dex code
+11-27 14:24:52.515  3145  3145 W pl.tekla.pellet: and incorrect proguard optimizations.
+11-27 14:24:52.515  3145  3145 W pl.tekla.pellet: Method boolean androidx.compose.runtime.snapshots.SnapshotStateList.conditionalUpdate$default(androidx.compose.runtime.snapshots.SnapshotStateList, boolean, kotlin.jvm.functions.Function1, int, java.lang.Object) failed lock verification and will run slower.
+11-27 14:24:52.515  3145  3145 W pl.tekla.pellet: Method java.lang.Object androidx.compose.runtime.snapshots.SnapshotStateList.mutate(kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-27 14:24:52.515  3145  3145 W pl.tekla.pellet: Method void androidx.compose.runtime.snapshots.SnapshotStateList.update(boolean, kotlin.jvm.functions.Function1) failed lock verification and will run slower.
+11-27 14:24:52.515  3145  3145 W pl.tekla.pellet: Method void androidx.compose.runtime.snapshots.SnapshotStateList.update$default(androidx.compose.runtime.snapshots.SnapshotStateList, boolean, kotlin.jvm.functions.Function1, int, java.lang.Object) failed lock verification and will run slower.
+11-27 14:24:52.638  3145  3145 D CompatibilityChangeReporter: Compat change id reported: 270306772; UID 10141; state: ENABLED
+11-27 14:24:52.638  3145  3145 D CompatibilityChangeReporter: Compat change id reported: 235355681; UID 10141; state: ENABLED
+11-27 14:24:52.639   505   727 I serviceDiscovery: [MdnsSocketProvider] Start monitoring sockets.
+11-27 14:24:52.639   505   727 I TetheringManager: registerTetheringEventCallback caller:android
+11-27 14:24:52.639   505   727 I serviceDiscovery: [MdnsDiscoveryManager] Registering listener for serviceType: _teklapellet._tcp.local
+11-27 14:24:52.639   505   724 D ConnectivityService: NetReassign [no changes] [c 0] [a 0] [i 1]
+11-27 14:24:52.640   505   727 D TrafficStats: tagSocket(415) with statsTag=0xffffffff, statsUid=-1
+11-27 14:24:52.664  3145  3145 D CompatibilityChangeReporter: Compat change id reported: 237531167; UID 10141; state: DISABLED
+11-27 14:24:52.664  3145  3145 W OpenGLRenderer: Unknown dataspace 0
+11-27 14:24:52.802   505   519 D CoreBackPreview: Window{e30060 u0 pl.tekla.pellet/pl.tekla.pellet.MainActivity}: Setting back callback OnBackInvokedCallbackInfo{mCallback=android.window.IOnBackInvokedCallback$Stub$Proxy@4e7c28c, mPriority=0, mIsAnimationCallback=false}
+11-27 14:24:53.002  3145  3163 W OpenGLRenderer: Failed to initialize 101010-2 format, error = EGL_SUCCESS
+11-27 14:24:53.024   134   134 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+11-27 14:24:53.024  3145  3163 I Gralloc4: mapper 4.x is not supported
+11-27 14:24:53.918  3145  3145 I Choreographer: Skipped 73 frames!  The application may be doing too much work on its main thread.
+11-27 14:24:53.920   505   522 W ziparchive: Unable to open '/data/app/~~bp5G0uC_nD22671OuUB4hQ==/pl.tekla.pellet-M4k1cgUutfLgAb9ufSQcuw==/base.dm': No such file or directory
+11-27 14:24:53.920   505   522 I ActivityTaskManager: Displayed pl.tekla.pellet/.MainActivity for user 0: +2s64ms
+11-27 14:24:53.935  3145  3160 I OpenGLRenderer: Davey! duration=1424ms; Flags=1, FrameTimelineVsyncId=18938, IntendedVsync=118322336808, Vsync=118489003468, InputEventId=0, HandleInputStart=118496938471, AnimationStart=118496941676, PerformTraversalsStart=118497006552, DrawStart=118873964975, FrameDeadline=118339003474, FrameInterval=118496810061, FrameStartTime=16666666, SyncQueued=118901356619, SyncStart=118901821142, IssueDrawCommandsStart=118902120675, SwapBuffers=119656381526, FrameCompleted=119747494989, DequeueBufferDuration=2734, QueueBufferDuration=185956, GpuCompleted=119747494989, SwapBuffersCompleted=119734882167, DisplayPresentTime=0, CommandSubmissionCompleted=119656381526, 
+11-27 14:24:53.949   792   862 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=falsecallback=android.view.ViewRootImpl$$ExternalSyntheticLambda17@38e45ba
+11-27 14:24:53.949   505   519 D CoreBackPreview: Window{d88f094 u0 Splash Screen pl.tekla.pellet}: Setting back callback null
+11-27 14:24:53.949   505   519 W InputManager-JNI: Input channel object 'd88f094 Splash Screen pl.tekla.pellet (client)' was disposed without first being removed with the input manager!
+11-27 14:24:53.969   505   519 D CompatibilityChangeReporter: Compat change id reported: 214016041; UID 10141; state: ENABLED
+11-27 14:24:53.969   505   519 I ImeTracker: pl.tekla.pellet:251e6271: onRequestHide at ORIGIN_SERVER_HIDE_INPUT reason HIDE_UNSPECIFIED_WINDOW
+11-27 14:24:53.969   505   519 I ImeTracker: pl.tekla.pellet:251e6271: onCancelled at PHASE_SERVER_SHOULD_HIDE
+11-27 14:24:53.991  1043  1092 I ImeTracker: com.android.launcher3:13256b7e: onRequestHide at ORIGIN_CLIENT_HIDE_SOFT_INPUT reason HIDE_SOFT_INPUT
+11-27 14:24:53.994  1043  1092 I ImeTracker: com.android.launcher3:13256b7e: onFailed at PHASE_CLIENT_VIEW_SERVED
+11-27 14:24:54.022  3145  3159 I OpenGLRenderer: Davey! duration=1297ms; Flags=0, FrameTimelineVsyncId=18968, IntendedVsync=118522336800, Vsync=119739003418, InputEventId=0, HandleInputStart=119747395917, AnimationStart=119747398711, PerformTraversalsStart=119763798313, DrawStart=119767492220, FrameDeadline=119772336750, FrameInterval=119747118767, FrameStartTime=16666666, SyncQueued=119768158616, SyncStart=119768508575, IssueDrawCommandsStart=119768562735, SwapBuffers=119815095698, FrameCompleted=119820396083, DequeueBufferDuration=3144, QueueBufferDuration=541461, GpuCompleted=119817915922, SwapBuffersCompleted=119820396083, DisplayPresentTime=98273146699776, CommandSubmissionCompleted=119815095698, 
+11-27 14:24:54.071   792   792 D StatusBarIconController: ignoring old pipeline callback because the new wifi icon is enabled
+11-27 14:24:54.928  3145  3152 I pl.tekla.pellet: Compiler allocated 5715KB to compile void pl.tekla.pellet.AppKt$HomeView$1$2.invoke(androidx.compose.foundation.layout.ColumnScope, androidx.compose.runtime.Composer, int)
+11-27 14:24:55.010  3145  3163 D EGL_emulation: app_time_stats: avg=110.35ms min=55.66ms max=136.34ms count=10
+11-27 14:24:55.891   505  1823 E TaskPersister: File error accessing recents directory (directory doesn't exist?).
+11-27 14:24:56.047  3145  3163 D EGL_emulation: app_time_stats: avg=115.22ms min=58.73ms max=135.39ms count=9
+11-27 14:24:57.096  3145  3163 D EGL_emulation: app_time_stats: avg=131.20ms min=115.77ms max=137.12ms count=8
+11-27 14:24:57.981  3181  3181 W BpBinder: Linking to death on android.gui.ISurfaceComposer but there are no threads (yet?) listening to incoming transactions. See ProcessState::startThreadPool and ProcessState::setThreadPoolMaxThreadCount. Generally you should setup the binder threadpool before other initialization steps.
+11-27 14:24:57.981  3181  3181 W ProcessState: Extra binder thread started, but 0 threads requested. Do not use *startThreadPool when zero threads are requested.
+11-27 14:24:57.994   134   134 I hwservicemanager: getTransport: Cannot find entry android.hardware.graphics.mapper@4.0::IMapper/default in either framework or device VINTF manifest.
+11-27 14:24:57.994  3181  3182 I Gralloc4: mapper 4.x is not supported
+11-27 14:24:58.147  3145  3163 D EGL_emulation: app_time_stats: avg=131.32ms min=117.27ms max=143.59ms count=8
