@@ -193,8 +193,9 @@ fun TeklaAppV2(){
 
     BoxWithConstraints(Modifier.fillMaxSize()){
         val pageWidth=maxWidth
-        LaunchedEffect(scroll.value,pageWidth){
-            val px=with(androidx.compose.ui.platform.LocalDensity.current){pageWidth.toPx()}
+        val density=androidx.compose.ui.platform.LocalDensity.current
+        LaunchedEffect(scroll.value,pageWidth,density){
+            val px=with(density){pageWidth.toPx()}
             if(px>1f){
                 val p=(scroll.value/px).toInt().coerceIn(0,pages.lastIndex)
                 if(page!=p) page=p
@@ -238,7 +239,7 @@ fun TeklaAppV2(){
                             .background(if(i==page)G2Orange else G2Mut)
                             .clickable{
                                 scope.launch{
-                                    val px=with(androidx.compose.ui.platform.LocalDensity.current){pageWidth.toPx()}
+                                    val px=with(density){pageWidth.toPx()}
                                     scroll.animateScrollTo((i*px).toInt())
                                 }
                             }
