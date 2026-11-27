@@ -35,29 +35,42 @@ private val G2Green = Color(0xFF8BEA21)
 private val G2Blue = Color(0xFF21C8E8)
 private val G2Red = Color(0xFFFF5B5B)
 
-private data class TestDef(val id:String,val label:String,val pid:String,val closeOpen:Boolean=false,val pctPid:String?=null)
+private data class TestDef(
+    val id:String,
+    val label:String,
+    val pid:String,
+    val closeOpen:Boolean=false,
+    val pctPid:String?=null
+)
+
+/**
+ * Canonical TEST_WYJSC model.
+ * Source: analiza/.../ui_model/outputs_test.json.
+ * UI deliberately has no row numbering; the order is the panel order.
+ */
 private val TESTS = listOf(
-    TestDef("cwu_pump_mode","Pompa CWU","0x2296"),
-    TestDef("boiler_pump_mode","Pompa kotłowa","0x2286"),
-    TestDef("solar_pump_mode","Pompa solarna","0x311F"),
-    TestDef("feeder_mode","Podajnik","0x2259"),
-    TestDef("grate_mode","Ruszt","0x2279",true),
-    TestDef("exchanger_mode","Wymiennik","0x2285"),
-    TestDef("igniter_mode","Zapalarka","0x2284"),
-    TestDef("burner_feeder_mode","Podajnik palnika","0x2295"),
-    TestDef("fuel_transporter_mode","Magazyn paliwa — transporter","0x351E"),
-    TestDef("fuel_storage_feeder_mode","Magazyn paliwa — podajnik","0x351F"),
-    TestDef("blower_mode","Dmuchawa","0x2283",false,"0x2288"),
-    TestDef("exh_fan_mode","WentWyc","0x2293",false,"0x2298"),
-    TestDef("co1_pump_mode","Pompa CO1","0x229D"),
-    TestDef("co2_pump_mode","Pompa CO2","0x229E"),
-    TestDef("co3_pump_mode","Pompa CO3","0x229F"),
-    TestDef("co4_pump_mode","Pompa CO4","0x22A0"),
-    TestDef("co1_mixer_mode","Mieszacz CO1","0x214A",true),
-    TestDef("co2_mixer_mode","Mieszacz CO2","0x214B",true),
-    TestDef("co3_mixer_mode","Mieszacz CO3","0x214C",true),
-    TestDef("co4_mixer_mode","Mieszacz CO4","0x214D",true),
-    TestDef("ret_mixer_mode","Mieszacz powrotu","0x216D",true)
+    TestDef("cwu_pump","Pompa CWU","0x2296"),
+    TestDef("cwu_circulation","Pompa cyrkulacyjna CWU","0x374A"),
+    TestDef("boiler_pump","Pompa kotłowa","0x2286"),
+    TestDef("solar_pump","Pompa solarna","0x311F"),
+    TestDef("feeder","Podajnik","0x2259"),
+    TestDef("grate","Ruszt","0x2279",closeOpen=true),
+    TestDef("exchanger","Wymiennik","0x2285"),
+    TestDef("igniter","Zapalarka","0x2284"),
+    TestDef("burner_feeder","Podajnik palnika","0x2295"),
+    TestDef("fuel_transport","Magazyn paliwa transport(1)","0x351E"),
+    TestDef("fuel_feeder","Magazyn paliwa podajnik(2)","0x351F"),
+    TestDef("blower","Dm. (dmuchawa)","0x2283",pctPid="0x2288"),
+    TestDef("exhaust_fan","WentWyc (wentylator wyciagowy)","0x2293",pctPid="0x2298"),
+    TestDef("co1_pump","Pompa CO1","0x229D"),
+    TestDef("co2_pump","Pompa CO2","0x229E"),
+    TestDef("co3_pump","Pompa CO3","0x229F"),
+    TestDef("co4_pump","Pompa CO4","0x22A0"),
+    TestDef("co1_mixer","Mieszacz CO1","0x214A",closeOpen=true),
+    TestDef("co2_mixer","Mieszacz CO2","0x214B",closeOpen=true),
+    TestDef("co3_mixer","Mieszacz CO3","0x214C",closeOpen=true),
+    TestDef("co4_mixer","Mieszacz CO4","0x214D",closeOpen=true),
+    TestDef("return_mixer","Mieszacz powrotu","0x216D",closeOpen=true)
 )
 
 private fun configModules(ui:Ui):List<String>{
@@ -351,9 +364,32 @@ fun TeklaAppV2(){
 
 @Composable private fun OutputTestV2(ui:Ui){
     val scroll=rememberScrollState()
-    Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(10.dp),verticalArrangement=Arrangement.spacedBy(6.dp)){
-        if(ui.level<2)GlassV2(Modifier.fillMaxWidth()){Text("Sterowanie od poziomu 2 (PIN 0999).",color=G2Mut,fontSize=14.sp)}
-        else for(t in TESTS)TestRowV2(ui,t)
+    Column(
+        Modifier.fillMaxSize().verticalScroll(scroll).padding(10.dp),
+        verticalArrangement=Arrangement.spacedBy(6.dp)
+    ){
+        if(ui.level<2){
+            GlassV2(Modifier.fillMaxWidth()){
+                Text("Test wyjść",color=G2Text,fontSize=16.sp,fontWeight=FontWeight.SemiBold)
+                Spacer(Modifier.height(4.dp))
+                Text("Sterowanie wyjściami od poziomu 2 (PIN 0999).",color=G2Mut,fontSize=13.sp)
+            }
+        } else {
+            TestHeaderV2()
+            for(t in TESTS) TestRowV2(ui,t)
+        }
+    }
+}
+
+@Composable private fun TestHeaderV2(){
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal=12.dp,vertical=2.dp),
+        verticalAlignment=Alignment.CenterVertically
+    ){
+        Text("Wyjście",color=G2Mut,fontSize=11.sp,modifier=Modifier.weight(1f))
+        Text("A",color=G2Mut,fontSize=11.sp,modifier=Modifier.width(55.dp),textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+        Text("OFF",color=G2Mut,fontSize=11.sp,modifier=Modifier.width(55.dp),textAlign=androidx.compose.ui.text.style.TextAlign.Center)
+        Text("ON",color=G2Mut,fontSize=11.sp,modifier=Modifier.width(55.dp),textAlign=androidx.compose.ui.text.style.TextAlign.Center)
     }
 }
 
