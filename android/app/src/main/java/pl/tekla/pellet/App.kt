@@ -139,6 +139,47 @@ fun BottomNavIcon(label: String, selected: Boolean) {
 }
 
 @Composable
+fun NotificationGlyph(active: Boolean) {
+    Canvas(Modifier.size(24.dp)) {
+        val col = if (active) Bad else Mut
+        val s = 1.7.dp.toPx()
+        drawArc(col, 205f, 130f, false, Offset(size.width*.22f,size.height*.12f), Size(size.width*.56f,size.height*.62f), style=Stroke(s))
+        drawLine(col, Offset(size.width*.30f,size.height*.73f), Offset(size.width*.70f,size.height*.73f), s)
+        drawCircle(col, size.minDimension*.055f, Offset(size.width*.50f,size.height*.84f))
+        if (active) drawCircle(Bad, size.minDimension*.10f, Offset(size.width*.79f,size.height*.16f))
+    }
+}
+
+@Composable
+fun MenuGlyph(title: String) {
+    val color = Mut
+    Canvas(Modifier.size(28.dp)) {
+        val w=size.width; val h=size.height; val s=1.6.dp.toPx()
+        when {
+            title.contains("Kocioł", true) -> {
+                drawRoundRect(color, Offset(w*.28f,h*.10f), Size(w*.44f,h*.78f), androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()), style=Stroke(s))
+                drawRect(color, Offset(w*.39f,h*.48f), Size(w*.22f,h*.22f), style=Stroke(s))
+            }
+            title.contains("Palnik", true) -> {
+                drawArc(color, 205f, 230f, false, Offset(w*.22f,h*.12f), Size(w*.56f,h*.70f), style=Stroke(s))
+            }
+            title.contains("Alarm", true) -> {
+                drawCircle(color, w*.30f, Offset(w*.50f,h*.48f), style=Stroke(s)); drawLine(color,Offset(w*.50f,h*.28f),Offset(w*.50f,h*.55f),s); drawLine(color,Offset(w*.50f,h*.55f),Offset(w*.65f,h*.65f),s)
+            }
+            title.contains("Inform", true) -> {
+                drawCircle(color,w*.34f,Offset(w*.50f,h*.48f),style=Stroke(s)); drawCircle(color,w*.04f,Offset(w*.50f,h*.34f)); drawLine(color,Offset(w*.50f,h*.46f),Offset(w*.50f,h*.68f),s)
+            }
+            title.contains("Konfigur", true) -> {
+                drawCircle(color,w*.23f,Offset(w*.50f,h*.50f),style=Stroke(s)); for(i in 0..7){ val a=i*Math.PI/4; drawLine(color,Offset(w*.50f+(w*.33f*kotlin.math.cos(a)).toFloat(),h*.50f+(h*.33f*kotlin.math.sin(a)).toFloat()),Offset(w*.50f+(w*.43f*kotlin.math.cos(a)).toFloat(),h*.50f+(h*.43f*kotlin.math.sin(a)).toFloat()),s) }
+            }
+            else -> {
+                drawRoundRect(color,Offset(w*.18f,h*.18f),Size(w*.64f,h*.64f),androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()),style=Stroke(s))
+            }
+        }
+    }
+}
+
+@Composable
 fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
     val title = when {
         screen == "home" -> "TeklaPellet"
@@ -202,7 +243,7 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
                 .padding(5.dp),
             contentAlignment = Alignment.Center
         ) {
-            Ic(78, 22.dp)
+            NotificationGlyph(ui.alarmActive)
             if (ui.alarmActive) Box(
                 Modifier.align(Alignment.TopEnd).size(7.dp).background(Bad, RoundedCornerShape(4.dp))
             )
@@ -219,7 +260,7 @@ fun Chip(t: String, dot: Color, click: () -> Unit) {
 
 @Composable
 fun Card(title: String?, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Column(modifier.fillMaxWidth().background(Panel, RoundedCornerShape(16.dp)).border(1.dp, Line, RoundedCornerShape(16.dp)).padding(14.dp)) {
+    Column(modifier.fillMaxWidth().background(CardBrush, RoundedCornerShape(16.dp)).border(1.dp, Line, RoundedCornerShape(16.dp)).padding(14.dp)) {
         if (title != null) { Text(title.uppercase(), color = Mut, fontSize = 11.sp, letterSpacing = 0.9.sp, fontWeight = FontWeight.SemiBold); Spacer(Modifier.height(8.dp)) }
         content()
     }
@@ -718,7 +759,7 @@ fun MoreView(ui: Ui) {
                 Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go(r) }.padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Ic(m.icon, 22.dp); Spacer(Modifier.width(10.dp))
+                MenuGlyph(m.title); Spacer(Modifier.width(10.dp))
                 Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f))
                 Text("›", color = Mut)
             }
