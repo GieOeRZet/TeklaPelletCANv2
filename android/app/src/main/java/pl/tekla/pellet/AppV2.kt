@@ -41,7 +41,7 @@ private val G2Red = Color(0xFFFF5B5B)
 private fun AssetIcon(id:Int, modifier:Modifier=Modifier.size(24.dp)){
     val image=remember(id){
         runCatching{
-            Ctl.context.assets.open("ic/$id.png").use{BitmapFactory.decodeStream(it)?.asImageBitmap()}
+            Ctl.ctx.assets.open("ic/$id.png").use{BitmapFactory.decodeStream(it)?.asImageBitmap()}
         }.getOrNull()
     }
     if(image!=null) Image(image,contentDescription=null,modifier=modifier)
