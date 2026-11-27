@@ -73,6 +73,44 @@ fun fuelDots(fuel: Double, cap: Double, res: Double): Pair<Int, Boolean> {
 }
 
 @Composable
+fun BottomNavIcon(id: String, selected: Boolean) {
+    val c = if (selected) Acc else Mut
+    Canvas(Modifier.size(24.dp)) {
+        when (id) {
+            "kociol" -> {
+                drawCircle(c, 8f, Offset(12f, 13f), style=Stroke(2f))
+                drawArc(c, 8f, 210f, 120f, false, Offset(5f,6f), Size(14f,14f), style=Stroke(2f))
+                drawCircle(c, 2f, Offset(12f,13f))
+            }
+            "palnik" -> {
+                val p=androidx.compose.ui.graphics.Path().apply {
+                    moveTo(12f,22f); cubicTo(5f,19f,7f,14f,11f,11f); cubicTo(10f,8f,13f,5f,15f,3f); cubicTo(20f,9f,21f,14f,18f,18f); cubicTo(16f,21f,14f,22f,12f,22f); close()
+                }
+                drawPath(p,c)
+                drawCircle(Bg,2.5f,Offset(14f,16f))
+            }
+            "co1","co2" -> {
+                for(i in 0..2) drawRoundRect(c,Offset(3f,5f+i*5f),Size(18f,2.2f),androidx.compose.ui.geometry.CornerRadius(1f))
+                drawLine(c,Offset(7f,4f),Offset(7f,20f),1f)
+                drawLine(c,Offset(17f,4f),Offset(17f,20f),1f)
+            }
+            "cwu" -> {
+                val p=androidx.compose.ui.graphics.Path().apply {
+                    moveTo(12f,2f); cubicTo(10f,6f,5f,10f,5f,15f); cubicTo(5f,20f,8f,22f,12f,22f); cubicTo(16f,22f,19f,20f,19f,15f); cubicTo(19f,10f,14f,6f,12f,2f); close()
+                }
+                drawPath(p,c,style=Stroke(2f))
+                drawLine(c,Offset(8f,17f),Offset(16f,17f),1.5f)
+            }
+            "more" -> {
+                drawRoundRect(c,Offset(4f,5f),Size(16f,2f),androidx.compose.ui.geometry.CornerRadius(1f))
+                drawRoundRect(c,Offset(4f,11f),Size(16f,2f),androidx.compose.ui.geometry.CornerRadius(1f))
+                drawRoundRect(c,Offset(4f,17f),Size(16f,2f),androidx.compose.ui.geometry.CornerRadius(1f))
+            }
+        }
+    }
+}
+
+@Composable
 fun TeklaApp() {
     TeklaTheme {
         if (AppLock.isSet() && !Ctl.appUnlocked) { LockScreen { Ctl.appUnlocked = true }; return@TeklaTheme }
@@ -97,7 +135,7 @@ fun TeklaApp() {
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
                     NavigationBar(containerColor = Color(0xFF101014)) {
-                        for ((id, t, ic) in tabs) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { val n = ic.toIntOrNull(); if (n != null) Ic(n, 24.dp) else Text(ic, fontSize = 20.sp) } }, label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
+                        for ((id, t, ic) in tabs) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { BottomNavIcon(id, screen == id) }, label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
                             colors = NavigationBarItemDefaults.colors(selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2, unselectedIconColor = Mut, unselectedTextColor = Mut))
                     }
                 },
@@ -389,15 +427,6 @@ fun HomeView(ui: Ui) {
     val mode = ui.m.statusTables["burner"]?.getOrNull(bs) ?: "—"
     val entries = (visibleTileIds(ui).filter { it != "kociol" && it != "palnik" } + listOf("fuel")).distinct()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal=2.dp, vertical=4.dp), verticalAlignment=Alignment.CenterVertically) {
-            Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(Panel2).border(1.dp,Line,RoundedCornerShape(10.dp)).clickable{ui.go("more")}, contentAlignment=Alignment.Center){Text("≡",color=Txt,fontSize=21.sp)}
-            Spacer(Modifier.width(9.dp)); var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-            LaunchedEffect(Unit){while(true){delay(1000);now=System.currentTimeMillis()}}
-            Column(Modifier.weight(1f)){Text(if(ui.src.isDemo)"TeklaPellet" else Ctl.activeName(),color=Txt,fontSize=14.sp,fontWeight=FontWeight.SemiBold,maxLines=1);Text(java.text.SimpleDateFormat("EEE, d MMM",java.util.Locale("pl")).format(now),color=Mut,fontSize=10.sp)}
-            if(ui.alarmActive){Ic(78,17.dp);Spacer(Modifier.width(8.dp))}
-            Box(Modifier.size(8.dp).background(if(ui.src.isDemo)Warn else if(Ctl.source?.connected?.value==true)Okc else Bad,RoundedCornerShape(4.dp)));Spacer(Modifier.width(10.dp))
-            Text(java.text.SimpleDateFormat("HH:mm",java.util.Locale("pl")).format(now),color=Acc2,fontSize=19.sp,fontWeight=FontWeight.SemiBold)
-        }
         GlowCard(Modifier.fillMaxWidth().heightIn(min=300.dp,max=340.dp),if(run)Warn else null,{ui.go("kociol")}){
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
                 Box(Modifier.weight(1.35f).aspectRatio(1f),contentAlignment=Alignment.Center){
@@ -547,7 +576,7 @@ fun LevelSep(t: String) { Row(Modifier.fillMaxWidth().padding(top = 14.dp, botto
 fun MoreView(ui: Ui) {
     val items = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }.mapNotNull { m -> ui.m.routeOf(m)?.let { it to m } }
     val names = mapOf(1 to "POZIOM 1 — INSTALATOR", 2 to "POZIOM 2", 3 to "POZIOM 3")
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (Ctl.devices.isEmpty()) {
             GlowCard(Modifier.fillMaxWidth(), Warn, null) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
