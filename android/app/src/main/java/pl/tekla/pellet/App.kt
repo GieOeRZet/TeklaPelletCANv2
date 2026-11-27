@@ -83,26 +83,36 @@ fun TeklaApp() {
                     val coRoute = co.firstOrNull() ?: "co1"
                     val coLabel = if (co.size >= 2) "CO1/2" else "CO"
                     val nav = listOf(
-                        Triple("home", "Pulpit", 0),
-                        Triple(coRoute, coLabel, 0),
-                        Triple("cwu", "CWU", 0),
-                        Triple("power", "Power", 0),
-                        Triple("more", "Menu", 0)
+                        Triple("home", "Pulpit", 60),
+                        Triple(coRoute, coLabel, 62),
+                        Triple("cwu", "CWU", 66),
+                        Triple("power", "Power", 115),
+                        Triple("more", "Menu", 77)
                     )
-                    NavigationBar(containerColor = Color(0xFF101014)) {
-                        for ((id, t, _) in nav) NavigationBarItem(
-                            selected = screen == id,
-                            onClick = { go(id) },
-                            icon = { BottomNavIcon(t, selected = screen == id) },
-                            label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
-                            colors = NavigationBarItemDefaults.colors(
-                                selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2,
-                                unselectedIconColor = Mut, unselectedTextColor = Mut
-                            )
-                        )
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .background(Brush.verticalGradient(listOf(Color(0xE61A2530), Color(0xF20A1017))))
+                            .border(1.dp, LineStrong, RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp))
+                            .navigationBarsPadding()
+                            .padding(horizontal = 8.dp, vertical = 7.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        for ((id, t, icon) in nav) {
+                            val selected = screen == id
+                            Column(
+                                Modifier.weight(1f)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(if (selected) Acc.copy(alpha = 0.13f) else Color.Transparent)
+                                    .clickable { go(id) }
+                                    .padding(vertical = 5.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Ic(icon, 23.dp)
+                                Text(t, color = if (selected) Acc else Mut, fontSize = 10.sp, fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium, maxLines = 1)
+                            }
+                        }
                     }
-                },
-            ) { pad ->
+                },            ) { pad ->
                 Column(Modifier.padding(pad).fillMaxSize().then(if (screen == "home") Modifier else Modifier.verticalScroll(rememberScrollState())).padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     key(screen) { Body(ui, screen) }
                 }
@@ -113,92 +123,9 @@ fun TeklaApp() {
 }
 
 @Composable
-fun BottomNavIcon(label: String, selected: Boolean) {
-    val color = if (selected) Acc else Mut
-    Canvas(Modifier.size(24.dp)) {
-        val w = size.width; val h = size.height; val s = 1.7.dp.toPx()
-        when {
-            label == "Pulpit" -> {
-                drawRoundRect(color, Offset(w*.16f,h*.16f), Size(w*.68f,h*.68f), androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()), style=Stroke(s))
-                drawLine(color, Offset(w*.50f,h*.10f), Offset(w*.50f,h*.90f), s)
-                drawLine(color, Offset(w*.10f,h*.50f), Offset(w*.90f,h*.50f), s)
-            }
-            label == "Power" -> {
-                drawArc(color, 210f, 120f, false, Offset(w*.20f,h*.14f), Size(w*.60f,h*.68f), style=Stroke(s))
-                drawLine(color, Offset(w*.50f,h*.10f), Offset(w*.50f,h*.53f), s)
-            }
-            label.contains("CO") -> {
-                drawLine(color, Offset(w*.28f,h*.18f), Offset(w*.28f,h*.82f), s)
-                drawLine(color, Offset(w*.42f,h*.12f), Offset(w*.42f,h*.88f), s)
-                drawLine(color, Offset(w*.58f,h*.12f), Offset(w*.58f,h*.88f), s)
-                drawLine(color, Offset(w*.72f,h*.18f), Offset(w*.72f,h*.82f), s)
-                drawLine(color, Offset(w*.20f,h*.36f), Offset(w*.80f,h*.36f), s)
-                drawLine(color, Offset(w*.20f,h*.64f), Offset(w*.80f,h*.64f), s)
-            }
-            label == "Kocioł" -> {
-                drawRoundRect(color, Offset(w*.28f,h*.12f), Size(w*.44f,h*.76f), androidx.compose.ui.geometry.CornerRadius(w*.08f), style=Stroke(s))
-                drawRect(color, Offset(w*.39f,h*.49f), Size(w*.22f,h*.22f), style=Stroke(s))
-                drawLine(color, Offset(w*.18f,h*.88f), Offset(w*.82f,h*.88f), s)
-            }
-            label == "Palnik" -> {
-                val p=androidx.compose.ui.graphics.Path().apply { moveTo(w*.50f,h*.08f); cubicTo(w*.30f,h*.35f,w*.60f,h*.40f,w*.36f,h*.62f); cubicTo(w*.18f,h*.80f,w*.38f,h*.94f,w*.52f,h*.90f); cubicTo(w*.78f,h*.82f,w*.76f,h*.56f,w*.61f,h*.43f); cubicTo(w*.57f,h*.30f,w*.60f,h*.18f,w*.50f,h*.08f); close() }
-                drawPath(p, color, style=Stroke(s, cap=androidx.compose.ui.graphics.StrokeCap.Round, join=androidx.compose.ui.graphics.StrokeJoin.Round))
-            }
-            label == "OLD_CO_ICON_UNUSED" -> {
-                drawLine(color, Offset(w*.28f,h*.18f), Offset(w*.28f,h*.82f), s); drawLine(color, Offset(w*.42f,h*.12f), Offset(w*.42f,h*.88f), s)
-                drawLine(color, Offset(w*.58f,h*.12f), Offset(w*.58f,h*.88f), s); drawLine(color, Offset(w*.72f,h*.18f), Offset(w*.72f,h*.82f), s)
-                drawLine(color, Offset(w*.20f,h*.36f), Offset(w*.80f,h*.36f), s); drawLine(color, Offset(w*.20f,h*.64f), Offset(w*.80f,h*.64f), s)
-            }
-            label == "CWU" -> {
-                val p=androidx.compose.ui.graphics.Path().apply { moveTo(w*.50f,h*.10f); cubicTo(w*.22f,h*.45f,w*.24f,h*.62f,w*.50f,h*.88f); cubicTo(w*.76f,h*.62f,w*.78f,h*.45f,w*.50f,h*.10f); close() }
-                drawPath(p, color, style=Stroke(s, cap=androidx.compose.ui.graphics.StrokeCap.Round, join=androidx.compose.ui.graphics.StrokeJoin.Round))
-            }
-            else -> for (i in 0..2) drawRoundRect(color, Offset(w*.18f,h*(.28f+i*.22f)), Size(w*.64f,h*.07f), androidx.compose.ui.geometry.CornerRadius(h*.03f))
-        }
-    }
-}
-
-@Composable
 fun NotificationGlyph(active: Boolean) {
-    Canvas(Modifier.size(24.dp)) {
-        val col = if (active) Bad else Mut
-        val s = 1.7.dp.toPx()
-        drawArc(col, 205f, 130f, false, Offset(size.width*.22f,size.height*.12f), Size(size.width*.56f,size.height*.62f), style=Stroke(s))
-        drawLine(col, Offset(size.width*.30f,size.height*.73f), Offset(size.width*.70f,size.height*.73f), s)
-        drawCircle(col, size.minDimension*.055f, Offset(size.width*.50f,size.height*.84f))
-        if (active) drawCircle(Bad, size.minDimension*.10f, Offset(size.width*.79f,size.height*.16f))
-    }
+    Ic(78, 24.dp)
 }
-
-@Composable
-fun MenuGlyph(title: String) {
-    val color = Mut
-    Canvas(Modifier.size(28.dp)) {
-        val w=size.width; val h=size.height; val s=1.6.dp.toPx()
-        when {
-            title.contains("Kocioł", true) -> {
-                drawRoundRect(color, Offset(w*.28f,h*.10f), Size(w*.44f,h*.78f), androidx.compose.ui.geometry.CornerRadius(3.dp.toPx()), style=Stroke(s))
-                drawRect(color, Offset(w*.39f,h*.48f), Size(w*.22f,h*.22f), style=Stroke(s))
-            }
-            title.contains("Palnik", true) -> {
-                drawArc(color, 205f, 230f, false, Offset(w*.22f,h*.12f), Size(w*.56f,h*.70f), style=Stroke(s))
-            }
-            title.contains("Alarm", true) -> {
-                drawCircle(color, w*.30f, Offset(w*.50f,h*.48f), style=Stroke(s)); drawLine(color,Offset(w*.50f,h*.28f),Offset(w*.50f,h*.55f),s); drawLine(color,Offset(w*.50f,h*.55f),Offset(w*.65f,h*.65f),s)
-            }
-            title.contains("Inform", true) -> {
-                drawCircle(color,w*.34f,Offset(w*.50f,h*.48f),style=Stroke(s)); drawCircle(color,w*.04f,Offset(w*.50f,h*.34f)); drawLine(color,Offset(w*.50f,h*.46f),Offset(w*.50f,h*.68f),s)
-            }
-            title.contains("Konfigur", true) -> {
-                drawCircle(color,w*.23f,Offset(w*.50f,h*.50f),style=Stroke(s)); for(i in 0..7){ val a=i*Math.PI/4; drawLine(color,Offset(w*.50f+(w*.33f*kotlin.math.cos(a)).toFloat(),h*.50f+(h*.33f*kotlin.math.sin(a)).toFloat()),Offset(w*.50f+(w*.43f*kotlin.math.cos(a)).toFloat(),h*.50f+(h*.43f*kotlin.math.sin(a)).toFloat()),s) }
-            }
-            else -> {
-                drawRoundRect(color,Offset(w*.18f,h*.18f),Size(w*.64f,h*.64f),androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()),style=Stroke(s))
-            }
-        }
-    }
-}
-
 @Composable
 fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
     val title = when {
@@ -216,7 +143,11 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
     LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
 
     Row(
-        Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal = 14.dp, vertical = 8.dp),
+        Modifier.fillMaxWidth()
+            .background(Brush.horizontalGradient(listOf(Color(0xD91A2632), Color(0xB80E151D))))
+            .border(1.dp, Line, RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
+            .statusBarsPadding()
+            .padding(horizontal = 14.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
@@ -258,7 +189,7 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
         Box(
             Modifier
                 .clip(RoundedCornerShape(12.dp))
-                .background(if (ui.alarmActive) Color(0xFF3A1B1B) else Color.Transparent)
+                .background(if (ui.alarmActive) Bad.copy(alpha = 0.12f) else Color.Transparent)
                 .clickable { ui.go("notifications") }
                 .padding(5.dp),
             contentAlignment = Alignment.Center
@@ -280,9 +211,17 @@ fun Chip(t: String, dot: Color, click: () -> Unit) {
 
 @Composable
 fun Card(title: String?, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
-    Column(modifier.fillMaxWidth().background(CardBrush, RoundedCornerShape(16.dp)).border(1.dp, Line, RoundedCornerShape(16.dp)).padding(14.dp)) {
-        if (title != null) { Text(title.uppercase(), color = Mut, fontSize = 11.sp, letterSpacing = 0.9.sp, fontWeight = FontWeight.SemiBold); Spacer(Modifier.height(8.dp)) }
-        content()
+    Box(
+        modifier.fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(Brush.verticalGradient(listOf(Color(0xD91B2936), Color(0xB8141D27))))
+            .border(1.dp, LineStrong, RoundedCornerShape(20.dp))
+    ) {
+        Box(Modifier.fillMaxWidth().height(1.dp).background(Color(0x38FFFFFF)))
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+            if (title != null) { Text(title, color = Mut, fontSize = 11.sp, letterSpacing = 0.6.sp, fontWeight = FontWeight.SemiBold); Spacer(Modifier.height(9.dp)) }
+            content()
+        }
     }
 }
 
@@ -439,9 +378,18 @@ val CardBrush = Brush.verticalGradient(listOf(Color(0xFF34414A), Color(0xFF242E3
 /** Karta/kafel z cienką linią LED przy górnej krawędzi (kolor stanu; gdy null - wygaszona). */
 @Composable
 fun GlowCard(modifier: Modifier, led: Color?, click: (() -> Unit)?, content: @Composable ColumnScope.() -> Unit) {
-    Box(modifier.clip(CardShape).background(CardBrush).border(1.dp, Line, CardShape).then(if (click != null) Modifier.clickable(onClick = click) else Modifier)) {
-        Box(Modifier.align(Alignment.TopCenter).fillMaxWidth(0.64f).height(2.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, led ?: Color(0xFF2A2A32), Color.Transparent))))
-        Column(Modifier.fillMaxSize().padding(horizontal = 13.dp, vertical = 11.dp), content = content)
+    Box(
+        modifier.clip(CardShape)
+            .background(Brush.linearGradient(listOf(Color(0xD91D2B38), Color(0xB5141D27), Color(0xC31A2430))))
+            .border(1.dp, if (led != null) led.copy(alpha = 0.34f) else LineStrong, CardShape)
+            .then(if (click != null) Modifier.clickable(onClick = click) else Modifier)
+    ) {
+        Box(Modifier.align(Alignment.TopStart).fillMaxWidth().height(1.dp).background(Color(0x30FFFFFF)))
+        if (led != null) Box(
+            Modifier.align(Alignment.TopCenter).fillMaxWidth(0.42f).height(2.dp)
+                .background(Brush.horizontalGradient(listOf(Color.Transparent, led.copy(alpha = 0.8f), Color.Transparent)))
+        )
+        Column(Modifier.fillMaxSize().padding(horizontal = 15.dp, vertical = 13.dp), content = content)
     }
 }
 
@@ -551,7 +499,7 @@ fun FuelTile(ui: Ui, modifier: Modifier) {
 
 @Composable
 fun PowerTile(ui: Ui, modifier: Modifier, wide: Boolean = false) {
-    val on = ui.n("0x2005") != 0.0; val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
+    val on = ui.n("0x2005") != 0.0; val prog = 115
     if (wide) { GlowCard(modifier, if (on) Okc else null, { ui.go("kociol") }) {   // samotny kafel w ostatnim wierszu: jedna kompaktowa linia
         Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f)) { Text("ZASILANIE", color = Mut, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.4.sp); Text(if (on) "Włączone" else "Wyłączone", color = Txt, fontSize = 19.sp, fontWeight = FontWeight.Medium) }
