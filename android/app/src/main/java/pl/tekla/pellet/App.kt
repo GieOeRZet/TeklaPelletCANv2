@@ -474,7 +474,7 @@ fun HomeView(ui: Ui) {
     val on = ui.n("0x2005") != 0.0; val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
     val run = bs in 1..8; val solar = (ui.n("0x2108") ?: 0.0) != 0.0; val buffer = (ui.n("0x2107") ?: 0.0) != 0.0
     val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0
-    val (dots, emptyFuel) = fuelDots(fuel, cap, res); val wx = ui.n("0x215F")
+    val wx = ui.n("0x215F")
     val mode = ui.m.statusTables["burner"]?.getOrNull(bs) ?: "—"
     val entries = (visibleTileIds(ui).filter { it != "kociol" && it != "palnik" } + listOf("fuel")).distinct()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -493,8 +493,7 @@ fun HomeView(ui: Ui) {
             GlowCard(Modifier.weight(1f).height(82.dp),null,null){Text("ZEWN.",color=Mut,fontSize=9.sp,letterSpacing=.8.sp);BigNum(f1(wx,0),"°C",27);Text(if((ui.n("0x3729")?:0.0)==1.0)"AUTO" else "RĘCZNY",color=Color.Black,fontSize=9.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(horizontal=8.dp,vertical=3.dp).background(Acc,RoundedCornerShape(6.dp)))}
             GlowCard(Modifier.weight(1f).height(92.dp),if(on)Okc else null,{ui.go("kociol")} ){Text("ZASILANIE",color=Mut,fontSize=9.sp,letterSpacing=.8.sp);Text(if(on)"Włączone" else "Wyłączone",color=Txt,fontSize=18.sp,fontWeight=FontWeight.Medium);Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(7.dp)){Ix(IxData("Kocioł","",on,Okc));Ic(prog,20.dp)}}
         }
-        if(entries.isNotEmpty())TileGrid(ui,entries,92.dp)
-        if(ui.src.isDemo&&Ctl.devices.isEmpty()){GlowCard(Modifier.fillMaxWidth(),Warn,null){Row(verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text("TRYB DEMO",color=Warn,fontSize=10.sp,fontWeight=FontWeight.Bold,letterSpacing=.8.sp);Text("Połącz aplikację z własnym modułem",color=Txt,fontSize=14.sp,fontWeight=FontWeight.Medium);Text("Dane powyżej są demonstracyjne.",color=Mut,fontSize=11.sp)};OutlinedButton({ui.go("appset")}){Text("Połącz")}}}}
+        if(entries.isNotEmpty())TileGrid(ui,entries,112.dp)
         if(solar||buffer){Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)){if(solar)GlowCard(Modifier.weight(1f).height(70.dp),Okc,{ui.go("more")}){Text("SOLARY",color=Mut,fontSize=9.sp);Text("Aktywne",color=Txt,fontSize=14.sp)};if(buffer)GlowCard(Modifier.weight(1f).height(70.dp),Okc,{ui.go("more")}){Text("BUFOR",color=Mut,fontSize=9.sp);Text("Aktywny",color=Txt,fontSize=14.sp)}}}
     }
 }
