@@ -371,7 +371,7 @@ fun KvRow(l: String, v: String) {
 }
 
 val CardShape = RoundedCornerShape(18.dp)
-val CardBrush = Brush.verticalGradient(listOf(Color(0xFF17171C), Color(0xFF121216)))
+val CardBrush = Brush.verticalGradient(listOf(Color(0xB82E3A45), Color(0x8F1D2933)))
 
 /** Karta/kafel z cienką linią LED przy górnej krawędzi (kolor stanu; gdy null - wygaszona). */
 @Composable
