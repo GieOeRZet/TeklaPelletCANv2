@@ -352,6 +352,7 @@ fun Body(ui: Ui, screen: String) {
         screen == "network" -> NetworkView(ui)
         screen == "circuits" -> CircuitsView(ui)
         screen == "module" -> ModuleView(ui)
+        screen == "internet" -> InternetView(ui)
         screen == "log" -> LogView(ui)
         screen == "outtest" -> OutTestView(ui)
         screen.startsWith("set:") -> ListView(ui, screen.removePrefix("set:"))
@@ -803,78 +804,82 @@ fun LevelSep(t: String) { Row(Modifier.fillMaxWidth().padding(top = 14.dp, botto
 
 @Composable
 fun MoreView(ui: Ui) {
-    val items = ui.m.menu
-        .filter { ui.m.menuVisible(it, ui.v, ui.level) }
-        .mapNotNull { m -> ui.m.routeOf(m)?.let { it to m } }
-        .filter { it.first !in listOf("cwu", "co1", "co2", "co3", "co4") }
-
-    Card("Dostęp") {
-        RowItem("Tryb pracy modułu", if (ui.full) "pełna kontrola" else "tylko odczyt") { ui.open(Dlg.Mode) }
-        RowItem("Poziom PIN", ui.level.toString()) { ui.open(Dlg.Pin) }
-    }
-
-    Card("Menu kotła i instalacji") {
-        val names = mapOf(1 to "POZIOM 1 — INSTALATOR", 2 to "POZIOM 2", 3 to "POZIOM 3")
-        for (lv in 0..3) {
-            val g = items.filter { it.second.levelMin == lv }
-            if (g.isEmpty()) continue
-            if (lv >= 1) LevelSep(names.getValue(lv))
-            for ((r, m) in g) Row(
-                Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go(r) }.padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                MenuGlyph(m.title); Spacer(Modifier.width(10.dp))
-                Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f))
-                Text("›", color = Mut)
+    val items = ui.m.menu.filter { ui.m.menuVisible(it, ui.v, ui.level) }
+    val names = mapOf(1 to "POZIOM 1 — INSTALATOR", 2 to "POZIOM 2", 3 to "POZIOM 3")
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Card("MENU KOTŁA") {
+            var lastLevel = -1
+            for (m in items) {
+                if (m.levelMin != lastLevel) {
+                    if (m.levelMin > 0) LevelSep(names[m.levelMin] ?: "POZIOM " + m.levelMin)
+                    lastLevel = m.levelMin
+                }
+                val route = ui.m.routeOf(m)
+                when (m.title) {
+                    "Jezyk (Language)" -> LanguageRow(ui, m)
+                    "Alarm dzwiekowy (przelacznik)" -> BeepMenuRow(ui, m)
+                    else -> if (route != null) Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).clickable { ui.go(route) }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Ic(m.icon, 26.dp); Spacer(Modifier.width(12.dp)); Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut, fontSize = 22.sp)
+                    }
+                }
             }
         }
-    }
-
-    if (ui.level >= 1) {
-        Card("Poziom 1 — dodatkowe ustawienia") {
-            BeepRow(ui)
+        LevelSep("MODUŁ ESP")
+        Card("MODUŁ") {
+            ModuleMenuRow("Dodaj / przełącz moduł", "BLE · Wi‑Fi · mDNS · adres ręczny") { ui.go("appset") }
+            if (ui.level >= 1) {
+                LevelSep("POZIOM 1")
+                ModuleMenuRow("Konfiguracja modułu ESP", "Wi‑Fi · CAN · OTA · klienci · serwis") { ui.go("module") }
+                ModuleMenuRow("Dziennik modułu", "Logi i diagnostyka") { ui.go("log") }
+                ModuleMenuRow("Sieć CAN", "Węzły i stan komunikacji") { ui.go("network") }
+            }
         }
-    }
-
-    LevelSep("MODUŁ ESP")
-    Card(null) {
-        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go("module") }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Moduł ESP", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f))
-            Text("Wi-Fi · CAN · OTA · klienci · diagnostyka", color = Mut, fontSize = 11.sp)
-            Spacer(Modifier.width(8.dp)); Text("›", color = Mut)
+        LevelSep("APLIKACJA")
+        Card("APLIKACJA") {
+            ModuleMenuRow("Powiadomienia", "Alarmy · aktualizacje aplikacji · firmware ESP") { ui.go("notifications") }
+            if (ui.level >= 1) {
+                LevelSep("POZIOM 1")
+                ModuleMenuRow("Ustawienia aplikacji", "Bezpieczeństwo · demo · urządzenia") { ui.go("appset") }
+                ModuleMenuRow("O aplikacji", "Wersja, źródło modelu i informacje") { ui.go("info") }
+            }
         }
-        HorizontalDivider(color = Line)
-        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go("network") }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Sieć CAN", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f))
-            Text("›", color = Mut)
-        }
-        HorizontalDivider(color = Line)
-        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go("log") }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Dziennik modułu", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f))
-            Text("›", color = Mut)
-        }
-    }
-
-    LevelSep("APLIKACJA")
-    Card(null) {
-        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go("appset") }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Ustawienia aplikacji", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f))
-            Text("PIN · demo · urządzenia · wygląd", color = Mut, fontSize = 11.sp)
-            Spacer(Modifier.width(8.dp)); Text("›", color = Mut)
-        }
-        HorizontalDivider(color = Line)
-        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go("notifications") }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("Powiadomienia", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f))
-            Text(if (ui.alarmActive) "alarm" else "›", color = if (ui.alarmActive) Bad else Mut)
-        }
-        HorizontalDivider(color = Line)
-        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { ui.go("info") }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text("O aplikacji", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f))
-            Text("›", color = Mut)
-        }
+        if (ui.level == 0) Text("Pozycje poziomu 1 i wyższych pojawią się poniżej po odblokowaniu odpowiednim PIN-em.", color = Mut, fontSize = 11.5.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
     }
 }
 
+@Composable fun ModuleMenuRow(title: String, subtitle: String, click: () -> Unit) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 54.dp).clickable(onClick = click).padding(horizontal = 4.dp, vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) { Text(title, color = Txt, fontSize = 15.sp); Text(subtitle, color = Mut, fontSize = 10.5.sp, maxLines = 1, softWrap = false) }
+        Text("›", color = Mut, fontSize = 22.sp)
+    }
+}
+
+@Composable fun LanguageRow(ui: Ui, m: MenuRow) {
+    val scope = rememberCoroutineScope(); val cur = ui.n("0x0003")?.toInt() ?: 0
+    val names = listOf("Polski", "English", "Deutsch", "Čeština", "Slovenčina", "Français", "Italiano", "Español")
+    Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Ic(m.icon, 26.dp); Spacer(Modifier.width(12.dp)); Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text(names.getOrElse(cur) { "Polski" }, color = Mut, fontSize = 12.sp); Spacer(Modifier.width(8.dp))
+        Text("›", color = Mut, fontSize = 22.sp, modifier = Modifier.clickable { val next = (cur + 1) % names.size; scope.launch { ui.src.write("0x0003", next.toDouble()); ui.toast(names[next]) } })
+    }
+}
+
+@Composable fun BeepMenuRow(ui: Ui, m: MenuRow) {
+    var on by remember { mutableStateOf<Boolean?>(null) }; val scope = rememberCoroutineScope()
+    LaunchedEffect(Unit) { on = ui.src.read(listOf("0x3506"))["0x3506"]?.let { it != 0.0 } }
+    Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Ic(m.icon, 26.dp); Spacer(Modifier.width(12.dp)); Text("Alarm dźwiękowy", color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f))
+        Switch(on == true, { v -> scope.launch { val err = ui.src.write("0x3506", if (v) 1.0 else 0.0); if (err == null) on = v else ui.toast(err) } }, enabled = on != null)
+    }
+}
+
+@Composable fun InternetView(ui: Ui) {
+    val scope = rememberCoroutineScope(); var fields by remember { mutableStateOf<Map<String, Double>>(emptyMap()) }
+    LaunchedEffect(Unit) { fields = ui.src.read((0x3730..0x3741).map { "0x" + it.toString(16).uppercase() }) }
+    fun chunk(pid: Int): String { val v = fields["0x" + pid.toString(16).uppercase()]?.toLong() ?: return ""; if (v == 0L) return ""; val b = ByteArray(4) { i -> ((v shr (8 * (3 - i))) and 0xFF).toByte() }; return b.toString(Charsets.ISO_8859_1).trimEnd(Char(0)) }
+    val ssid = (0..5).joinToString("") { chunk(0x3730 + it) }.take(24); val password = (0..5).joinToString("") { chunk(0x3736 + it) }.take(24)
+    val serial = fields["0x373F"]?.toLong() ?: 0L; val pin = fields["0x3740"]?.toLong() ?: 0L; val wifi = (fields["0x373E"] ?: 0.0) != 0.0; val remote = (fields["0x3741"] ?: 0.0) != 0.0
+    Card("Internet") { RowItem("SSID", ssid.ifBlank { "—" }); RowItem("Password", password.ifBlank { "—" }); RowItem("Serial", if(serial == 0L) "—" else serial.toString()); RowItem("PIN", if(pin == 0L) "—" else pin.toString().take(6)); RowItem("WiFi", if(wifi) "Włączone" else "Wyłączone") { scope.launch { ui.src.write("0x373E", if(wifi) 0.0 else 1.0); fields = ui.src.read(listOf("0x373E")) } }; RowItem("Zmiany zdalne", if(remote) "Włączone" else "Wyłączone") { scope.launch { ui.src.write("0x3741", if(remote) 0.0 else 1.0); fields = ui.src.read(listOf("0x3741")) } } }
+}
 @Composable
 fun Dialogs(ui: Ui, d: Dlg, close: () -> Unit) {
     val scope = rememberCoroutineScope(); var err by remember(d) { mutableStateOf("") }
