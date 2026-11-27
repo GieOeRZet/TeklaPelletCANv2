@@ -2,6 +2,7 @@ package pl.tekla.pellet
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -13,6 +14,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 /** Stan aplikacji (jedna instancja na proces): model, aktywne zrodlo danych (demo / ESP), obrazy z assets. */
 object Ctl {
@@ -44,7 +46,27 @@ object Ctl {
     fun activeName(): String = devices.firstOrNull { it.id == activeId }?.name ?: "TeklaPellet"
     fun notify(msg: String) { scope.launch { android.widget.Toast.makeText(ctx, msg, android.widget.Toast.LENGTH_LONG).show() } }
     val clientName: String get() = ("Android " + android.os.Build.MODEL).take(23).replace("\"", "").replace("\\", "")
-    fun icon(n: Int): ImageBitmap? = icons.getOrPut(n) { try { ctx.assets.open("ic/$n.png").use { BitmapFactory.decodeStream(it)?.asImageBitmap() } } catch (e: Exception) { null } }
+    fun icon(n: Int): ImageBitmap? = icons.getOrPut(n) {
+        try {
+            ctx.assets.open("ic/$n.png").use { stream ->
+                val src = BitmapFactory.decodeStream(stream) ?: return@getOrPut null
+                val bmp = src.copy(android.graphics.Bitmap.Config.ARGB_8888, true)
+                // Oryginalne bitmapy panela mają jednolite tło (41,40,41).
+                // Usuwamy wyłącznie to tło przy renderowaniu, zachowując oryginalną grafikę.
+                val br = 41; val bg = 40; val bb = 41
+                for (y in 0 until bmp.height) for (x in 0 until bmp.width) {
+                    val p = bmp.getPixel(x, y)
+                    val d = maxOf(abs(Color.red(p) - br), abs(Color.green(p) - bg), abs(Color.blue(p) - bb))
+                    if (d <= 7) bmp.setPixel(x, y, Color.TRANSPARENT)
+                    else if (d < 28) {
+                        val a = ((d - 7) * 255 / 21).coerceIn(0, 255)
+                        bmp.setPixel(x, y, Color.argb(a, Color.red(p), Color.green(p), Color.blue(p)))
+                    }
+                }
+                bmp.asImageBitmap()
+            }
+        } catch (e: Exception) { null }
+    }
 }
 
 class MainActivity : androidx.fragment.app.FragmentActivity() {
