@@ -187,25 +187,64 @@ fun TeklaAppV2(){
 @Composable private fun HomeV2(ui:Ui,nav:(String)->Unit){
     val mods=configModules(ui)
     val pages=mods.chunked(4).ifEmpty{listOf(emptyList())}
+    val scroll=rememberScrollState()
+    val scope=rememberCoroutineScope()
     var page by remember{mutableIntStateOf(0)}
-    page=page.coerceIn(0,pages.lastIndex)
-    Column(Modifier.fillMaxSize().padding(horizontal=12.dp,vertical=4.dp)){
-        HeroV2(ui){nav("kociol")}
-        Spacer(Modifier.height(8.dp))
-        BurnerStripV2(ui)
-        Spacer(Modifier.height(8.dp))
-        Row(Modifier.fillMaxWidth().weight(1f).horizontalScroll(rememberScrollState())){
-            Column(Modifier.width(400.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
-                for(row in pages[page].chunked(2)){
-                    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)){
-                        for(id in row)Box(Modifier.weight(1f)){HomeTileV2(ui,id,nav)}
-                        if(row.size==1)Spacer(Modifier.weight(1f))
+
+    BoxWithConstraints(Modifier.fillMaxSize()){
+        val pageWidth=maxWidth
+        LaunchedEffect(scroll.value,pageWidth){
+            val px=with(androidx.compose.ui.platform.LocalDensity.current){pageWidth.toPx()}
+            if(px>1f){
+                val p=(scroll.value/px).toInt().coerceIn(0,pages.lastIndex)
+                if(page!=p) page=p
+            }
+        }
+        Column(Modifier.fillMaxSize().padding(horizontal=12.dp,vertical=4.dp)){
+            HeroV2(ui){nav("kociol")}
+            Spacer(Modifier.height(8.dp))
+            BurnerStripV2(ui)
+            Spacer(Modifier.height(8.dp))
+            Row(
+                Modifier.fillMaxWidth().weight(1f).horizontalScroll(scroll),
+                horizontalArrangement=Arrangement.Start
+            ){
+                for(p in pages){
+                    Column(
+                        Modifier.width(pageWidth),
+                        verticalArrangement=Arrangement.spacedBy(8.dp)
+                    ){
+                        for(row in p.chunked(2)){
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                horizontalArrangement=Arrangement.spacedBy(8.dp)
+                            ){
+                                for(id in row) Box(Modifier.weight(1f)){HomeTileV2(ui,id,nav)}
+                                if(row.size==1) Spacer(Modifier.weight(1f))
+                            }
+                        }
                     }
                 }
             }
-        }
-        if(pages.size>1)Row(Modifier.fillMaxWidth().padding(4.dp),horizontalArrangement=Arrangement.Center){
-            for(i in pages.indices)Box(Modifier.padding(3.dp).size(if(i==page)8.dp else 6.dp).clip(RoundedCornerShape(50)).background(if(i==page)G2Orange else G2Mut).clickable{page=i})
+            if(pages.size>1)Row(
+                Modifier.fillMaxWidth().padding(4.dp),
+                horizontalArrangement=Arrangement.Center
+            ){
+                for(i in pages.indices){
+                    Box(
+                        Modifier.padding(3.dp)
+                            .size(if(i==page)8.dp else 6.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(if(i==page)G2Orange else G2Mut)
+                            .clickable{
+                                scope.launch{
+                                    val px=with(androidx.compose.ui.platform.LocalDensity.current){pageWidth.toPx()}
+                                    scroll.animateScrollTo((i*px).toInt())
+                                }
+                            }
+                    )
+                }
+            }
         }
     }
 }
