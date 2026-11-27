@@ -568,7 +568,8 @@ fun HomeTileGrid(ui: Ui, entries: List<String>) {
     val pages = entries.chunked(6)
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val pageWidthPx = maxWidth.value.toInt().coerceAtLeast(1)
+            val pageWidth = this@BoxWithConstraints.maxWidth
+            val pageWidthPx = pageWidth.value.toInt().coerceAtLeast(1)
             val scroll = rememberScrollState(page * pageWidthPx)
             LaunchedEffect(page, pageWidthPx) { scroll.animateScrollTo(page * pageWidthPx) }
             LaunchedEffect(scroll.value, pageWidthPx) {
@@ -580,7 +581,7 @@ fun HomeTileGrid(ui: Ui, entries: List<String>) {
             ) {
                 pages.forEachIndexed { index, ids ->
                     Column(
-                        Modifier.width(maxWidth),
+                        Modifier.width(pageWidth),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         ids.chunked(2).forEach { pair ->
