@@ -568,7 +568,7 @@ fun HomeView(ui: Ui) {
     val res = ui.n("0x3603") ?: 0.0
     // HOME panel Estyma: CO/CWU zależą od konfiguracji, Solary i Bufor mają stałe miejsca na pulpicie.
     val modules = visibleTileIds(ui).filter { it !in setOf("kociol", "palnik", "solary", "bufor") }
-    val entries = (modules + listOf("cwu", "solary", "bufor", "fuel", "power")).distinct()
+    val entries = (modules + listOf("solary", "bufor", "fuel", "power")).distinct()
 
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
