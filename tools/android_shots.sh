@@ -10,7 +10,8 @@ for s in home kociol palnik co1 co2 cwu config sched:co1 more module alarms stat
   sleep 6
   if ! adb shell pidof pl.tekla.pellet >/dev/null 2>&1; then
     echo "CRASH: aplikacja nie ma procesu po ekranie $s"
-    adb logcat -d -b main -b system -b crash -t 200 > "docs/zrzuty_android/crash_$s.log" || true
+    echo "===== CRASH LOG $s ====="
+    adb logcat -d -b main -b system -b crash -t 300 || true
     exit 1
   fi
   if ! adb shell dumpsys activity activities | grep -q "pl.tekla.pellet"; then
