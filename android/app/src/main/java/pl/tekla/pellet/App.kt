@@ -345,6 +345,7 @@ fun Body(ui: Ui, screen: String) {
         screen == "more" -> MoreView(ui)
         screen == "notifications" -> NotificationsView(ui)
         screen == "appset" -> AppSettings(ui)
+        screen == "appabout" -> AppAboutView(ui)
         screen == "config" -> ConfigView(ui)
         screen == "alarms" -> AlarmsView(ui)
         screen == "info" -> InfoView(ui)
@@ -763,6 +764,17 @@ fun NetworkView(ui: Ui) {
 }
 
 @Composable
+fun AppAboutView(ui: Ui) {
+    Card("O aplikacji") {
+        RowItem("TeklaPelletCANv2", "Android · Compose")
+        RowItem("Model urządzenia", "655 PID · menu Estyma")
+        RowItem("Źródło danych", if (ui.src.isDemo) "Demo" else "Moduł ESP")
+        RowItem("Poziom dostępu", ui.level.toString())
+        Text("Interfejs korzysta z modelu menu, PID-ów, list nastaw, harmonogramów i zależności konfiguracji z repozytorium V2. Warstwa wizualna jest niezależna od starego WebView.", color = Mut, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
+    }
+}
+
+@Composable
 fun InfoView(ui: Ui) {
     Card("Informacje o programie") {
         RowItem("Aplikacja", "TeklaPellet 0.1"); RowItem("Źródło danych", if (ui.src.isDemo) "demo (dane przykładowe)" else "urządzenie ESP")
@@ -842,6 +854,9 @@ fun MoreView(ui: Ui) {
                 when (m.title) {
                     "Jezyk (Language)" -> LanguageRow(ui, m)
                     "Alarm dzwiekowy (przelacznik)" -> BeepMenuRow(ui, m)
+                    "Poziom menu (PIN)" -> Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).clickable { ui.open(Dlg.Pin) }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Ic(m.icon, 26.dp); Spacer(Modifier.width(12.dp)); Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("PIN " + ui.level, color = Mut, fontSize = 12.sp)
+                    }
                     else -> if (route != null) Row(Modifier.fillMaxWidth().heightIn(min = 52.dp).clickable { ui.go(route) }.padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                         Ic(m.icon, 26.dp); Spacer(Modifier.width(12.dp)); Text(m.title, color = Txt, fontSize = 15.sp, modifier = Modifier.weight(1f)); Text("›", color = Mut, fontSize = 22.sp)
                     }
@@ -864,7 +879,7 @@ fun MoreView(ui: Ui) {
             if (ui.level >= 1) {
                 LevelSep("POZIOM 1")
                 ModuleMenuRow("Ustawienia aplikacji", "Bezpieczeństwo · demo · urządzenia") { ui.go("appset") }
-                ModuleMenuRow("O aplikacji", "Wersja, źródło modelu i informacje") { ui.go("info") }
+                ModuleMenuRow("O aplikacji", "Wersja aplikacji i źródła modelu") { ui.go("appabout") }
             }
         }
         if (ui.level == 0) Text("Pozycje poziomu 1 i wyższych pojawią się poniżej po odblokowaniu odpowiednim PIN-em.", color = Mut, fontSize = 11.5.sp, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
