@@ -165,7 +165,7 @@ fun TeklaApp() {
         val ctx = Ctl.ctx
         val vals by src.values.collectAsState(); val level by src.level.collectAsState(); val full by src.fullMode.collectAsState(); val conn by src.connected.collectAsState(); val tabs = navTabs(vals)
         var frame by remember { mutableIntStateOf(0) }
-        LaunchedEffect(Unit) { while (true) { delay(130); frame++ } }
+        LaunchedEffect(Unit) { UpdateCenter.start(); while (true) { delay(130); frame++ } }
         val stack = remember { mutableStateListOf("home").also { l -> Ctl.startScreen?.let { if (it != "home") l.add(it) } } }
         var dlg by remember { mutableStateOf<Dlg?>(null) }
         val hist = remember(src) { mutableStateListOf<Float>().also { l -> if (src.isDemo) { val base = (src.values.value["0x2001"] ?: 60.0).toFloat(); for (i in 0 until 120) l.add(base + 3.5f * kotlin.math.sin((i - 119) / 11.0).toFloat() - 1.5f) } } }
