@@ -92,12 +92,17 @@ object UpdateCenter {
 }
 val PROGICON = listOf(133, 135, 122, 128, 120)
 fun navTabs(v: Map<String, Double>): List<Triple<String, String, String>> {
-    val out = mutableListOf(Triple("kociol", "Kocioł", "60"), Triple("palnik", "Palnik", "61"))
+    // Dolna nawigacja odwzorowuje dynamiczny pasek oryginalnego panelu:
+    // najpierw moduły aktywne w konfiguracji, na końcu zawsze Menu.
+    val out = mutableListOf(Triple("kociol", "Kocioł", "83"), Triple("palnik", "Palnik", "85"))
     val co = (v["0x2105"] ?: 1.0).toInt().coerceIn(0, 4)
-    if (co >= 1) out += Triple("co1", if (co >= 2) "CO1" else "CO", "62")
-    if (co >= 2) out += Triple("co2", "CO2", "63")
-    if ((v["0x2106"] ?: 0.0) != 0.0) out += Triple("cwu", "CWU", "66")
-    out += Triple("more", "Menu", "≡")
+    for (i in 1..co) out += Triple("co$i", "CO$i", "86")
+    if ((v["0x2106"] ?: 0.0) != 0.0) out += Triple("cwu", "CWU", "88")
+    if ((v["0x2108"] ?: 0.0) != 0.0) out += Triple("solary", "Solary", "87")
+    if ((v["0x2107"] ?: 0.0) != 0.0) out += Triple("bufor", "Bufor", "84")
+    if ((v["0x350C"] ?: 0.0) != 0.0) out += Triple("kaskada", "Kaskada", "82")
+    if ((v["0x3525"] ?: 0.0) != 0.0) out += Triple("magazyn", "Magazyn", "99")
+    out += Triple("more", "Menu", "96")
     return out
 }
 
@@ -123,40 +128,21 @@ fun NotificationIcon(hasNew:Boolean=false) {
 }
 @Composable
 fun BottomNavIcon(id: String, selected: Boolean) {
-    val c = if (selected) Acc else Mut
-    Canvas(Modifier.size(24.dp)) {
-        when (id) {
-            "kociol" -> {
-                drawCircle(c, 8f, Offset(12f, 13f), style=Stroke(2f))
-                drawArc(c, 210f, 120f, false, Offset(5f,6f), Size(14f,14f), style=Stroke(2f))
-                drawCircle(c, 2f, Offset(12f,13f))
-            }
-            "palnik" -> {
-                val p=androidx.compose.ui.graphics.Path().apply {
-                    moveTo(12f,22f); cubicTo(5f,19f,7f,14f,11f,11f); cubicTo(10f,8f,13f,5f,15f,3f); cubicTo(20f,9f,21f,14f,18f,18f); cubicTo(16f,21f,14f,22f,12f,22f); close()
-                }
-                drawPath(p,c)
-                drawCircle(Bg,2.5f,Offset(14f,16f))
-            }
-            "co1","co2" -> {
-                for(i in 0..2) drawRoundRect(c,Offset(3f,5f+i*5f),Size(18f,2.2f),androidx.compose.ui.geometry.CornerRadius(1f))
-                drawLine(c,Offset(7f,4f),Offset(7f,20f),1f)
-                drawLine(c,Offset(17f,4f),Offset(17f,20f),1f)
-            }
-            "cwu" -> {
-                val p=androidx.compose.ui.graphics.Path().apply {
-                    moveTo(12f,2f); cubicTo(10f,6f,5f,10f,5f,15f); cubicTo(5f,20f,8f,22f,12f,22f); cubicTo(16f,22f,19f,20f,19f,15f); cubicTo(19f,10f,14f,6f,12f,2f); close()
-                }
-                drawPath(p,c,style=Stroke(2f))
-                drawLine(c,Offset(8f,17f),Offset(16f,17f),1.5f)
-            }
-            "more" -> {
-                drawRoundRect(c,Offset(4f,5f),Size(16f,2f),androidx.compose.ui.geometry.CornerRadius(1f))
-                drawRoundRect(c,Offset(4f,11f),Size(16f,2f),androidx.compose.ui.geometry.CornerRadius(1f))
-                drawRoundRect(c,Offset(4f,17f),Size(16f,2f),androidx.compose.ui.geometry.CornerRadius(1f))
-            }
-        }
+    val icon = when (id) {
+        "kociol" -> 83
+        "palnik" -> 85
+        "co1", "co2", "co3", "co4" -> 86
+        "cwu" -> 88
+        "solary" -> 87
+        "bufor" -> 84
+        "kaskada" -> 82
+        "magazyn" -> 99
+        "more" -> 96
+        else -> 96
     }
+    Ic(icon, 24.dp)
+}
+
 }
 
 @Composable
@@ -183,9 +169,28 @@ fun TeklaApp() {
                 containerColor = Bg,
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
-                    NavigationBar(containerColor = Color(0xFF101014)) {
-                        for ((id, t, ic) in tabs) NavigationBarItem(selected = screen == id, onClick = { go(id) }, icon = { BottomNavIcon(id, screen == id) }, label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
-                            colors = NavigationBarItemDefaults.colors(selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2, unselectedIconColor = Mut, unselectedTextColor = Mut))
+                    NavigationBar(containerColor = GlassBar) {
+                        Row(
+                            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            for ((id, t, _) in tabs) {
+                                NavigationBarItem(
+                                    modifier = Modifier.width(72.dp),
+                                    selected = screen == id,
+                                    onClick = { go(id) },
+                                    icon = { BottomNavIcon(id, screen == id) },
+                                    label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        selectedIconColor = Acc,
+                                        selectedTextColor = Acc,
+                                        indicatorColor = Glass2,
+                                        unselectedIconColor = Mut,
+                                        unselectedTextColor = Mut
+                                    )
+                                )
+                            }
+                        }
                     }
                 },
             ) { pad ->
@@ -652,13 +657,17 @@ fun MoreView(ui: Ui) {
             RowItem("Moduły", Ctl.devices.size.toString()) { ui.go("appset") }
         }
         Card("MENU KOTŁA") {
-            for (lv in 0..3) {
-                val g = items.filter { it.second.levelMin == lv }
-                if (g.isEmpty()) continue
-                if (lv >= 1) LevelSep(names.getValue(lv))
-                for ((r,m) in g) Row(Modifier.fillMaxWidth().heightIn(min=52.dp).clickable { ui.go(r) }.padding(horizontal=4.dp), verticalAlignment=Alignment.CenterVertically) {
-                    Ic(m.icon,24.dp); Spacer(Modifier.width(12.dp)); Text(m.title,color=Txt,fontSize=15.sp,modifier=Modifier.weight(1f))
-                    if (m.levelMin > ui.level) Text("🔒",color=Mut,fontSize=12.sp) else Text("›",color=Mut,fontSize=22.sp)
+            var lastLevel = -1
+            for ((r, m) in items) {
+                if (m.levelMin != lastLevel) {
+                    if (m.levelMin >= 1) LevelSep(names.getValue(m.levelMin))
+                    lastLevel = m.levelMin
+                }
+                Row(Modifier.fillMaxWidth().heightIn(min=52.dp).clickable { ui.go(r) }.padding(horizontal=4.dp), verticalAlignment=Alignment.CenterVertically) {
+                    Ic(m.icon,24.dp)
+                    Spacer(Modifier.width(12.dp))
+                    Text(m.title,color=Txt,fontSize=15.sp,modifier=Modifier.weight(1f))
+                    Text("›",color=Mut,fontSize=22.sp)
                 }
             }
         }
