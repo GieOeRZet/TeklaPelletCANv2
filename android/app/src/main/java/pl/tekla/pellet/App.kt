@@ -34,6 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -77,7 +78,8 @@ object UpdateCenter {
                         if(!r.isSuccessful)return@use emptyList<UpdateNotice>()
                         val root=JSONObject(r.body?.string()?:"{}");val out=mutableListOf<UpdateNotice>()
                         val app=root.optJSONObject("app");val av=app?.optString("version").orEmpty()
-                        if(av.isNotEmpty()&&av!=BuildConfig.VERSION_NAME)out+=UpdateNotice("app","Nowa wersja aplikacji",BuildConfig.VERSION_NAME,av,app.optString("changelog"),app.optString("downloadUrl").ifEmpty{null})
+                        val currentApp=Ctl.ctx.packageManager.getPackageInfo(Ctl.ctx.packageName,0).versionName ?: "0.1"
+                        if(av.isNotEmpty()&&av!=currentApp)out+=UpdateNotice("app","Nowa wersja aplikacji",currentApp,av,app.optString("changelog"),app.optString("downloadUrl").ifEmpty{null})
                         val fw=root.optJSONObject("firmware");val fv=fw?.optString("version").orEmpty();val cur=Ctl.firmwareVersion
                         if(fv.isNotEmpty()&&!cur.isNullOrEmpty()&&cur!="demo"&&fv!=cur)out+=UpdateNotice("firmware","Nowy firmware modułu ESP",cur,fv,fw.optString("changelog"),fw.optString("downloadUrl").ifEmpty{null})
                         out
