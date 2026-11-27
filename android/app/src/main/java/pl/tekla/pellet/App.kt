@@ -490,34 +490,150 @@ fun Spark(hist: List<Float>, set: Float?, modifier: Modifier) {
 }
 
 @Composable
-fun HomeView(ui: Ui) {
-    val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0
-    val on = ui.n("0x2005") != 0.0; val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
-    val run = bs in 1..8; val solar = (ui.n("0x2108") ?: 0.0) != 0.0; val buffer = (ui.n("0x2107") ?: 0.0) != 0.0
-    val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0
-    val wx = ui.n("0x215F")
-    val mode = ui.m.statusTables["burner"]?.getOrNull(bs) ?: "—"
-    val entries = (visibleTileIds(ui).filter { it != "kociol" && it != "palnik" } + listOf("fuel")).distinct()
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        GlowCard(Modifier.fillMaxWidth().heightIn(min=280.dp,max=300.dp),if(run)Warn else null,{ui.go("kociol")}){
-            Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
-                Box(Modifier.weight(1.35f).aspectRatio(1f),contentAlignment=Alignment.Center){
-                    Canvas(Modifier.fillMaxSize().padding(4.dp)){val sw=size.width*.055f;val d=size.minDimension-sw;val frac=(((t?:20.0)-20.0)/70.0).coerceIn(.02,1.0).toFloat();drawArc(Color(0xFF1D1D23),135f,270f,false,Offset(sw/2,sw/2),Size(d,d),style=Stroke(sw,cap=androidx.compose.ui.graphics.StrokeCap.Round));drawArc(Brush.sweepGradient(listOf(Acc,Warn,Acc)),135f,270f*frac,false,Offset(sw/2,sw/2),Size(d,d),style=Stroke(sw,cap=androidx.compose.ui.graphics.StrokeCap.Round))}
-                    Column(horizontalAlignment=Alignment.CenterHorizontally){Row(verticalAlignment=Alignment.Top){Text(f1(t,1),color=Txt,fontSize=44.sp,fontWeight=FontWeight.Light);Text("°C",color=Acc,fontSize=12.sp,modifier=Modifier.padding(top=5.dp,start=2.dp))};Text(mode,color=Acc2,fontSize=14.sp,fontWeight=FontWeight.SemiBold);Text("zadana " + f1(set,0) + " °C",color=Mut,fontSize=10.sp)}
+fun HomeModuleTile(ui: Ui, id: String, modifier: Modifier) {
+    when (id) {
+        "solary" -> {
+            val temp = ui.n("0x2109"); val power = ui.n("0x2101") ?: 0.0
+            Tile("Solary", null, if ((ui.n("0x311C") ?: 0.0) != 0.0) Okc else null, modifier, { ui.go(id) }, emptyList()) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Ic(87, 52.dp)
+                    Spacer(Modifier.width(10.dp))
+                    Column {
+                        BigNum(f1(temp, 1), "°C", 25)
+                        Text(if (power >= 1000) f1(power / 1000.0, 1) + " kW" else f1(power, 0) + " W", color = Mut, fontSize = 11.sp)
+                    }
                 }
-                Column(Modifier.weight(.95f).padding(end=4.dp),verticalArrangement=Arrangement.spacedBy(9.dp)){KvRow("Moc palnika",f1(ui.n("0x4005"),0)+" %");KvRow("Spalanie",f1(ui.n("0x3710"),1)+" kg/h");if((ui.n("0x350A")?:0.0)!=0.0)KvRow("Powrót",f1(ui.n("0x4000"),1)+" °C");if((ui.n("0x350D")?:0.0)!=0.0)KvRow("Ciśnienie",f1(ui.n("0x3333"),0)+" mbar");KvRow("Palnik",f1(ui.n("0x226C"),0)+" °C")}
             }
-            Spacer(Modifier.height(5.dp));IxRow(ui.m.screens.getValue("palnik").bar.mapNotNull{barIx(ui,it,"palnik")}+ui.m.screens.getValue("kociol").bar.filter{it.k!="anim"}.mapNotNull{barIx(ui,it,"kociol")})
-            if(ui.hist.size>=2){Spacer(Modifier.height(5.dp));Row(Modifier.fillMaxWidth()){Text("Temperatura kotła",color=Mut,fontSize=10.sp,modifier=Modifier.weight(1f));Text("trend",color=Color(0xFF5D5D68),fontSize=10.sp)};Spark(ui.hist,set?.toFloat(),Modifier.fillMaxWidth().height(32.dp))}
         }
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)){
-            GlowCard(Modifier.weight(1f).height(82.dp),null,null){Text("ZEWN.",color=Mut,fontSize=9.sp,letterSpacing=.8.sp);BigNum(f1(wx,0),"°C",27);Text(if((ui.n("0x3729")?:0.0)==1.0)"AUTO" else "RĘCZNY",color=Color.Black,fontSize=9.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(horizontal=8.dp,vertical=3.dp).background(Acc,RoundedCornerShape(6.dp)))}
-            GlowCard(Modifier.weight(1f).height(92.dp),if(on)Okc else null,{ui.go("kociol")} ){Text("ZASILANIE",color=Mut,fontSize=9.sp,letterSpacing=.8.sp);Text(if(on)"Włączone" else "Wyłączone",color=Txt,fontSize=18.sp,fontWeight=FontWeight.Medium);Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(7.dp)){Ix(IxData("Kocioł","",on,Okc));Ic(prog,20.dp)}}
+        "bufor" -> {
+            val top = ui.n("0x2112"); val bottom = ui.n("0x2113")
+            Tile("Bufor", null, if ((ui.n("0x2277") ?: 0.0) != 0.0) Okc else null, modifier, { ui.go(id) }, emptyList()) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Ic(84, 56.dp)
+                    Spacer(Modifier.width(10.dp))
+                    Column {
+                        BigNum(f1(top, 1), "°C", 25)
+                        Text("dół  " + f1(bottom, 1) + " °C", color = Mut, fontSize = 11.sp)
+                    }
+                }
+            }
         }
-        if(entries.isNotEmpty())TileGrid(ui,entries,112.dp)
-        if(solar||buffer){Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)){if(solar)GlowCard(Modifier.weight(1f).height(70.dp),Okc,{ui.go("more")}){Text("SOLARY",color=Mut,fontSize=9.sp);Text("Aktywne",color=Txt,fontSize=14.sp)};if(buffer)GlowCard(Modifier.weight(1f).height(70.dp),Okc,{ui.go("more")}){Text("BUFOR",color=Mut,fontSize=9.sp);Text("Aktywny",color=Txt,fontSize=14.sp)}}}
+        "fuel" -> FuelTile(ui, modifier)
+        "power" -> PowerTile(ui, modifier)
+        else -> {
+            val s = ui.m.screens[id] ?: return
+            val title = if (id.startsWith("co") && id.length == 3) "CO " + id.last() else if (id == "cwu") "CWU" else s.title
+            val active = (id.startsWith("co") || id == "cwu") && (ui.n(s.mode)?.toInt() ?: 0) > 0
+            val mi = s.mode?.let { m -> ui.m.programModes.firstOrNull { it.v == (ui.n(m)?.toInt() ?: -1) }?.icon }
+            Tile(title, mi, if (active) Okc else null, modifier, { ui.go(id) }, s.bar.mapNotNull { barIx(ui, it, id) }) {
+                if (s.big != null) {
+                    val value = f1(ui.n(s.big), 1)
+                    val target = s.pill?.let { f1(ui.n(it), 0) }
+                    BigNum(value, if (s.bigUnit == "°C") "°C" else s.bigUnit, 25)
+                    if (target != null) Text("→ " + target + " °C", color = Acc2, fontSize = 11.sp)
+                } else if (s.kv.isNotEmpty()) {
+                    val k = s.kv.first()
+                    Text(f1(ui.n(k.pid), k.dec) + " " + k.unit, color = Txt, fontSize = 22.sp)
+                }
+            }
+        }
     }
 }
+
+@Composable
+fun HomeTileGrid(ui: Ui, entries: List<String>) {
+    for (pair in entries.chunked(2)) {
+        Row(
+            Modifier.fillMaxWidth().height(104.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            for (id in pair) {
+                val m = Modifier.weight(1f).fillMaxHeight()
+                HomeModuleTile(ui, id, m)
+            }
+            if (pair.size == 1) Spacer(Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+fun HomeView(ui: Ui) {
+    val t = ui.n("0x2001"); val set = ui.n("0x2004")
+    val bs = ui.n("0x2007")?.toInt() ?: 0
+    val on = ui.n("0x2005") != 0.0
+    val run = bs in 1..8
+    val mode = ui.m.statusTables["burner"]?.getOrNull(bs) ?: if (on) "Praca" else "Wyłączony"
+    val fuel = ui.n("0x3601") ?: 0.0
+    val cap = ui.n("0x3600") ?: 0.0
+    val res = ui.n("0x3603") ?: 0.0
+    val modules = visibleTileIds(ui).filter { it !in setOf("kociol", "palnik") }
+    val entries = (modules + listOf("fuel", "power")).distinct()
+
+    Column(
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        GlowCard(
+            Modifier.fillMaxWidth().heightIn(min = 270.dp, max = 310.dp),
+            if (run) Okc else null,
+            { ui.go("kociol") }
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(
+                    Modifier.width(150.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    BoilerImage(ui)
+                    Text("Kocioł", color = Txt, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(8.dp).background(if (run) Okc else Mut, RoundedCornerShape(4.dp)))
+                        Spacer(Modifier.width(5.dp))
+                        Text(if (run) "Praca" else "Wyłączony", color = if (run) Okc else Mut, fontSize = 11.sp)
+                    }
+                }
+                Column(
+                    Modifier.weight(1f).padding(start = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(7.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(f1(t, 1), color = Txt, fontSize = 43.sp, fontWeight = FontWeight.Light)
+                        Text("°C", color = Acc2, fontSize = 15.sp, modifier = Modifier.padding(start = 3.dp, bottom = 7.dp))
+                    }
+                    Text("→ " + f1(set, 1) + " °C", color = Acc, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                    Text(mode, color = if (run) Okc else Mut, fontSize = 12.sp)
+                    HomeValueRow("Moc palnika", f1(ui.n("0x4005"), 0) + " %")
+                    HomeValueRow("Spalanie", f1(ui.n("0x3710"), 1) + " kg/h")
+                    if ((ui.n("0x350A") ?: 0.0) != 0.0) HomeValueRow("Powrót", f1(ui.n("0x4000"), 1) + " °C")
+                    if ((ui.n("0x350D") ?: 0.0) != 0.0) HomeValueRow("Ciśnienie", f1(ui.n("0x3333"), 0) + " mbar")
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            BarView(ui, ui.m.screens.getValue("kociol").bar + ui.m.screens.getValue("palnik").bar)
+            Row(
+                Modifier.fillMaxWidth().padding(top = 7.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text("Paliwo  " + f1(fuel, 0) + " / " + f1(cap, 0) + " kg", color = Mut, fontSize = 10.sp)
+                Spacer(Modifier.width(10.dp))
+                Text(if (res > 0 && fuel <= res) "REZERWA" else "OK", color = if (res > 0 && fuel <= res) Warn else Okc, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+
+        if (entries.isNotEmpty()) HomeTileGrid(ui, entries)
+    }
+}
+
+@Composable
+fun HomeValueRow(label: String, value: String) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(label, color = Mut, fontSize = 11.sp, modifier = Modifier.weight(1f))
+        Text(value, color = Txt, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
 @Composable
 fun Led(t: String, on: Boolean, c: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) { Box(Modifier.size(34.dp, 7.dp).background(if (on) c else Color(0xFF3A3A42), RoundedCornerShape(4.dp))); Text(t, color = Mut, fontSize = 11.sp) }
