@@ -22,7 +22,7 @@ class SetRow(
 )
 
 class Cond(val pid: String, val op: String, val v: Int)
-class MenuRow(val title: String, val target: String?, val levelMin: Int, val cond: List<Cond>, val icon: Int)
+class MenuRow(val title: String, val target: String?, val levelMin: Int, val cond: List<Cond>, val icon: Int, val iconSel: Int)
 class Cell(val k: String, val p: String, val fr: List<Int>, val n: String?, val nd: Boolean, val hm: Boolean, val l: String? = null)
 class Kv(val label: String, val pid: String, val unit: String, val dec: Int, val cond: String?)
 class ScreenDef(
@@ -39,7 +39,7 @@ class AppModel(ctx: Context) {
 
     val menu: List<MenuRow> = app.getJSONArray("menu").objs().map { m ->
         MenuRow(m.getString("title"), m.str("target"), m.getInt("level_min"),
-            m.getJSONArray("cond").objs().map { Cond(normPid(it.getString("pid")), it.getString("op"), it.getInt("val")) }, m.getInt("icon_sel"))   // glify menu = bitmapy icon_sel (icon = tlo/stan nieaktywny)
+            m.getJSONArray("cond").objs().map { Cond(normPid(it.getString("pid")), it.getString("op"), it.getInt("val")) }, m.getInt("icon"), m.getInt("icon_sel"))   // glify menu = bitmapy icon_sel (icon = tlo/stan nieaktywny)
     }
     val screens: Map<String, ScreenDef> = app.getJSONObject("screens").let { s ->
         s.keys().asSequence().associateWith { id ->
@@ -89,6 +89,6 @@ class AppModel(ctx: Context) {
     fun routeOf(m: MenuRow): String? = when (m.target) {
         "KOCIOL" -> "kociol"; "PALNIK" -> "palnik"; "OGRZEWANIE" -> "co" + m.title.last(); "CWU" -> "cwu"; "SOLARY" -> "solary"; "BUFOR" -> "bufor"
         "KASKADA" -> "kaskada"; "MAGAZYN" -> "magazyn"; "ALARMY" -> "alarms"; "INFO" -> "info"; "KONFIGURACJA" -> "config"; "TEST_WYJSC" -> "outtest"
-        "STATYSTYKI" -> "stats"; "SIEC" -> "network"; "INTERNET" -> "module"; else -> null
+        "STATYSTYKI" -> "stats"; "SIEC" -> "network"; "INTERNET" -> "internet"; else -> null
     }
 }
