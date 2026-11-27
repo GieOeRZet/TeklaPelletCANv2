@@ -324,14 +324,15 @@ fun Body(ui: Ui, screen: String) {
 @Composable
 fun BoilerImage(ui: Ui) {
     val id = ui.m.boilerImages[ui.n("0x370A")?.toInt() ?: 2] ?: 12
-    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Ic(id, 170.dp) }
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Ic(id, 126.dp) }
 }
 
 @Composable
 fun BarView(ui: Ui, cells: List<Cell>) {
     if (cells.isEmpty()) return
     val frame = LocalFrame.current
-    Row(Modifier.fillMaxWidth().padding(top = 12.dp).background(Panel2, RoundedCornerShape(12.dp)).border(1.dp, Line, RoundedCornerShape(12.dp)).padding(10.dp).heightIn(min = 66.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+    Row(Modifier.fillMaxWidth().padding(top = 7.dp).background(Glass2, RoundedCornerShape(14.dp))
+        .border(1.dp, Line, RoundedCornerShape(14.dp)).padding(7.dp).heightIn(min = 50.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
         for (c in cells) {
             val s = ui.n(c.p)?.toInt() ?: 0
             if (s == 0) continue    // stan 0 = ikona niewidoczna (jak w panelu)
@@ -398,7 +399,10 @@ val CardBrush = Brush.verticalGradient(listOf(Color(0xB82E3A45), Color(0x8F1D293
 @Composable
 fun GlowCard(modifier: Modifier, led: Color?, click: (() -> Unit)?, content: @Composable ColumnScope.() -> Unit) {
     Box(modifier.clip(CardShape).background(CardBrush).border(1.dp, Line, CardShape).then(if (click != null) Modifier.clickable(onClick = click) else Modifier)) {
-        Box(Modifier.align(Alignment.TopCenter).fillMaxWidth(0.64f).height(2.dp).background(Brush.horizontalGradient(listOf(Color.Transparent, led ?: Color(0xFF2A2A32), Color.Transparent))))
+        Box(
+    Modifier.align(Alignment.TopCenter).fillMaxWidth(0.64f).height(2.dp)
+        .background(Brush.horizontalGradient(listOf(Color.Transparent, led ?: Color(0x7890A0AA), Color.Transparent)))
+)
         Column(Modifier.fillMaxSize().padding(horizontal = 13.dp, vertical = 11.dp), content = content)
     }
 }
@@ -586,7 +590,7 @@ fun HomeTileGrid(ui: Ui, entries: List<String>) {
                     ) {
                         ids.chunked(2).forEach { pair ->
                             Row(
-                                Modifier.fillMaxWidth().height(96.dp),
+                                Modifier.fillMaxWidth().height(86.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 HomeModuleTile(ui, pair[0], Modifier.weight(1f).fillMaxHeight())
@@ -646,16 +650,16 @@ fun HomeView(ui: Ui) {
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         GlowCard(
-            Modifier.fillMaxWidth().height(246.dp),
+            Modifier.fillMaxWidth().height(205.dp),
             if (run) Okc else null,
             { ui.go("kociol") }
         ) {
             Row(
-                Modifier.fillMaxWidth().height(158.dp),
+                Modifier.fillMaxWidth().height(126.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
-                    Modifier.width(132.dp),
+                    Modifier.width(108.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     BoilerImage(ui)
@@ -670,10 +674,10 @@ fun HomeView(ui: Ui) {
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Text(f1(t, 1), color = Txt, fontSize = 39.sp, fontWeight = FontWeight.Light)
-                        Text("°C", color = Mut, fontSize = 14.sp, modifier = Modifier.padding(start = 3.dp, bottom = 6.dp))
+                        Text(f1(t, 1), color = Txt, fontSize = 35.sp, fontWeight = FontWeight.Light)
+                        Text("°C", color = Mut, fontSize = 13.sp, modifier = Modifier.padding(start = 3.dp, bottom = 5.dp))
                     }
-                    Text("→ " + f1(set, 1) + " °C", color = Acc, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Text("→ " + f1(set, 1) + " °C", color = Acc, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     Text(
                         "Jasność płomienia  " + f1(ui.n("0x4005"), 0) + " %",
                         color = Txt, fontSize = 12.sp
