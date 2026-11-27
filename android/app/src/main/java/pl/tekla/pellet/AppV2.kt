@@ -1,5 +1,6 @@
 package pl.tekla.pellet
 
+import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -34,6 +36,16 @@ private val G2Orange = Color(0xFFFF9800)
 private val G2Green = Color(0xFF8BEA21)
 private val G2Blue = Color(0xFF21C8E8)
 private val G2Red = Color(0xFFFF5B5B)
+
+@Composable
+private fun AssetIcon(id:Int, modifier:Modifier=Modifier.size(24.dp)){
+    val image=remember(id){
+        runCatching{
+            Ctl.context.assets.open("ic/$id.png").use{BitmapFactory.decodeStream(it)?.asImageBitmap()}
+        }.getOrNull()
+    }
+    if(image!=null) Image(image,contentDescription=null,modifier=modifier)
+}
 
 private data class TestDef(
     val id:String,
@@ -162,21 +174,21 @@ fun TeklaAppV2(){
     for(i in 1..co)ids.add("co"+i to "CO"+i)
     if((ui.n("0x2106")?:0.0)!=0.0)ids.add("cwu" to "CWU")
     ids.add("power" to "Power");ids.add("menu" to "Menu")
-    val shown = if(ids.size<=6) ids else {
-        val x=mutableListOf(ids[0],ids[1])
-        val middle=ids.drop(2).dropLast(2)
-        x.addAll(middle.take(2))
-        x.add(ids[ids.lastIndex-1])
-        x.add(ids.last())
-        x
-    }
     NavigationBar(containerColor=Color(0xE613232D),modifier=Modifier.navigationBarsPadding().border(1.dp,G2Line)){
         for(item in shown){
             val id=item.first;val label=item.second
             NavigationBarItem(
                 selected=screen==id || (id=="menu" && screen in setOf("menu","settings","outtest")),
                 onClick={nav(if(id=="menu")"menu" else id)},
-                icon={Text(if(id=="menu")"≡" else if(id=="kociol")"⌂" else if(id=="palnik")"♨" else if(id.startsWith("co"))"▥" else if(id=="cwu")"♢" else "◉",fontSize=21.sp)},
+                icon={
+    when{
+        id=="menu"->AssetIcon(77)
+        id.startsWith("co")->AssetIcon(if(id=="co1")144 else 146)
+        id=="cwu"->AssetIcon(94)
+        id=="power"->AssetIcon(115)
+        else->Text(if(id=="kociol")"⌂" else "♨",fontSize=21.sp,color=G2Text)
+    }
+},
                 label={Text(label,fontSize=9.sp,maxLines=1)},
                 colors=NavigationBarItemDefaults.colors(selectedIconColor=G2Orange,selectedTextColor=G2Orange,indicatorColor=G2Panel2,unselectedIconColor=G2Mut,unselectedTextColor=G2Mut)
             )
