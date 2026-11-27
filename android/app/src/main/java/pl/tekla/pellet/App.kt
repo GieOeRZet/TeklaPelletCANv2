@@ -540,8 +540,16 @@ fun PowerTile(ui: Ui, modifier: Modifier, wide: Boolean = false) {
 @Composable
 fun TileGrid(ui: Ui, entries: List<String>, rowH: androidx.compose.ui.unit.Dp = 116.dp) {
     for (pair in entries.chunked(2)) {
-        Row(Modifier.height(if (pair.size == 1) 70.dp else rowH), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            for (id in pair) { val m = if (pair.size == 1) Modifier.fillMaxWidth().fillMaxHeight() else Modifier.weight(1f).fillMaxHeight(); when (id) { "fuel" -> FuelTile(ui, m); "power" -> PowerTile(ui, m, pair.size == 1); else -> SysTile(ui, id, m) } }
+        Row(Modifier.height(rowH), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            for (id in pair) {
+                val m = Modifier.weight(1f).fillMaxHeight()
+                when (id) {
+                    "fuel" -> FuelTile(ui, m)
+                    "power" -> PowerTile(ui, m, false)
+                    else -> SysTile(ui, id, m)
+                }
+            }
+            if (pair.size == 1) Spacer(Modifier.weight(1f).fillMaxHeight())
         }
     }
 }
@@ -576,7 +584,14 @@ fun HomeView(ui: Ui) {
     val on = ui.n("0x2005") != 0.0
     val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
     val run = bs in 1..8
-    val entries = visibleTileIds(ui).filter { it != "kociol" && it != "palnik" } + listOf("fuel", "power")
+    val available = visibleTileIds(ui).filter { it != "kociol" && it != "palnik" }
+    val ordered = buildList {
+        if (available.contains("co1")) add("co1")
+        if (available.contains("cwu")) add("cwu")
+        available.filter { it != "co1" && it != "cwu" }.forEach { add(it) }
+        add("fuel"); add("power")
+    }
+    val entries = ordered.distinct()
     Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(9.dp)) {
         GlowCard(Modifier.fillMaxWidth().height(160.dp), if (run) Warn else null, { ui.go("kociol") }) {
             Column(Modifier.fillMaxSize()) {
