@@ -138,7 +138,7 @@ fun TeklaAppV2(){
                 Text(if(connected)"Połączono" else "Brak połączenia",color=G2Mut,fontSize=11.sp)
             }
         }
-        Text(if(screen=="home")"♧" else "⋮",color=G2Text,fontSize=25.sp)
+        Text(if(screen=="home")"♧" else "",color=G2Text,fontSize=25.sp)
     }
 }
 
@@ -148,7 +148,14 @@ fun TeklaAppV2(){
     for(i in 1..co)ids.add("co"+i to "CO"+i)
     if((ui.n("0x2106")?:0.0)!=0.0)ids.add("cwu" to "CWU")
     ids.add("power" to "Power");ids.add("menu" to "Menu")
-    val shown=if(ids.size>6)ids.take(6) else ids
+    val shown = if(ids.size<=6) ids else {
+        val x=mutableListOf(ids[0],ids[1])
+        val middle=ids.drop(2).dropLast(2)
+        x.addAll(middle.take(2))
+        x.add(ids[ids.lastIndex-1])
+        x.add(ids.last())
+        x
+    }
     NavigationBar(containerColor=Color(0xE613232D),modifier=Modifier.navigationBarsPadding().border(1.dp,G2Line)){
         for(item in shown){
             val id=item.first;val label=item.second
@@ -240,6 +247,7 @@ fun TeklaAppV2(){
     val id=if(id0=="co")"co1" else id0
     val s=ui.m.screens[id]?:return
     val scope=rememberCoroutineScope()
+    var editRow by remember { mutableStateOf<SetRow?>(null) }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)){
         GlassV2(Modifier.fillMaxWidth().height(178.dp),moduleLed(ui,id)){
             if(s.image)BoilerImage(ui) else if(s.big!=null){
@@ -274,21 +282,70 @@ fun TeklaAppV2(){
         Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(G2Panel2).border(1.dp,G2Line,RoundedCornerShape(14.dp)).clickable{toggle()}.padding(15.dp),verticalAlignment=Alignment.CenterVertically){
             Text("⚙  Nastawy",color=G2Text,fontSize=15.sp,modifier=Modifier.weight(1f));Text(if(settings)"▲" else "▼",color=G2Orange)
         }
-        if(settings)SettingsForScreenV2(ui,s)
+        if(settings)SettingsForScreenV2(ui,s){ editRow=it }
+        editRow?.let { row -> EditSettingDialogV2(ui,row){ editRow=null } }
     }
 }
 
-@Composable private fun SettingsForScreenV2(ui:Ui,s:ScreenDef){
+@Composable private fun SettingsForScreenV2(ui:Ui,s:ScreenDef,onEdit:(SetRow)->Unit){
     val cls=s.list.substringBefore("|")
     val rows=ui.m.lists[cls].orEmpty().filter{it.levelMin<=ui.level}
-    val scope=rememberCoroutineScope()
     GlassV2(Modifier.fillMaxWidth()){
         for(r in rows){
             val value=ui.n(r.pid)
             val text=if(r.options!=null)r.options.firstOrNull{it.v==(value?:r.def).toInt()}?.label?:f1(value?:r.def,0) else f1(value?:r.def,if(r.step<1)1 else 0)
-            V2Row(r.label,text,click=if(r.pid!=null){ {scope.launch{ui.src.write(r.pid,value?:r.def)} } } else null)
+            V2Row(r.label,text,click=if(r.pid!=null){ { onEdit(r) } } else null)
         }
     }
+}
+
+@Composable private fun EditSettingDialogV2(ui:Ui,row:SetRow,close:()->Unit){
+    val scope=rememberCoroutineScope()
+    val current=ui.n(row.pid)?:row.def
+    var text by remember(current){mutableStateOf(current.toString())}
+    AlertDialog(
+        onDismissRequest=close,
+        containerColor=Color(0xFF16242D),
+        titleContentColor=G2Text,
+        textContentColor=G2Text,
+        title={Text(row.label)},
+        text={
+            Column(verticalArrangement=Arrangement.spacedBy(7.dp)){
+                if(row.options!=null){
+                    for(opt in row.options){
+                        val selected=opt.v==current.toInt()
+                        Row(
+                            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                                .background(if(selected)G2Orange.copy(alpha=.20f) else G2Panel2)
+                                .clickable{scope.launch{ui.src.write(row.pid?:return@launch,opt.v.toDouble());close()}}
+                                .padding(12.dp),
+                            verticalAlignment=Alignment.CenterVertically
+                        ){
+                            Text(opt.label,color=G2Text,modifier=Modifier.weight(1f))
+                            if(selected)Text("✓",color=G2Orange,fontWeight=FontWeight.Bold)
+                        }
+                    }
+                }else{
+                    OutlinedTextField(
+                        value=text,
+                        onValueChange={text=it},
+                        singleLine=true,
+                        label={Text("Wartość")},
+                        supportingText={Text("Zakres: "+row.min+" … "+row.max)}
+                    )
+                }
+            }
+        },
+        confirmButton={
+            if(row.options==null)TextButton(onClick={
+                val x=text.replace(',','.').toDoubleOrNull()
+                if(x!=null && x>=row.min && x<=row.max){
+                    scope.launch{ui.src.write(row.pid?:return@launch,x);close()}
+                }else Ctl.notify("Wartość poza zakresem")
+            }){Text("Zapisz",color=G2Orange)}
+        },
+        dismissButton={TextButton(onClick=close){Text("Anuluj",color=G2Mut)}}
+    )
 }
 
 @Composable private fun OutputTestV2(ui:Ui){
