@@ -79,7 +79,7 @@ fun BottomNavIcon(id: String, selected: Boolean) {
         when (id) {
             "kociol" -> {
                 drawCircle(c, 8f, Offset(12f, 13f), style=Stroke(2f))
-                drawArc(c, 8f, 210f, 120f, false, Offset(5f,6f), Size(14f,14f), style=Stroke(2f))
+                drawArc(c, 210f, 120f, false, Offset(5f,6f), Size(14f,14f), style=Stroke(2f))
                 drawCircle(c, 2f, Offset(12f,13f))
             }
             "palnik" -> {
