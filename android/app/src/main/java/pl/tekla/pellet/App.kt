@@ -36,6 +36,10 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
+import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.math.min
 
@@ -53,6 +57,37 @@ class Ui(val src: DataSource, val v: Map<String, Double>, val level: Int, val fu
 }
 
 fun f1(x: Double?, d: Int = 1): String = if (x == null || x.isNaN()) "--" else if (d == 0) Math.round(x).toString() else String.format(java.util.Locale.US, "%.${d}f", x)
+
+data class UpdateNotice(val kind:String,val title:String,val current:String,val latest:String,val changelog:String,val downloadUrl:String?)
+
+object UpdateCenter {
+    private const val MANIFEST_URL = "https://raw.githubusercontent.com/GieOeRZet/TeklaPelletCANv2/main/update_manifest.json"
+    private val http=OkHttpClient.Builder().connectTimeout(4,TimeUnit.SECONDS).readTimeout(6,TimeUnit.SECONDS).build()
+    val notices=mutableStateListOf<UpdateNotice>()
+    private var started=false
+    private var lastCheck=0L
+    fun start(){if(started)return;started=true;refresh()}
+    fun refresh(){
+        val now=System.currentTimeMillis();if(now-lastCheck<10*60*1000L)return;lastCheck=now
+        Ctl.scope.launch(Dispatchers.Main.immediate){
+            val found=withContext(Dispatchers.IO){
+                try{
+                    val req=Request.Builder().url(MANIFEST_URL).header("Cache-Control","no-cache").build()
+                    http.newCall(req).execute().use{r->
+                        if(!r.isSuccessful)return@use emptyList<UpdateNotice>()
+                        val root=JSONObject(r.body?.string()?:"{}");val out=mutableListOf<UpdateNotice>()
+                        val app=root.optJSONObject("app");val av=app?.optString("version").orEmpty()
+                        if(av.isNotEmpty()&&av!=BuildConfig.VERSION_NAME)out+=UpdateNotice("app","Nowa wersja aplikacji",BuildConfig.VERSION_NAME,av,app.optString("changelog"),app.optString("downloadUrl").ifEmpty{null})
+                        val fw=root.optJSONObject("firmware");val fv=fw?.optString("version").orEmpty();val cur=Ctl.firmwareVersion
+                        if(fv.isNotEmpty()&&!cur.isNullOrEmpty()&&cur!="demo"&&fv!=cur)out+=UpdateNotice("firmware","Nowy firmware modułu ESP",cur,fv,fw.optString("changelog"),fw.optString("downloadUrl").ifEmpty{null})
+                        out
+                    }
+                }catch(_:Exception){emptyList()}
+            }
+            notices.clear();notices.addAll(found)
+        }
+    }
+}
 val PROGICON = listOf(133, 135, 122, 128, 120)
 fun navTabs(v: Map<String, Double>): List<Triple<String, String, String>> {
     val out = mutableListOf(Triple("kociol", "Kocioł", "60"), Triple("palnik", "Palnik", "61"))
@@ -72,6 +107,18 @@ fun fuelDots(fuel: Double, cap: Double, res: Double): Pair<Int, Boolean> {
     return 0 to false
 }
 
+@Composable
+fun NotificationIcon(hasNew:Boolean=false) {
+    val c=if(hasNew)Acc else Mut
+    Canvas(Modifier.size(24.dp)) {
+        val p=androidx.compose.ui.graphics.Path().apply {
+            moveTo(7f,17f);lineTo(17f,17f);lineTo(15.8f,15f);lineTo(15.8f,10.5f)
+            cubicTo(15.8f,7.2f,14.2f,5.5f,12f,5.2f);cubicTo(9.8f,5.5f,8.2f,7.2f,8.2f,10.5f)
+            lineTo(8.2f,15f);close()
+        }
+        drawPath(p,c,style=Stroke(1.8f));drawLine(c,Offset(6f,18f),Offset(18f,18f),1.8f);drawCircle(c,1.3f,Offset(12f,20f))
+    }
+}
 @Composable
 fun BottomNavIcon(id: String, selected: Boolean) {
     val c = if (selected) Acc else Mut
@@ -166,7 +213,7 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
                 Text(java.text.SimpleDateFormat("HH:mm",java.util.Locale("pl")).format(now),color=Acc2,fontSize=16.sp,fontWeight=FontWeight.SemiBold)
                 Text(java.text.SimpleDateFormat("EEE, d MMM",java.util.Locale("pl")).format(now),color=Mut,fontSize=10.sp)
             }
-            Box(Modifier.clickable{ui.go("alarms")}.padding(4.dp)) { Ic(78,22.dp); if(ui.alarmActive) Box(Modifier.size(6.dp).background(Bad,RoundedCornerShape(4.dp)).align(Alignment.TopEnd)) }
+            Box(Modifier.clickable{ui.go("notifications")}.padding(4.dp)) { NotificationIcon(ui.alarmActive || UpdateCenter.notices.isNotEmpty()); if(ui.alarmActive || UpdateCenter.notices.isNotEmpty()) Box(Modifier.size(6.dp).background(if(ui.alarmActive)Bad else Acc2,RoundedCornerShape(4.dp)).align(Alignment.TopEnd)) }
         }
         return
     }
@@ -175,6 +222,7 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
         screen == "module" -> "Moduł ESP"
         screen == "log" -> "Dziennik"
         screen == "appset" -> "Ustawienia aplikacji"
+        screen == "notifications" -> "Powiadomienia"
         screen.startsWith("set:") -> "Nastawy"
         screen.startsWith("sched:") -> "Harmonogram"
         else -> ui.m.screens[screen]?.title ?: ui.m.menu.firstOrNull { ui.m.routeOf(it) == screen }?.title ?: screen
@@ -223,6 +271,7 @@ fun Body(ui: Ui, screen: String) {
         screen == "appset" -> AppSettings(ui)
         screen == "config" -> ConfigView(ui)
         screen == "alarms" -> AlarmsView(ui)
+        screen == "notifications" -> NotificationView(ui)
         screen == "info" -> InfoView(ui)
         screen == "stats" -> ListView(ui, "0x11|STATYSTYKI|inst1", readOnly = true)
         screen == "network" -> NetworkView(ui)
@@ -427,7 +476,7 @@ fun HomeView(ui: Ui) {
     val mode = ui.m.statusTables["burner"]?.getOrNull(bs) ?: "—"
     val entries = (visibleTileIds(ui).filter { it != "kociol" && it != "palnik" } + listOf("fuel")).distinct()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        GlowCard(Modifier.fillMaxWidth().heightIn(min=300.dp,max=340.dp),if(run)Warn else null,{ui.go("kociol")}){
+        GlowCard(Modifier.fillMaxWidth().heightIn(min=280.dp,max=300.dp),if(run)Warn else null,{ui.go("kociol")}){
             Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically){
                 Box(Modifier.weight(1.35f).aspectRatio(1f),contentAlignment=Alignment.Center){
                     Canvas(Modifier.fillMaxSize().padding(4.dp)){val sw=size.width*.055f;val d=size.minDimension-sw;val frac=(((t?:20.0)-20.0)/70.0).coerceIn(.02,1.0).toFloat();drawArc(Color(0xFF1D1D23),135f,270f,false,Offset(sw/2,sw/2),Size(d,d),style=Stroke(sw,cap=androidx.compose.ui.graphics.StrokeCap.Round));drawArc(Brush.sweepGradient(listOf(Acc,Warn,Acc)),135f,270f*frac,false,Offset(sw/2,sw/2),Size(d,d),style=Stroke(sw,cap=androidx.compose.ui.graphics.StrokeCap.Round))}
@@ -439,10 +488,10 @@ fun HomeView(ui: Ui) {
             if(ui.hist.size>=2){Spacer(Modifier.height(5.dp));Row(Modifier.fillMaxWidth()){Text("Temperatura kotła",color=Mut,fontSize=10.sp,modifier=Modifier.weight(1f));Text("trend",color=Color(0xFF5D5D68),fontSize=10.sp)};Spark(ui.hist,set?.toFloat(),Modifier.fillMaxWidth().height(32.dp))}
         }
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)){
-            GlowCard(Modifier.weight(1f).height(92.dp),null,null){Text("ZEWN.",color=Mut,fontSize=9.sp,letterSpacing=.8.sp);BigNum(f1(wx,0),"°C",27);Text(if((ui.n("0x3729")?:0.0)==1.0)"AUTO" else "RĘCZNY",color=Color.Black,fontSize=9.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(horizontal=8.dp,vertical=3.dp).background(Acc,RoundedCornerShape(6.dp)))}
+            GlowCard(Modifier.weight(1f).height(82.dp),null,null){Text("ZEWN.",color=Mut,fontSize=9.sp,letterSpacing=.8.sp);BigNum(f1(wx,0),"°C",27);Text(if((ui.n("0x3729")?:0.0)==1.0)"AUTO" else "RĘCZNY",color=Color.Black,fontSize=9.sp,fontWeight=FontWeight.Bold,modifier=Modifier.padding(horizontal=8.dp,vertical=3.dp).background(Acc,RoundedCornerShape(6.dp)))}
             GlowCard(Modifier.weight(1f).height(92.dp),if(on)Okc else null,{ui.go("kociol")} ){Text("ZASILANIE",color=Mut,fontSize=9.sp,letterSpacing=.8.sp);Text(if(on)"Włączone" else "Wyłączone",color=Txt,fontSize=18.sp,fontWeight=FontWeight.Medium);Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(7.dp)){Ix(IxData("Kocioł","",on,Okc));Ic(prog,20.dp)}}
         }
-        if(entries.isNotEmpty())TileGrid(ui,entries,112.dp)
+        if(entries.isNotEmpty())TileGrid(ui,entries,92.dp)
         if(ui.src.isDemo&&Ctl.devices.isEmpty()){GlowCard(Modifier.fillMaxWidth(),Warn,null){Row(verticalAlignment=Alignment.CenterVertically){Column(Modifier.weight(1f)){Text("TRYB DEMO",color=Warn,fontSize=10.sp,fontWeight=FontWeight.Bold,letterSpacing=.8.sp);Text("Połącz aplikację z własnym modułem",color=Txt,fontSize=14.sp,fontWeight=FontWeight.Medium);Text("Dane powyżej są demonstracyjne.",color=Mut,fontSize=11.sp)};OutlinedButton({ui.go("appset")}){Text("Połącz")}}}}
         if(solar||buffer){Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(10.dp)){if(solar)GlowCard(Modifier.weight(1f).height(70.dp),Okc,{ui.go("more")}){Text("SOLARY",color=Mut,fontSize=9.sp);Text("Aktywne",color=Txt,fontSize=14.sp)};if(buffer)GlowCard(Modifier.weight(1f).height(70.dp),Okc,{ui.go("more")}){Text("BUFOR",color=Mut,fontSize=9.sp);Text("Aktywny",color=Txt,fontSize=14.sp)}}}
     }
@@ -611,7 +660,7 @@ fun MoreView(ui: Ui) {
         }
         LevelSep("APLIKACJA")
         Card("APLIKACJA") {
-            MenuRow("Powiadomienia", "Alarmy, aktualizacje aplikacji i firmware") { ui.go("alarms") }
+            MenuRow("Powiadomienia", "Alarmy, aktualizacje aplikacji i firmware") { ui.go("notifications") }
             MenuRow("Ustawienia aplikacji", "Demo, urządzenia, bezpieczeństwo") { ui.go("appset") }
         }
     }
@@ -624,6 +673,21 @@ fun MenuRow(title: String, subtitle: String, click: () -> Unit) {
         Text("›",color=Mut,fontSize=20.sp)
     }
 }
+@Composable
+fun NotificationView(ui: Ui) {
+    LaunchedEffect(Unit){UpdateCenter.refresh()}
+    Column(verticalArrangement=Arrangement.spacedBy(10.dp)) {
+        if(ui.alarmActive) Card("KOCIOŁ"){MenuRow("Aktywny alarm","Otwórz historię alarmów"){ui.go("alarms")}}
+        if(UpdateCenter.notices.isEmpty()) Card("AKTUALIZACJE"){
+            Text("Brak nowych aktualizacji.",color=Mut,fontSize=13.sp)
+            Text("Aplikacja sprawdza wersje publikowane z gałęzi main.",color=Mut,fontSize=11.sp,modifier=Modifier.padding(top=6.dp))
+        } else Card("AKTUALIZACJE"){
+            for(n in UpdateCenter.notices) MenuRow(n.title,n.current+" → "+n.latest){ui.toast(if(n.changelog.isBlank())"Dostępna wersja "+n.latest else n.changelog)}
+        }
+        Card("SYSTEM"){MenuRow("Sprawdź ponownie","Manifest aktualizacji z main"){UpdateCenter.refresh();ui.toast("Sprawdzam aktualizacje…")}}
+    }
+}
+
 @Composable
 fun Dialogs(ui: Ui, d: Dlg, close: () -> Unit) {
     val scope = rememberCoroutineScope(); var err by remember(d) { mutableStateOf("") }
