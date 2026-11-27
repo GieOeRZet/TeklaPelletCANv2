@@ -93,16 +93,13 @@ object UpdateCenter {
 }
 val PROGICON = listOf(133, 135, 122, 128, 120)
 fun navTabs(v: Map<String, Double>): List<Triple<String, String, String>> {
-    // Dolna nawigacja odwzorowuje dynamiczny pasek oryginalnego panelu:
-    // najpierw moduły aktywne w konfiguracji, na końcu zawsze Menu.
+    // Dolna belka jest skrótem nawigacyjnym, nie kopią całego menu.
+    // CO jest jednym wejściem (jak w panelu); CO2..CO4 pozostają dostępne z Menu.
     val out = mutableListOf(Triple("kociol", "Kocioł", "83"), Triple("palnik", "Palnik", "85"))
-    val co = (v["0x2105"] ?: 1.0).toInt().coerceIn(0, 4)
-    for (i in 1..co) out += Triple("co$i", "CO$i", "86")
+    val co = (v["0x2105"] ?: 0.0).toInt().coerceIn(0, 4)
+    if (co > 0) out += Triple("co1", "CO", "86")
     if ((v["0x2106"] ?: 0.0) != 0.0) out += Triple("cwu", "CWU", "88")
-    if ((v["0x2108"] ?: 0.0) != 0.0) out += Triple("solary", "Solary", "87")
-    if ((v["0x2107"] ?: 0.0) != 0.0) out += Triple("bufor", "Bufor", "84")
-    if ((v["0x350C"] ?: 0.0) != 0.0) out += Triple("kaskada", "Kaskada", "82")
-    if ((v["0x3525"] ?: 0.0) != 0.0) out += Triple("magazyn", "Magazyn", "99")
+    out += Triple("power", "Power", "115")
     out += Triple("more", "Menu", "96")
     return out
 }
@@ -175,27 +172,21 @@ fun TeklaApp() {
                 containerColor = Color.Transparent,
                 topBar = { TopBar(ui, screen, conn, src.isDemo) },
                 bottomBar = {
-                    NavigationBar(containerColor = GlassBar) {
-                        Row(
-                            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            for ((id, t, _) in tabs) {
-                                NavigationBarItem(
-                                    modifier = Modifier.width(72.dp),
-                                    selected = screen == id,
-                                    onClick = { go(id) },
-                                    icon = { BottomNavIcon(id, screen == id) },
-                                    label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
-                                    colors = NavigationBarItemDefaults.colors(
-                                        selectedIconColor = Acc,
-                                        selectedTextColor = Acc,
-                                        indicatorColor = Glass2,
-                                        unselectedIconColor = Mut,
-                                        unselectedTextColor = Mut
-                                    )
+                    NavigationBar(containerColor = GlassBar, tonalElevation = 0.dp) {
+                        for ((id, t, _) in tabs) {
+                            NavigationBarItem(
+                                selected = screen == id || (id == "co1" && screen.startsWith("co")),
+                                onClick = { go(id) },
+                                icon = { BottomNavIcon(id, screen == id) },
+                                label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = Acc,
+                                    selectedTextColor = Acc,
+                                    indicatorColor = Glass2,
+                                    unselectedIconColor = Mut,
+                                    unselectedTextColor = Mut
                                 )
-                            }
+                            )
                         }
                     }
                 },
@@ -215,19 +206,34 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) { while (true) { delay(1000); now = System.currentTimeMillis() } }
     if (screen == "home") {
-        Row(Modifier.fillMaxWidth().background(GlassBar).statusBarsPadding().padding(horizontal=14.dp,vertical=8.dp), verticalAlignment=Alignment.CenterVertically, horizontalArrangement=Arrangement.spacedBy(10.dp)) {
-            Row(Modifier.weight(1f),verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                Text("🔥",fontSize=19.sp)
+        Row(
+            Modifier.fillMaxWidth().background(GlassBar).statusBarsPadding()
+                .padding(horizontal = 14.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                Text("🔥", fontSize = 18.sp)
                 Column {
-                    Text(if(demo) "TeklaPellet" else Ctl.activeName(),color=Txt,fontSize=14.sp,fontWeight=FontWeight.SemiBold,maxLines=1)
-                    Text(if(demo) "Demo" else if(conn) "Połączono" else "Offline",color=if(demo)Warn else if(conn)Okc else Bad,fontSize=10.sp)
+                    Text(if (demo) "TeklaPellet" else Ctl.activeName(), color = Txt, fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold, maxLines = 1)
+                    Text(
+                        if (demo) "Demo" else if (conn) "Połączono" else "Offline",
+                        color = if (demo) Warn else if (conn) Okc else Bad,
+                        fontSize = 9.sp
+                    )
                 }
             }
-            Column(horizontalAlignment=Alignment.End) {
-                Text(java.text.SimpleDateFormat("HH:mm",java.util.Locale("pl")).format(now),color=Acc2,fontSize=16.sp,fontWeight=FontWeight.SemiBold)
-                Text(java.text.SimpleDateFormat("EEE, d MMM",java.util.Locale("pl")).format(now),color=Mut,fontSize=10.sp)
+            Box(
+                Modifier.clickable { ui.go("notifications") }.padding(4.dp)
+            ) {
+                NotificationIcon(ui.alarmActive || UpdateCenter.notices.isNotEmpty())
+                if (ui.alarmActive || UpdateCenter.notices.isNotEmpty())
+                    Box(Modifier.size(6.dp).background(if (ui.alarmActive) Bad else Acc2, RoundedCornerShape(4.dp)).align(Alignment.TopEnd))
             }
-            Box(Modifier.clickable{ui.go("notifications")}.padding(4.dp)) { NotificationIcon(ui.alarmActive || UpdateCenter.notices.isNotEmpty()); if(ui.alarmActive || UpdateCenter.notices.isNotEmpty()) Box(Modifier.size(6.dp).background(if(ui.alarmActive)Bad else Acc2,RoundedCornerShape(4.dp)).align(Alignment.TopEnd)) }
         }
         return
     }
@@ -241,12 +247,27 @@ fun TopBar(ui: Ui, screen: String, conn: Boolean, demo: Boolean) {
         screen.startsWith("sched:") -> "Harmonogram"
         else -> ui.m.screens[screen]?.title ?: ui.m.menu.firstOrNull { ui.m.routeOf(it) == screen }?.title ?: screen
     }
-    Row(Modifier.fillMaxWidth().background(Color(0xFF101014)).statusBarsPadding().padding(horizontal=14.dp,vertical=9.dp),verticalAlignment=Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) { Text(title,color=Txt,fontSize=17.sp,fontWeight=FontWeight.SemiBold,maxLines=1); Text(java.text.SimpleDateFormat("EEE, d MMM · HH:mm",java.util.Locale("pl")).format(now),color=Mut,fontSize=11.sp) }
-        Box(Modifier.clickable{ui.go("alarms")}.padding(5.dp)) { Ic(78,22.dp); if(ui.alarmActive) Box(Modifier.size(6.dp).background(Bad,RoundedCornerShape(4.dp)).align(Alignment.TopEnd)) }
-        Chip("",if(demo)Warn else if(conn)Okc else Bad){ui.go("appset")}
+    Row(
+        Modifier.fillMaxWidth().background(GlassBar).statusBarsPadding()
+            .padding(horizontal = 10.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            "‹",
+            color = Txt, fontSize = 38.sp, fontWeight = FontWeight.Light,
+            modifier = Modifier.clickable { ui.go("home") }.padding(horizontal = 8.dp)
+        )
+        Text(
+            title, color = Txt, fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
+            maxLines = 1, modifier = Modifier.weight(1f), textAlign = TextAlign.Center
+        )
+        Box(Modifier.clickable { ui.go("notifications") }.padding(5.dp)) {
+            Ic(78, 22.dp)
+            if (ui.alarmActive || UpdateCenter.notices.isNotEmpty())
+                Box(Modifier.size(6.dp).background(if (ui.alarmActive) Bad else Acc2, RoundedCornerShape(4.dp)).align(Alignment.TopEnd))
+        }
         Spacer(Modifier.width(6.dp))
-        Chip("PIN "+ui.level,Mut){ui.open(Dlg.Pin)}
+        Spacer(Modifier.width(28.dp))
     }
 }
 
@@ -542,53 +563,97 @@ fun HomeModuleTile(ui: Ui, id: String, modifier: Modifier) {
 
 @Composable
 fun HomeTileGrid(ui: Ui, entries: List<String>) {
-    for (pair in entries.chunked(2)) {
-        Row(
-            Modifier.fillMaxWidth().height(104.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            for (id in pair) {
-                val m = Modifier.weight(1f).fillMaxHeight()
-                HomeModuleTile(ui, id, m)
+    if (entries.isEmpty()) return
+    var page by remember(entries) { mutableIntStateOf(0) }
+    val pages = entries.chunked(6)
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val scroll = rememberScrollState(page * maxWidth.value.toInt())
+            LaunchedEffect(page, maxWidth) { scroll.animateScrollTo((page * maxWidth.value).toInt()) }
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(scroll),
+                horizontalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
+                pages.forEachIndexed { index, ids ->
+                    Column(
+                        Modifier.width(maxWidth),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ids.chunked(2).forEach { pair ->
+                            Row(
+                                Modifier.fillMaxWidth().height(96.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                HomeModuleTile(ui, pair[0], Modifier.weight(1f).fillMaxHeight())
+                                if (pair.size > 1) HomeModuleTile(ui, pair[1], Modifier.weight(1f).fillMaxHeight())
+                                else Spacer(Modifier.weight(1f))
+                            }
+                        }
+                        repeat(3 - ids.chunked(2).size) {
+                            Spacer(Modifier.fillMaxWidth().height(96.dp))
+                        }
+                    }
+                }
             }
-            if (pair.size == 1) Spacer(Modifier.weight(1f))
+        }
+        if (pages.size > 1) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                pages.indices.forEach { i ->
+                    Box(
+                        Modifier.padding(horizontal = 4.dp)
+                            .size(if (i == page) 8.dp else 6.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(if (i == page) Acc else Mut)
+                            .clickable { page = i }
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
 fun HomeView(ui: Ui) {
-    val t = ui.n("0x2001"); val set = ui.n("0x2004")
+    val t = ui.n("0x2001")
+    val set = ui.n("0x2004")
     val bs = ui.n("0x2007")?.toInt() ?: 0
     val on = ui.n("0x2005") != 0.0
     val run = bs in 1..8
     val mode = ui.m.statusTables["burner"]?.getOrNull(bs) ?: if (on) "Praca" else "Wyłączony"
-    val fuel = ui.n("0x3601") ?: 0.0
-    val cap = ui.n("0x3600") ?: 0.0
-    val res = ui.n("0x3603") ?: 0.0
-    // HOME panel Estyma: CO/CWU zależą od konfiguracji, Solary i Bufor mają stałe miejsca na pulpicie.
-    val modules = visibleTileIds(ui).filter { it !in setOf("kociol", "palnik", "solary", "bufor") }
-    val entries = (modules + listOf("solary", "bufor", "fuel", "power")).distinct()
+
+    // HOME jest podglądem instalacji. Pełne nastawy i diagnostyka są dopiero po wejściu
+    // w Kocioł/Palnik albo przez Menu. Kafelki są generowane wyłącznie dla aktywnych
+    // pozycji modelu/menu; dodatkowe CO pozostają w Menu.
+    val entries = buildList {
+        visibleTileIds(ui)
+            .filter { it != "kociol" && it != "palnik" }
+            .distinct()
+            .forEach { add(it) }
+        if (!contains("fuel")) add("fuel")
+        if (!contains("power")) add("power")
+    }
 
     Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
+        Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         GlowCard(
-            Modifier.fillMaxWidth().heightIn(min = 270.dp, max = 310.dp),
+            Modifier.fillMaxWidth().height(246.dp),
             if (run) Okc else null,
             { ui.go("kociol") }
         ) {
             Row(
-                Modifier.fillMaxWidth(),
+                Modifier.fillMaxWidth().height(158.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column(
-                    Modifier.width(150.dp),
+                    Modifier.width(132.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     BoilerImage(ui)
-                    Text("Kocioł", color = Txt, fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(8.dp).background(if (run) Okc else Mut, RoundedCornerShape(4.dp)))
                         Spacer(Modifier.width(5.dp))
@@ -596,37 +661,30 @@ fun HomeView(ui: Ui) {
                     }
                 }
                 Column(
-                    Modifier.weight(1f).padding(start = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(7.dp)
+                    Modifier.weight(1f).padding(start = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Text(f1(t, 1), color = Txt, fontSize = 43.sp, fontWeight = FontWeight.Light)
-                        Text("°C", color = Acc2, fontSize = 15.sp, modifier = Modifier.padding(start = 3.dp, bottom = 7.dp))
+                        Text(f1(t, 1), color = Txt, fontSize = 39.sp, fontWeight = FontWeight.Light)
+                        Text("°C", color = Mut, fontSize = 14.sp, modifier = Modifier.padding(start = 3.dp, bottom = 6.dp))
                     }
-                    Text("→ " + f1(set, 1) + " °C", color = Acc, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
-                    Text(mode, color = if (run) Okc else Mut, fontSize = 12.sp)
-                    HomeValueRow("Moc palnika", f1(ui.n("0x4005"), 0) + " %")
-                    HomeValueRow("Spalanie", f1(ui.n("0x3710"), 1) + " kg/h")
-                    if ((ui.n("0x350A") ?: 0.0) != 0.0) HomeValueRow("Powrót", f1(ui.n("0x4000"), 1) + " °C")
-                    if ((ui.n("0x350D") ?: 0.0) != 0.0) HomeValueRow("Ciśnienie", f1(ui.n("0x3333"), 0) + " mbar")
+                    Text("→ " + f1(set, 1) + " °C", color = Acc, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Text(
+                        "Jasność płomienia  " + f1(ui.n("0x4005"), 0) + " %",
+                        color = Txt, fontSize = 12.sp
+                    )
+                    Text(
+                        "Spalanie  " + f1(ui.n("0x3710"), 1) + " kg/h",
+                        color = Mut, fontSize = 12.sp
+                    )
                 }
             }
-            Spacer(Modifier.height(6.dp))
             BarView(ui, ui.m.screens.getValue("kociol").bar + ui.m.screens.getValue("palnik").bar)
-            Row(
-                Modifier.fillMaxWidth().padding(top = 7.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Text("Paliwo  " + f1(fuel, 0) + " / " + f1(cap, 0) + " kg", color = Mut, fontSize = 10.sp)
-                Spacer(Modifier.width(10.dp))
-                Text(if (res > 0 && fuel <= res) "REZERWA" else "OK", color = if (res > 0 && fuel <= res) Warn else Okc, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
-            }
         }
 
         if (entries.isNotEmpty()) HomeTileGrid(ui, entries)
     }
 }
-
 @Composable
 fun HomeValueRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
