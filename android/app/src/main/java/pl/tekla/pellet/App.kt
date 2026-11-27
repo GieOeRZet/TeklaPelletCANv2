@@ -93,7 +93,7 @@ fun TeklaApp() {
                         for ((id, t, ic) in nav) NavigationBarItem(
                             selected = screen == id,
                             onClick = { go(id) },
-                            icon = { Box(Modifier.size(26.dp), contentAlignment = Alignment.Center) { if (ic != 0) Ic(ic, 23.dp) else Text("≡", fontSize = 22.sp, fontWeight = FontWeight.SemiBold) } },
+                            icon = { BottomNavIcon(t, selected = screen == id) },
                             label = { Text(t, fontSize = 9.sp, maxLines = 1, softWrap = false) },
                             colors = NavigationBarItemDefaults.colors(selectedIconColor = Acc, selectedTextColor = Acc, indicatorColor = Panel2, unselectedIconColor = Mut, unselectedTextColor = Mut)
                         )
@@ -105,6 +105,35 @@ fun TeklaApp() {
                 }
             }
             dlg?.let { Dialogs(ui, it) { dlg = null } }
+        }
+    }
+}
+
+@Composable
+fun BottomNavIcon(label: String, selected: Boolean) {
+    val color = if (selected) Acc else Mut
+    Canvas(Modifier.size(24.dp)) {
+        val w = size.width; val h = size.height; val s = 1.7.dp.toPx()
+        when {
+            label == "Kocioł" -> {
+                drawRoundRect(color, Offset(w*.28f,h*.12f), Size(w*.44f,h*.76f), androidx.compose.ui.geometry.CornerRadius(w*.08f), style=Stroke(s))
+                drawRect(color, Offset(w*.39f,h*.49f), Size(w*.22f,h*.22f), style=Stroke(s))
+                drawLine(color, Offset(w*.18f,h*.88f), Offset(w*.82f,h*.88f), s)
+            }
+            label == "Palnik" -> {
+                val p=androidx.compose.ui.graphics.Path().apply { moveTo(w*.50f,h*.08f); cubicTo(w*.30f,h*.35f,w*.60f,h*.40f,w*.36f,h*.62f); cubicTo(w*.18f,h*.80f,w*.38f,h*.94f,w*.52f,h*.90f); cubicTo(w*.78f,h*.82f,w*.76f,h*.56f,w*.61f,h*.43f); cubicTo(w*.57f,h*.30f,w*.60f,h*.18f,w*.50f,h*.08f); close() }
+                drawPath(p, color, style=Stroke(s, cap=androidx.compose.ui.graphics.StrokeCap.Round, join=androidx.compose.ui.graphics.StrokeJoin.Round))
+            }
+            label.startsWith("CO") -> {
+                drawLine(color, Offset(w*.28f,h*.18f), Offset(w*.28f,h*.82f), s); drawLine(color, Offset(w*.42f,h*.12f), Offset(w*.42f,h*.88f), s)
+                drawLine(color, Offset(w*.58f,h*.12f), Offset(w*.58f,h*.88f), s); drawLine(color, Offset(w*.72f,h*.18f), Offset(w*.72f,h*.82f), s)
+                drawLine(color, Offset(w*.20f,h*.36f), Offset(w*.80f,h*.36f), s); drawLine(color, Offset(w*.20f,h*.64f), Offset(w*.80f,h*.64f), s)
+            }
+            label == "CWU" -> {
+                val p=androidx.compose.ui.graphics.Path().apply { moveTo(w*.50f,h*.10f); cubicTo(w*.22f,h*.45f,w*.24f,h*.62f,w*.50f,h*.88f); cubicTo(w*.76f,h*.62f,w*.78f,h*.45f,w*.50f,h*.10f); close() }
+                drawPath(p, color, style=Stroke(s, cap=androidx.compose.ui.graphics.StrokeCap.Round, join=androidx.compose.ui.graphics.StrokeJoin.Round))
+            }
+            else -> for (i in 0..2) drawRoundRect(color, Offset(w*.18f,h*(.28f+i*.22f)), Size(w*.64f,h*.07f), androidx.compose.ui.geometry.CornerRadius(h*.03f))
         }
     }
 }
@@ -302,7 +331,7 @@ fun KvRow(l: String, v: String) {
 }
 
 val CardShape = RoundedCornerShape(18.dp)
-val CardBrush = Brush.verticalGradient(listOf(Color(0xFF17171C), Color(0xFF121216)))
+val CardBrush = Brush.verticalGradient(listOf(Color(0xFF34414A), Color(0xFF242E35), Color(0xFF1A2228)))
 
 /** Karta/kafel z cienką linią LED przy górnej krawędzi (kolor stanu; gdy null - wygaszona). */
 @Composable
@@ -315,9 +344,14 @@ fun GlowCard(modifier: Modifier, led: Color?, click: (() -> Unit)?, content: @Co
 
 @Composable
 fun Tile(title: String, modeIcon: Int?, led: Color?, modifier: Modifier, go: () -> Unit, ixs: List<IxData>, value: @Composable () -> Unit) {
-    GlowCard(modifier.heightIn(min = 100.dp), led, go) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) { Text(title.uppercase(), color = Mut, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.4.sp, modifier = Modifier.weight(1f)); if (modeIcon != null) Ic(modeIcon, 17.dp) }
-        Spacer(Modifier.height(4.dp)); value(); Spacer(Modifier.weight(1f).heightIn(min = 6.dp)); if (ixs.isNotEmpty()) IxRow(ixs)
+    GlowCard(modifier.heightIn(min = 92.dp), led, go) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(title.uppercase(), color = Txt, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+            if (modeIcon != null) Ic(modeIcon, 17.dp)
+        }
+        Spacer(Modifier.height(4.dp)); value()
+        Spacer(Modifier.weight(1f).heightIn(min = 4.dp))
+        if (ixs.isNotEmpty()) IxRow(ixs.take(3))
     }
 }
 
@@ -387,7 +421,7 @@ fun HopperIcon(level: Float, empty: Boolean, w: androidx.compose.ui.unit.Dp = 40
 fun FuelTile(ui: Ui, modifier: Modifier) {
     val fuel = ui.n("0x3601") ?: 0.0; val cap = ui.n("0x3600") ?: 0.0; val res = ui.n("0x3603") ?: 0.0; val empty = res > 0 && fuel <= res; val level = if (cap > 0) (fuel / cap).coerceIn(0.0, 1.0).toFloat() else 0f
     Tile("Paliwo", null, if (empty) Acc2 else null, modifier, { ui.open(Dlg.Fuel) }, listOf(IxData(if (empty) "rezerwa" else "z ${f1(cap, 0)} kg", "", empty, Acc2))) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) { HopperIcon(level, empty); BigNum(f1(fuel, 0), "kg") }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) { HopperIcon(level, empty, 34.dp, 42.dp); BigNum(f1(fuel, 0), "kg", 25) }
     }
 }
 
@@ -437,48 +471,62 @@ fun Spark(hist: List<Float>, set: Float?, modifier: Modifier) {
 
 @Composable
 fun HomeView(ui: Ui) {
-    // Pulpit: karta kotła (łuk z temperaturą, metryki, wskaźniki wyjść palnika, wykres temperatury) + siatka kompaktowych kafli wg konfiguracji; kafle rozkładają się na wysokość ekranu, przy dużej instalacji Pulpit się przewija.
     val t = ui.n("0x2001"); val set = ui.n("0x2004"); val bs = ui.n("0x2007")?.toInt() ?: 0; val on = ui.n("0x2005") != 0.0
     val prog = PROGICON[if (on) min((ui.n("0x2002") ?: 0.0).toInt(), 4) else 4]
-    val frac = (((t ?: 20.0) - 20.0) / 70.0).coerceIn(0.0, 1.0).toFloat(); val run = bs in 1..8
-    val kix = ui.m.screens.getValue("palnik").bar.mapNotNull { barIx(ui, it, "palnik") } + ui.m.screens.getValue("kociol").bar.filter { it.k != "anim" }.mapNotNull { barIx(ui, it, "kociol") }
-    val entries = visibleTileIds(ui) + listOf("fuel", "power"); val rows = (entries.size + 1) / 2
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val tileH = ((maxHeight - 430.dp) / rows - 10.dp).coerceIn(116.dp, 160.dp)
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            GlowCard(Modifier.fillMaxWidth(), if (run) Warn else null, { ui.go("kociol") }) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Box(Modifier.weight(0.95f).aspectRatio(1f), contentAlignment = Alignment.Center) {
-                        Canvas(Modifier.fillMaxSize().padding(6.dp)) {
-                            val sw = size.width * 0.06f; val d = size.minDimension - sw
-                            drawArc(Line, 135f, 270f, false, Offset(sw / 2, sw / 2), Size(d, d), style = Stroke(sw, cap = androidx.compose.ui.graphics.StrokeCap.Round))
-                            drawArc(Brush.sweepGradient(listOf(Warn, Acc, Warn)), 135f, 270f * frac.coerceAtLeast(0.01f), false, Offset(sw / 2, sw / 2), Size(d, d), style = Stroke(sw, cap = androidx.compose.ui.graphics.StrokeCap.Round))
-                        }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Row(verticalAlignment = Alignment.Top) { Text(f1(t), color = Txt, fontSize = 33.sp, fontWeight = FontWeight.Light, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum")); Text("°C", color = Acc, fontSize = 12.sp, modifier = Modifier.padding(start = 2.dp, top = 3.dp)) }
-                            Text(ui.m.statusTables["burner"]?.getOrNull(bs) ?: "?", color = Acc2, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) { Ic(prog, 15.dp); Text("zadana ${f1(set, 0)} °C", color = Mut, fontSize = 11.sp) }
-                        }
+    val run = bs in 1..8
+    val entries = visibleTileIds(ui).filter { it != "kociol" && it != "palnik" } + listOf("fuel", "power")
+
+    Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+        GlowCard(Modifier.fillMaxWidth().height(154.dp), if (run) Warn else null, { ui.go("kociol") }) {
+            Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Box(Modifier.width(92.dp).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                    val imageId = ui.m.boilerImages[ui.n("0x370A")?.toInt() ?: 2] ?: 12
+                    Ic(imageId, 82.dp)
+                }
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Kocioł", color = Txt, fontSize = 16.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                        Box(Modifier.size(8.dp).background(if (run) Okc else Mut, RoundedCornerShape(4.dp)))
+                        Spacer(Modifier.width(5.dp))
+                        Text(if (run) "Praca" else "Postój", color = if (run) Okc else Mut, fontSize = 11.sp)
                     }
-                    Column(Modifier.weight(1.05f)) {
-                        KvRow("Moc palnika", f1(ui.n("0x4005"), 0) + " %"); KvRow("Spalanie", f1(ui.n("0x3710"), 1) + " kg/h")
-                        if ((ui.n("0x350A") ?: 0.0) != 0.0) KvRow("Powrót", f1(ui.n("0x4000"), 1) + " °C")
-                        if ((ui.n("0x350D") ?: 0.0) != 0.0) KvRow("Ciśnienie", f1(ui.n("0x3333"), 0) + " mbar")
-                        KvRow("Temp. palnika", f1(ui.n("0x226C"), 0) + " °C")
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(f1(t), color = Txt, fontSize = 34.sp, fontWeight = FontWeight.Light, style = androidx.compose.ui.text.TextStyle(fontFeatureSettings = "tnum"))
+                        Text("°C", color = Txt, fontSize = 15.sp, modifier = Modifier.padding(start = 3.dp, bottom = 5.dp))
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("→ "+f1(set,0)+"°C", color = Acc2, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.width(12.dp)); Ic(prog, 16.dp); Spacer(Modifier.width(4.dp))
+                        Text(f1(ui.n("0x4005"),0)+" %", color = Mut, fontSize = 11.sp)
                     }
                 }
-                Spacer(Modifier.height(4.dp)); IxRow(kix)
-                if (ui.hist.size >= 2) {
-                    Spacer(Modifier.height(6.dp))
-                    Row(Modifier.fillMaxWidth()) { Text("Temperatura kotła", color = Mut, fontSize = 10.5.sp, modifier = Modifier.weight(1f)); Text("ostatnie ${ui.hist.size / 4} min", color = Color(0xFF5D5D68), fontSize = 10.5.sp) }
-                    Spark(ui.hist, set?.toFloat(), Modifier.fillMaxWidth().height(34.dp).padding(top = 2.dp))
+                Column(Modifier.width(92.dp), verticalArrangement = Arrangement.spacedBy(5.dp), horizontalAlignment = Alignment.End) {
+                    Text(f1(ui.n("0x4005"),0)+" %", color = Txt, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                    Text(f1(ui.n("0x3710"),1) + " kg/h", color = Mut, fontSize = 10.5.sp)
+                    Spacer(Modifier.height(2.dp)); Text("Palnik", color = Mut, fontSize = 10.5.sp)
+                    Text(f1(ui.n("0x226C"),0) + "°C", color = Txt, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
-            TileGrid(ui, entries, tileH)
+        }
+        val kix = ui.m.screens.getValue("palnik").bar.mapNotNull { barIx(ui, it, "palnik") } +
+                ui.m.screens.getValue("kociol").bar.filter { it.k != "anim" }.mapNotNull { barIx(ui, it, "kociol") }
+        if (kix.isNotEmpty()) {
+            GlowCard(Modifier.fillMaxWidth().heightIn(min = 54.dp, max = 62.dp), null, null) { IxRow(kix.take(6)) }
+        }
+        val rows = (entries.size + 1) / 2
+        val tileH = if (rows <= 2) 106.dp else 96.dp
+        TileGrid(ui, entries, tileH)
+        if (ui.hist.size >= 2) {
+            GlowCard(Modifier.fillMaxWidth().height(86.dp), null, null) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Text("Temperatura kotła", color = Txt, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                    Text("ostatnie "+(ui.hist.size / 4)+" min", color = Mut, fontSize = 10.sp)
+                }
+                Spark(ui.hist, set?.toFloat(), Modifier.fillMaxWidth().height(47.dp).padding(top = 3.dp))
+            }
         }
     }
 }
-
 @Composable
 fun Led(t: String, on: Boolean, c: Color) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) { Box(Modifier.size(34.dp, 7.dp).background(if (on) c else Color(0xFF3A3A42), RoundedCornerShape(4.dp))); Text(t, color = Mut, fontSize = 11.sp) }
