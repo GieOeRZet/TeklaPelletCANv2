@@ -2,6 +2,7 @@ package pl.tekla.pellet
 
 import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -151,142 +153,111 @@ fun TeklaAppV2(){
         "outtest"->"Test wyjść"
         "menu"->"Menu"
         "settings"->"Ustawienia"
+        "alarms"->"Alarmy"
         else->ui.m.screens[if(screen=="co")"co1" else screen]?.title?:"TeklaPellet"
     }
     Row(
-        Modifier.fillMaxWidth()
-            .background(G2Bg)
-            .statusBarsPadding()
-            .padding(horizontal=14.dp,vertical=7.dp),
+        Modifier.fillMaxWidth().background(G2Bg).statusBarsPadding()
+            .padding(horizontal=14.dp,vertical=6.dp),
         verticalAlignment=Alignment.CenterVertically
     ){
         if(screen!="home"){
-            Text("‹",color=G2Text,fontSize=34.sp,modifier=Modifier.clickable{nav("home")})
+            Text("‹",color=G2Text,fontSize=32.sp,modifier=Modifier.clickable{nav("home")})
             Spacer(Modifier.width(6.dp))
         }
         Column(Modifier.weight(1f)){
-            Text(title,color=G2Text,fontSize=16.sp,fontWeight=FontWeight.SemiBold)
-            Row(verticalAlignment=Alignment.CenterVertically){
-                Box(
-                    Modifier.size(6.dp)
-                        .clip(RoundedCornerShape(50))
-                        .background(if(connected)G2Green else G2Red)
-                )
-                Spacer(Modifier.width(5.dp))
-                Text(
-                    if(connected)"Na żywo · CAN OK" else "Brak połączenia",
-                    color=G2Mut,fontSize=10.sp
-                )
-            }
+            Text(title,color=G2Text,fontSize=15.sp,fontWeight=FontWeight.SemiBold)
+            if(screen=="home") Text("TeklaPellet",color=G2Mut,fontSize=10.5.sp)
         }
         if(screen=="home"){
-            Text("●",color=G2Orange,fontSize=10.sp)
+            Row(
+                Modifier.clip(RoundedCornerShape(20.dp)).border(1.dp,G2Line,RoundedCornerShape(20.dp))
+                    .background(G2Panel).padding(horizontal=9.dp,vertical=4.dp),
+                verticalAlignment=Alignment.CenterVertically
+            ){
+                Box(Modifier.size(6.dp).clip(RoundedCornerShape(50)).background(if(connected)G2Green else G2Red))
+                Spacer(Modifier.width(5.dp))
+                Text(if(connected)"Na żywo · CAN OK" else "Brak połączenia",color=G2Mut,fontSize=10.5.sp,fontWeight=FontWeight.SemiBold)
+            }
         }
     }
 }
 
 @Composable private fun BottomV2(ui:Ui,screen:String,nav:(String)->Unit){
-    val ids=mutableListOf("kociol" to "Kocioł","palnik" to "Palnik")
-    val co=(ui.n("0x2105")?:1.0).toInt().coerceIn(0,4)
-    for(i in 1..co)ids.add("co"+i to "CO"+i)
-    if((ui.n("0x2106")?:0.0)!=0.0)ids.add("cwu" to "CWU")
-    ids.add("power" to "Power");ids.add("menu" to "Menu")
-    val shown=if(ids.size>6) ids.take(6) else ids
-    NavigationBar(
-        containerColor=G2Panel,
-        modifier=Modifier
-            .navigationBarsPadding()
-            .border(1.dp,G2Line)
-            .height(66.dp)
+    val items=listOf(
+        Triple("home","Pulpit","⌂"),
+        Triple("co1","Ogrzewanie","▥"),
+        Triple("schedule","Harmonogram","□"),
+        Triple("alarms","Alarmy","♧"),
+        Triple("menu","Menu","☰")
+    )
+    Row(
+        Modifier.fillMaxWidth().navigationBarsPadding().height(58.dp)
+            .background(G2Bg).border(1.dp,G2Line),
+        verticalAlignment=Alignment.CenterVertically
     ){
-        for(item in shown){
-            val id=item.first;val label=item.second
-            NavigationBarItem(
-                selected=screen==id || (id=="menu" && screen in setOf("menu","settings","outtest")),
-                onClick={nav(if(id=="menu")"menu" else id)},
-                icon={
-                    when{
-                        id=="menu"->AssetIcon(77,Modifier.size(21.dp))
-                        id.startsWith("co")->AssetIcon(if(id=="co1")144 else 146,Modifier.size(21.dp))
-                        id=="cwu"->AssetIcon(94,Modifier.size(21.dp))
-                        id=="power"->AssetIcon(115,Modifier.size(21.dp))
-                        else->Text(if(id=="kociol")"▣" else "♨",fontSize=19.sp,color=G2Text)
-                    }
+        for((id,label,glyph) in items){
+            val selected=screen==id || (id=="co1" && screen.startsWith("co"))
+            Column(
+                Modifier.weight(1f).fillMaxHeight().clickable{
+                    nav(if(id=="co1" && (ui.n("0x2105")?:0.0)==0.0) "home" else id)
                 },
-                label={Text(label,fontSize=8.sp,maxLines=1,overflow=TextOverflow.Clip)},
-                colors=NavigationBarItemDefaults.colors(
-                    selectedIconColor=G2Orange,
-                    selectedTextColor=G2Orange,
-                    indicatorColor=G2Panel2,
-                    unselectedIconColor=G2Mut,
-                    unselectedTextColor=G2Mut
-                )
-            )
+                horizontalAlignment=Alignment.CenterHorizontally,
+                verticalArrangement=Arrangement.Center
+            ){
+                if(selected) Box(Modifier.fillMaxWidth(.38f).height(3.dp).clip(RoundedCornerShape(0,0,3,3)).background(G2Orange))
+                Spacer(Modifier.height(2.dp))
+                Text(glyph,color=if(selected)G2Orange else G2Mut,fontSize=20.sp)
+                Text(label,color=if(selected)G2Orange else G2Mut,fontSize=9.5.sp,fontWeight=FontWeight.SemiBold)
+            }
         }
     }
 }
 
 @Composable private fun HomeV2(ui:Ui,nav:(String)->Unit){
     val mods=configModules(ui)
-    val pages=mods.chunked(4).ifEmpty{listOf(emptyList())}
+    val co1=mods.firstOrNull{it=="co1"}
+    val cwu=mods.firstOrNull{it=="cwu"}
+    val others=mods.filter{it!="co1"&&it!="cwu"&&it!="fuel"}
+    val cards=buildList{
+        if(co1!=null)add("co1")
+        if(cwu!=null)add("cwu")
+        add("fuel"); add("palnik"); add("alarms"); add("can")
+        addAll(others)
+    }
+    val pages=cards.chunked(6).ifEmpty{listOf(emptyList())}
     val scroll=rememberScrollState()
     val scope=rememberCoroutineScope()
     var page by remember{mutableIntStateOf(0)}
-
     BoxWithConstraints(Modifier.fillMaxSize()){
         val pageWidth=maxWidth
         val density=androidx.compose.ui.platform.LocalDensity.current
         LaunchedEffect(scroll.value,pageWidth,density){
             val px=with(density){pageWidth.toPx()}
-            if(px>1f){
-                val p=(scroll.value/px).toInt().coerceIn(0,pages.lastIndex)
-                if(page!=p) page=p
-            }
+            if(px>1f){ val p=(scroll.value/px).toInt().coerceIn(0,pages.lastIndex); if(page!=p)page=p }
         }
         Column(Modifier.fillMaxSize().padding(horizontal=12.dp,vertical=4.dp)){
             HeroV2(ui){nav("kociol")}
             Spacer(Modifier.height(8.dp))
             BurnerStripV2(ui)
             Spacer(Modifier.height(8.dp))
-            Row(
-                Modifier.fillMaxWidth().weight(1f).horizontalScroll(scroll),
-                horizontalArrangement=Arrangement.Start
-            ){
+            Row(Modifier.fillMaxWidth().weight(1f).horizontalScroll(scroll)){
                 for(p in pages){
-                    Column(
-                        Modifier.width(pageWidth),
-                        verticalArrangement=Arrangement.spacedBy(8.dp)
-                    ){
+                    Column(Modifier.width(pageWidth),verticalArrangement=Arrangement.spacedBy(8.dp)){
                         for(row in p.chunked(2)){
-                            Row(
-                                Modifier.fillMaxWidth(),
-                                horizontalArrangement=Arrangement.spacedBy(8.dp)
-                            ){
+                            Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)){
                                 for(id in row) Box(Modifier.weight(1f)){HomeTileV2(ui,id,nav)}
-                                if(row.size==1) Spacer(Modifier.weight(1f))
+                                if(row.size==1)Spacer(Modifier.weight(1f))
                             }
                         }
                     }
                 }
             }
-            if(pages.size>1)Row(
-                Modifier.fillMaxWidth().padding(4.dp),
-                horizontalArrangement=Arrangement.Center
-            ){
-                for(i in pages.indices){
-                    Box(
-                        Modifier.padding(3.dp)
-                            .size(if(i==page)8.dp else 6.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(if(i==page)G2Orange else G2Mut)
-                            .clickable{
-                                scope.launch{
-                                    val px=with(density){pageWidth.toPx()}
-                                    scroll.animateScrollTo((i*px).toInt())
-                                }
-                            }
-                    )
-                }
+            if(pages.size>1)Row(Modifier.fillMaxWidth().padding(3.dp),horizontalArrangement=Arrangement.Center){
+                for(i in pages.indices)Box(Modifier.padding(3.dp).size(if(i==page)8.dp else 6.dp)
+                    .clip(RoundedCornerShape(50)).background(if(i==page)G2Orange else G2Mut).clickable{
+                        scope.launch{val px=with(density){pageWidth.toPx()};scroll.animateScrollTo((i*px).toInt())}
+                    })
             }
         }
     }
@@ -294,18 +265,38 @@ fun TeklaAppV2(){
 
 @Composable private fun HeroV2(ui:Ui,click:()->Unit){
     val run=(ui.n("0x2005")?:0.0)!=0.0
-    GlassV2(Modifier.fillMaxWidth().height(188.dp),if(run)G2Green else null,click){
+    GlassV2(Modifier.fillMaxWidth().height(176.dp),if(run)G2Green else null,click){
         Row(Modifier.fillMaxSize(),verticalAlignment=Alignment.CenterVertically){
-            Box(Modifier.width(125.dp),contentAlignment=Alignment.Center){BoilerImage(ui)}
-            Column(Modifier.weight(1f).padding(start=4.dp)){
-                Text("Kocioł",color=G2Text,fontSize=19.sp,fontWeight=FontWeight.SemiBold)
-                Text(if(run)"● Praca" else "● Wyłączony",color=if(run)G2Green else G2Mut,fontSize=13.sp)
-                Spacer(Modifier.height(5.dp));BigV2(f1(ui.n("0x2001")),"°C")
-                Text("→ "+f1(ui.n("0x2004"),0)+" °C",color=G2Orange,fontSize=16.sp)
+            Box(Modifier.width(176.dp).fillMaxHeight(),contentAlignment=Alignment.Center){
+                GaugeV2(ui,run)
             }
-            Column(Modifier.width(76.dp),horizontalAlignment=Alignment.CenterHorizontally){
-                Text("🔥",fontSize=28.sp);Text(f1(ui.n("0x2250"),0)+" %",color=G2Text,fontSize=15.sp);Text(f1(ui.n("0x3710"),1)+" kg/h",color=G2Mut,fontSize=11.sp)
+            Column(Modifier.weight(1f).padding(start=2.dp)){
+                Text("Kocioł",color=G2Text,fontSize=15.sp,fontWeight=FontWeight.SemiBold)
+                Text(if(run)"● Praca" else "Wyłączony",color=if(run)G2Orange2 else G2Mut,fontSize=15.sp,fontWeight=FontWeight.SemiBold)
+                Text("zadana "+f1(ui.n("0x2004"),0)+" °C · tryb Auto",color=G2Mut,fontSize=10.sp)
+                Spacer(Modifier.height(8.dp))
+                V2Row("Powrót",f1(ui.n("0x2002"))+" °C")
+                V2Row("Temp. palnika",f1(ui.n("0x2260"))+" °C")
+                V2Row("Temp. zewnętrzna",f1(ui.n("0x2011"))+" °C")
+                V2Row("Moc palnika",f1(ui.n("0x2250"),0)+" %")
             }
+        }
+    }
+}
+@Composable private fun GaugeV2(ui:Ui,run:Boolean){
+    val temp=(ui.n("0x2001")?:0.0).toFloat()
+    Canvas(Modifier.size(170.dp)){
+        val stroke=10.dp.toPx()
+        val r=size.minDimension/2-stroke/2
+        drawArc(G2Line,135f,270f,false,style=androidx.compose.ui.graphics.drawscope.Stroke(stroke,cap=StrokeCap.Round))
+        drawArc(Brush.linearGradient(listOf(G2Orange,G2Orange2)),135f,(temp.coerceIn(0f,100f)/100f)*270f,false,
+            style=androidx.compose.ui.graphics.drawscope.Stroke(stroke,cap=StrokeCap.Round))
+    }
+    Box(Modifier.size(170.dp),contentAlignment=Alignment.Center){
+        Column(horizontalAlignment=Alignment.CenterHorizontally){
+            Text(f1(ui.n("0x2001")),color=G2Text,fontSize=38.sp,fontWeight=FontWeight.Light)
+            Text("°C",color=G2Orange,fontSize=14.sp)
+            Text(if(run)"Praca" else "Wyłączony",color=if(run)G2Orange2 else G2Mut,fontSize=13.sp,fontWeight=FontWeight.SemiBold)
         }
     }
 }
@@ -343,18 +334,33 @@ fun TeklaAppV2(){
 }
 
 @Composable private fun HomeTileV2(ui:Ui,id:String,nav:(String)->Unit){
-    if(id=="fuel"){FuelTile(ui,Modifier.fillMaxWidth().height(108.dp));return}
-    val s=ui.m.screens[id]?:return
-    GlassV2(Modifier.fillMaxWidth().height(108.dp),moduleLed(ui,id),{nav(id)}){
-        Row(verticalAlignment=Alignment.CenterVertically){
-            val icon=when{ id.startsWith("co")->62+id.last().digitToInt()-1;id=="cwu"->66;id=="bufor"->67;id=="solary"->71;id=="kaskada"->70;id=="magazyn"->69;else->60 }
-            Ic(icon,27.dp);Spacer(Modifier.width(8.dp))
-            Column{
-                Text(tileTitle(id,s),color=G2Text,fontSize=14.sp,fontWeight=FontWeight.SemiBold)
-                if(s.big!=null)BigV2(f1(ui.n(s.big)),"°C") else Text(if(moduleLed(ui,id)!=null) "Praca" else "Gotowy",color=if(moduleLed(ui,id)!=null)G2Green else G2Mut,fontSize=13.sp)
+    when(id){
+        "fuel"->{FuelTile(ui,Modifier.fillMaxWidth().height(96.dp));return}
+        "palnik"->GlassV2(Modifier.fillMaxWidth().height(96.dp),null,{nav("palnik")}){
+            Text("Palnik",color=G2Mut,fontSize=11.sp,fontWeight=FontWeight.SemiBold)
+            Text(if((ui.n("0x2250")?:0.0)>0)"Praca" else "Wyłączony",color=G2Text,fontSize=22.sp,fontWeight=FontWeight.Light)
+            V2Row("jasność płomienia",f1(ui.n("0x2250"),0)+" %")
+            V2Row("zapalarka",f1(ui.n("0x2284"),0))
+        }
+        "alarms"->GlassV2(Modifier.fillMaxWidth().height(76.dp),null,{nav("alarms")}){
+            Text("Ostatni alarm",color=G2Mut,fontSize=11.sp,fontWeight=FontWeight.SemiBold)
+            Text("kod 140 · Brak ognia/opału",color=G2Text,fontSize=15.sp,fontWeight=FontWeight.SemiBold)
+            Text("w historii 20 zdarzeń · nie aktywny",color=G2Mut,fontSize=10.sp)
+        }
+        "can"->GlassV2(Modifier.fillMaxWidth().height(76.dp),G2Green,null){
+            Text("Moduły CAN",color=G2Mut,fontSize=11.sp,fontWeight=FontWeight.SemiBold)
+            Text("1 online",color=G2Text,fontSize=20.sp,fontWeight=FontWeight.Light)
+            Text("CAN IO BIG · Node 86",color=G2Mut,fontSize=10.sp)
+        }
+        else->{
+            val s=ui.m.screens[id]?:return
+            GlassV2(Modifier.fillMaxWidth().height(96.dp),moduleLed(ui,id),{nav(id)}){
+                Text(tileTitle(id,s),color=G2Mut,fontSize=11.sp,fontWeight=FontWeight.SemiBold)
+                if(s.big!=null)BigV2(f1(ui.n(s.big)),s.bigUnit) else Text(if(moduleLed(ui,id)!=null)"Praca" else "Wyłączony",color=G2Text,fontSize=22.sp,fontWeight=FontWeight.Light)
+                if(s.pill!=null)Text("zadana wynikowa  "+f1(ui.n(s.pill),0)+" °C",color=G2Mut,fontSize=10.sp)
+                if(s.mode!=null)Text("tryb  Komfort",color=G2Mut,fontSize=10.sp)
             }
         }
-        if(s.pill!=null)Text("→ "+f1(ui.n(s.pill),0)+" °C",color=G2Orange,fontSize=12.sp)
     }
 }
 
