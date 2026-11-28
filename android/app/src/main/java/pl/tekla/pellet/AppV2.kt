@@ -2,6 +2,7 @@ package pl.tekla.pellet
 
 import android.graphics.BitmapFactory
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -174,6 +175,7 @@ fun TeklaAppV2(){
     for(i in 1..co)ids.add("co"+i to "CO"+i)
     if((ui.n("0x2106")?:0.0)!=0.0)ids.add("cwu" to "CWU")
     ids.add("power" to "Power");ids.add("menu" to "Menu")
+    val shown=if(ids.size>6) listOf(ids[0],ids[1],*ids.drop(2).dropLast(2).take(2).toTypedArray(),ids[ids.lastIndex-1],ids.last()) else ids
     NavigationBar(containerColor=Color(0xE613232D),modifier=Modifier.navigationBarsPadding().border(1.dp,G2Line)){
         for(item in shown){
             val id=item.first;val label=item.second
