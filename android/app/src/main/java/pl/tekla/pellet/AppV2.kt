@@ -27,16 +27,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 
-private val G2Bg = Color(0xFF07131C)
-private val G2Panel = Color(0xB51A2A35)
-private val G2Panel2 = Color(0xC31D303D)
-private val G2Line = Color(0x667B95A4)
-private val G2Text = Color(0xFFF2F5F7)
-private val G2Mut = Color(0xFF9AAAB5)
-private val G2Orange = Color(0xFFFF9800)
-private val G2Green = Color(0xFF8BEA21)
-private val G2Blue = Color(0xFF21C8E8)
-private val G2Red = Color(0xFFFF5B5B)
+private val G2Bg = Color(0xFF09090B)
+private val G2Panel = Color(0xFF141418)
+private val G2Panel2 = Color(0xFF1A1A1F)
+private val G2Line = Color(0xFF26262C)
+private val G2Text = Color(0xFFF3F3F5)
+private val G2Mut = Color(0xFF8A8A94)
+private val G2Orange = Color(0xFFFF7A1A)
+private val G2Orange2 = Color(0xFFFFB066)
+private val G2Green = Color(0xFF4FE38A)
+private val G2Blue = Color(0xFF5AB4FF)
+private val G2Red = Color(0xFFFF4D4D)
 
 @Composable
 private fun AssetIcon(id:Int, modifier:Modifier=Modifier.size(24.dp)){
@@ -146,26 +147,41 @@ fun TeklaAppV2(){
 
 @Composable private fun HeaderV2(ui:Ui,screen:String,connected:Boolean,nav:(String)->Unit){
     val title=when(screen){
-        "home"->"TeklaPellet"
+        "home"->"Pulpit"
         "outtest"->"Test wyjść"
         "menu"->"Menu"
         "settings"->"Ustawienia"
         else->ui.m.screens[if(screen=="co")"co1" else screen]?.title?:"TeklaPellet"
     }
-    Row(Modifier.fillMaxWidth().background(G2Bg).statusBarsPadding().padding(14.dp,8.dp),verticalAlignment=Alignment.CenterVertically){
+    Row(
+        Modifier.fillMaxWidth()
+            .background(G2Bg)
+            .statusBarsPadding()
+            .padding(horizontal=14.dp,vertical=7.dp),
+        verticalAlignment=Alignment.CenterVertically
+    ){
         if(screen!="home"){
-            Text("‹",color=G2Text,fontSize=38.sp,modifier=Modifier.clickable{nav("home")})
+            Text("‹",color=G2Text,fontSize=34.sp,modifier=Modifier.clickable{nav("home")})
             Spacer(Modifier.width(6.dp))
         }
         Column(Modifier.weight(1f)){
-            Text(title,color=G2Text,fontSize=19.sp,fontWeight=FontWeight.SemiBold)
+            Text(title,color=G2Text,fontSize=16.sp,fontWeight=FontWeight.SemiBold)
             Row(verticalAlignment=Alignment.CenterVertically){
-                Box(Modifier.size(7.dp).clip(RoundedCornerShape(50)).background(if(connected)G2Green else G2Red))
+                Box(
+                    Modifier.size(6.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(if(connected)G2Green else G2Red)
+                )
                 Spacer(Modifier.width(5.dp))
-                Text(if(connected)"Połączono" else "Brak połączenia",color=G2Mut,fontSize=11.sp)
+                Text(
+                    if(connected)"Na żywo · CAN OK" else "Brak połączenia",
+                    color=G2Mut,fontSize=10.sp
+                )
             }
         }
-        Text(if(screen=="home")"♧" else "",color=G2Text,fontSize=25.sp)
+        if(screen=="home"){
+            Text("●",color=G2Orange,fontSize=10.sp)
+        }
     }
 }
 
@@ -175,24 +191,36 @@ fun TeklaAppV2(){
     for(i in 1..co)ids.add("co"+i to "CO"+i)
     if((ui.n("0x2106")?:0.0)!=0.0)ids.add("cwu" to "CWU")
     ids.add("power" to "Power");ids.add("menu" to "Menu")
-    val shown=if(ids.size>6) listOf(ids[0],ids[1],*ids.drop(2).dropLast(2).take(2).toTypedArray(),ids[ids.lastIndex-1],ids.last()) else ids
-    NavigationBar(containerColor=Color(0xE613232D),modifier=Modifier.navigationBarsPadding().border(1.dp,G2Line)){
+    val shown=if(ids.size>6) ids.take(6) else ids
+    NavigationBar(
+        containerColor=G2Panel,
+        modifier=Modifier
+            .navigationBarsPadding()
+            .border(1.dp,G2Line)
+            .height(66.dp)
+    ){
         for(item in shown){
             val id=item.first;val label=item.second
             NavigationBarItem(
                 selected=screen==id || (id=="menu" && screen in setOf("menu","settings","outtest")),
                 onClick={nav(if(id=="menu")"menu" else id)},
                 icon={
-    when{
-        id=="menu"->AssetIcon(77)
-        id.startsWith("co")->AssetIcon(if(id=="co1")144 else 146)
-        id=="cwu"->AssetIcon(94)
-        id=="power"->AssetIcon(115)
-        else->Text(if(id=="kociol")"⌂" else "♨",fontSize=21.sp,color=G2Text)
-    }
-},
-                label={Text(label,fontSize=9.sp,maxLines=1)},
-                colors=NavigationBarItemDefaults.colors(selectedIconColor=G2Orange,selectedTextColor=G2Orange,indicatorColor=G2Panel2,unselectedIconColor=G2Mut,unselectedTextColor=G2Mut)
+                    when{
+                        id=="menu"->AssetIcon(77,Modifier.size(21.dp))
+                        id.startsWith("co")->AssetIcon(if(id=="co1")144 else 146,Modifier.size(21.dp))
+                        id=="cwu"->AssetIcon(94,Modifier.size(21.dp))
+                        id=="power"->AssetIcon(115,Modifier.size(21.dp))
+                        else->Text(if(id=="kociol")"▣" else "♨",fontSize=19.sp,color=G2Text)
+                    }
+                },
+                label={Text(label,fontSize=8.sp,maxLines=1,overflow=TextOverflow.Clip)},
+                colors=NavigationBarItemDefaults.colors(
+                    selectedIconColor=G2Orange,
+                    selectedTextColor=G2Orange,
+                    indicatorColor=G2Panel2,
+                    unselectedIconColor=G2Mut,
+                    unselectedTextColor=G2Mut
+                )
             )
         }
     }
@@ -283,13 +311,32 @@ fun TeklaAppV2(){
 }
 
 @Composable private fun BurnerStripV2(ui:Ui){
-    val s=ui.m.screens["palnik"]?:return
-    Row(Modifier.fillMaxWidth().height(55.dp).clip(RoundedCornerShape(15.dp)).background(G2Panel2).border(1.dp,G2Line,RoundedCornerShape(15.dp)).padding(8.dp),horizontalArrangement=Arrangement.SpaceEvenly,verticalAlignment=Alignment.CenterVertically){
-        for(c in s.bar){
+    val scr=ui.m.screens["palnik"]?:return
+    Row(
+        Modifier.fillMaxWidth()
+            .height(52.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(G2Panel)
+            .border(1.dp,G2Line,RoundedCornerShape(14.dp))
+            .padding(horizontal=8.dp,vertical=6.dp),
+        horizontalArrangement=Arrangement.SpaceEvenly,
+        verticalAlignment=Alignment.CenterVertically
+    ){
+        for(c in scr.bar){
             if(!ui.v.containsKey(c.p))continue
             val active=(ui.n(c.p)?.toInt()?:0)!=0
-            Box(Modifier.size(38.dp).clip(RoundedCornerShape(10.dp)).background((if(active)G2Orange else Color(0xFF53636D)).copy(alpha=if(active).22f else .08f)),contentAlignment=Alignment.Center){
-                if(c.fr.isNotEmpty())Ic(c.fr.first(),27.dp) else Text("•",color=G2Mut,fontSize=24.sp)
+            val led=if(active)G2Orange else Color(0xFF3B3B42)
+            Column(horizontalAlignment=Alignment.CenterHorizontally){
+                Box(
+                    Modifier.size(28.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(led.copy(alpha=if(active).20f else .10f))
+                        .border(1.dp,led.copy(alpha=if(active).75f else .25f),RoundedCornerShape(8.dp)),
+                    contentAlignment=Alignment.Center
+                ){
+                    if(c.fr.isNotEmpty())Ic(c.fr.first(),20.dp)
+                    else Box(Modifier.size(6.dp).clip(RoundedCornerShape(50)).background(led))
+                }
             }
         }
     }
@@ -483,8 +530,34 @@ fun TeklaAppV2(){
 }
 
 @Composable private fun GlassV2(modifier:Modifier,led:Color?=null,click:(()->Unit)?=null,content:@Composable ColumnScope.()->Unit){
-    Column(modifier.clip(RoundedCornerShape(17.dp)).background(Brush.verticalGradient(listOf(Color(0xC21E303B),Color(0xB5101E28)))).border(1.dp,G2Line,RoundedCornerShape(17.dp)).then(if(click!=null)Modifier.clickable(onClick=click) else Modifier).padding(12.dp)){
-        if(led!=null){Box(Modifier.fillMaxWidth(.45f).height(2.dp).background(Brush.horizontalGradient(listOf(Color.Transparent,led,Color.Transparent))));Spacer(Modifier.height(4.dp))}
+    val shape=RoundedCornerShape(16.dp)
+    Column(
+        modifier
+            .clip(shape)
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF1A1A1F),
+                        Color(0xFF141418)
+                    )
+                )
+            )
+            .border(1.dp,G2Line,shape)
+            .then(if(click!=null)Modifier.clickable(onClick=click) else Modifier)
+            .padding(12.dp)
+    ){
+        if(led!=null){
+            Box(
+                Modifier.fillMaxWidth(.42f)
+                    .height(2.dp)
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(Color.Transparent,led.copy(alpha=.85f),Color.Transparent)
+                        )
+                    )
+            )
+            Spacer(Modifier.height(4.dp))
+        }
         content()
     }
 }
