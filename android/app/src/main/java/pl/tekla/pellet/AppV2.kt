@@ -190,19 +190,18 @@ fun TeklaAppV2(){
     val co=(ui.n("0x2105")?:0.0).toInt().coerceIn(0,4)
     val cwu=(ui.n("0x2106")?:0.0)!=0.0
     val items=buildList<Triple<String,String,Int>>{
-        add(Triple("kociol","Kocioł",60))
-        add(Triple("palnik","Palnik",61))
-        if(co>0)add(Triple("co1","CO",62))
+        add(Triple("home","Pulpit",60))
+        if(co>0)add(Triple("co1",if(co>=2)"CO1/2" else "CO",62))
         if(cwu)add(Triple("cwu","CWU",66))
         add(Triple("power","Power",115))
         add(Triple("menu","Menu",77))
     }
     Row(
-        Modifier.fillMaxWidth().navigationBarsPadding().height(64.dp)
-            .padding(horizontal=8.dp,vertical=4.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(Brush.verticalGradient(listOf(G2Panel2,G2Panel)))
-            .border(1.dp,G2Line,RoundedCornerShape(20.dp)),
+        Modifier.fillMaxWidth().navigationBarsPadding().height(60.dp)
+            .padding(horizontal=10.dp,vertical=3.dp)
+            .clip(RoundedCornerShape(19.dp))
+            .background(Brush.verticalGradient(listOf(TeklaThemes.ModernGlass.glassTop,TeklaThemes.ModernGlass.glassBottom)))
+            .border(1.dp,TeklaThemes.ModernGlass.line,RoundedCornerShape(19.dp)),
         verticalAlignment=Alignment.CenterVertically
     ){
         for((id,label,icon) in items){
@@ -212,45 +211,19 @@ fun TeklaAppV2(){
                 horizontalAlignment=Alignment.CenterHorizontally,
                 verticalArrangement=Arrangement.Center
             ){
-                Box(Modifier.height(3.dp).fillMaxWidth(.32f).clip(RoundedCornerShape(2.dp))
-                    .background(if(selected)G2Orange else Color.Transparent))
+                Box(Modifier.height(2.dp).fillMaxWidth(.30f).clip(RoundedCornerShape(2.dp))
+                    .background(if(selected)TeklaThemes.ModernGlass.accent else Color.Transparent))
                 Spacer(Modifier.height(2.dp))
-                AssetIcon(icon,Modifier.size(23.dp))
-                Text(label,color=if(selected)G2Orange else G2Mut,fontSize=9.5.sp,fontWeight=FontWeight.SemiBold,maxLines=1)
+                Ic(icon,22.dp)
+                Text(label,color=if(selected)TeklaThemes.ModernGlass.accent else TeklaThemes.ModernGlass.muted,fontSize=9.sp,
+                    fontWeight=androidx.compose.ui.text.font.FontWeight.SemiBold,maxLines=1)
             }
         }
     }
 }
 
 @Composable private fun HomeV2(ui:Ui,nav:(String)->Unit){
-    val modules=configModules(ui)
-    val pages=modules.chunked(6).ifEmpty{listOf(emptyList())}
-    val pager=rememberPagerState(pageCount={pages.size})
-    Column(Modifier.fillMaxSize().padding(horizontal=12.dp,vertical=6.dp)){
-        HeroV2(ui){nav("kociol")}
-        Spacer(Modifier.height(8.dp))
-        BurnerStripV2(ui)
-        Spacer(Modifier.height(8.dp))
-        HorizontalPager(
-            state=pager,
-            modifier=Modifier.weight(1f).fillMaxWidth(),
-            pageSpacing=0.dp,
-            beyondViewportPageCount=0
-        ){page->
-            Column(Modifier.fillMaxWidth(),verticalArrangement=Arrangement.spacedBy(8.dp)){
-                for(row in pages[page].chunked(2)){
-                    Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(8.dp)){
-                        for(id in row) Box(Modifier.weight(1f)){HomeTileV2(ui,id,nav)}
-                        if(row.size==1)Spacer(Modifier.weight(1f))
-                    }
-                }
-            }
-        }
-        if(pages.size>1)Row(Modifier.fillMaxWidth().padding(top=3.dp,bottom=2.dp),horizontalArrangement=Arrangement.Center){
-            for(i in pages.indices)Box(Modifier.padding(3.dp).size(if(i==pager.currentPage)8.dp else 6.dp)
-                .clip(RoundedCornerShape(50)).background(if(i==pager.currentPage)G2Orange else G2Mut))
-        }
-    }
+    HomeModernGlass(ui,nav)
 }
 
 @Composable private fun HeroV2(ui:Ui,click:()->Unit){
