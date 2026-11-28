@@ -518,8 +518,8 @@ fun TeklaAppV2(){
             .background(
                 Brush.verticalGradient(
                     listOf(
-                        Color(0xFF1A1A1F),
-                        Color(0xFF141418)
+                        TeklaThemes.ModernGlass.glassTop,
+                        TeklaThemes.ModernGlass.glassBottom
                     )
                 )
             )
