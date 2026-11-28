@@ -11,7 +11,7 @@ jobs:
   host-tests:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Model produktowy zgodny ze zrodlem w analiza/
         run: |
           cmp data/device_model.json analiza/analiza_archiwum/FW2213TK-2026-11-22/data/ui_model/device_model.json
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     container: espressif/idf:v5.4.1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Kompilacja ESP-IDF (esp32c6)
         shell: bash
         run: |
@@ -44,7 +44,7 @@ jobs:
           grep -E 'error:|FAILED' /tmp/build.log | head -40 || true
           idf.py merge-bin -o "$PWD/build/tekla_pellet_flash.bin"
           ls -la build/*.bin
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: tekla-firmware
           path: |
@@ -80,10 +80,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions: { contents: write }
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with: { distribution: temurin, java-version: "17" }
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with: { gradle-version: "8.9" }
       - name: Budowa APK
         working-directory: android
@@ -108,10 +108,10 @@ jobs:
   android-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with: { distribution: temurin, java-version: "17" }
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with: { gradle-version: "8.9" }
       - name: Spojnosc zasobow Androida z WWW (app.json, model, ikony)
         run: |
@@ -121,7 +121,7 @@ jobs:
       - name: Kompilacja aplikacji (debug APK)
         working-directory: android
         run: gradle --no-daemon assembleDebug
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: tekla-android-debug
           path: android/app/build/outputs/apk/debug/*.apk

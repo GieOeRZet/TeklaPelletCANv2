@@ -12,8 +12,59 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Dp
 
-val Bg = Color(0xFF09090B); val Panel = Color(0xFF141418); val Panel2 = Color(0xFF1A1A1F); val Line = Color(0xFF26262C)
-val Txt = Color(0xFFF3F3F5); val Mut = Color(0xFF8A8A94); val Acc = Color(0xFFFF7A1A); val Acc2 = Color(0xFFFFB066); val Okc = Color(0xFF4FE38A); val Warn = Color(0xFFFFC233); val Bad = Color(0xFFFF4D4D)
+data class TeklaPalette(
+    val bg: Color,
+    val panel: Color,
+    val panel2: Color,
+    val line: Color,
+    val text: Color,
+    val muted: Color,
+    val accent: Color,
+    val accentSoft: Color,
+    val ok: Color,
+    val warn: Color,
+    val bad: Color,
+    val cold: Color,
+    val glassTop: Color,
+    val glassBottom: Color,
+    val glassHighlight: Color
+)
+
+object TeklaThemes {
+    /** Kanoniczny motyw aplikacji — Modern Glass. */
+    val ModernGlass = TeklaPalette(
+        bg = Color(0xFF090D12),
+        panel = Color(0xD91A222B),
+        panel2 = Color(0xCC202B35),
+        line = Color(0xFF34424D),
+        text = Color(0xFFF3F5F7),
+        muted = Color(0xFF9AA5AE),
+        accent = Color(0xFFFF981F),
+        accentSoft = Color(0xFFFFB45C),
+        ok = Color(0xFF69E36F),
+        warn = Color(0xFFFFC233),
+        bad = Color(0xFFFF4D4D),
+        cold = Color(0xFF59B8FF),
+        glassTop = Color(0xD92A3640),
+        glassBottom = Color(0xCC141A20),
+        glassHighlight = Color(0x4DFFFFFF)
+    )
+}
+
+/** Jedno miejsce wyboru motywu. Kolejne motywy dodajemy do TeklaThemes bez przepisywania UI. */
+private val ActiveTeklaTheme = TeklaThemes.ModernGlass
+
+val Bg get() = ActiveTeklaTheme.bg
+val Panel get() = ActiveTeklaTheme.panel
+val Panel2 get() = ActiveTeklaTheme.panel2
+val Line get() = ActiveTeklaTheme.line
+val Txt get() = ActiveTeklaTheme.text
+val Mut get() = ActiveTeklaTheme.muted
+val Acc get() = ActiveTeklaTheme.accent
+val Acc2 get() = ActiveTeklaTheme.accentSoft
+val Okc get() = ActiveTeklaTheme.ok
+val Warn get() = ActiveTeklaTheme.warn
+val Bad get() = ActiveTeklaTheme.bad
 
 val LocalFrame = compositionLocalOf { 0 }
 
