@@ -1,5 +1,7 @@
 package pl.tekla.pellet
 
+// CI visual check: modular Modern Glass HOME
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
